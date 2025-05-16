@@ -4,6 +4,7 @@ import model.*;
 public class Programma {
     public static void main(String[] args) {
 
+
         //creazione attività
         Attività a1 = new Attività("comprare il latte", false);
         Attività a2 = new Attività("comprare il pane", false);
