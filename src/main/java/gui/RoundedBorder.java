@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.border.Border;
+import javax.swing.*;
 import java.awt.*;
 
 public class RoundedBorder implements Border {
@@ -22,7 +23,7 @@ public class RoundedBorder implements Border {
 
     @Override
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-        g.setColor(Color.GRAY);
+        g.setColor(Color.WHITE);
         g.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
     }
 }

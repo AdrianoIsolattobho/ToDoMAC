@@ -32,7 +32,7 @@ public class SetPlaceHolder {
                 if (String.valueOf(passwordField.getPassword()).equals(placeholder)) {
                     passwordField.setText("");
                     passwordField.setEchoChar('•'); // o '*'
-                    passwordField.setForeground(java.awt.Color.BLACK);
+                    passwordField.setForeground(java.awt.Color.WHITE);
                 }
             }
 
@@ -67,7 +67,7 @@ public class SetPlaceHolder {
             public void focusGained(java.awt.event.FocusEvent e) {
                 if (textField.getText().equals(placeholder)) {
                     textField.setText("");
-                    textField.setForeground(java.awt.Color.BLACK);
+                    textField.setForeground(java.awt.Color.WHITE);
                 }
             }
 
