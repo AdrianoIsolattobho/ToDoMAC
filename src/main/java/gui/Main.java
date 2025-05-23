@@ -1,6 +1,10 @@
 package gui;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.Image;
+import java.net.URL;
+
 
 public class Main extends JPanel {
     private JButton esci;
@@ -13,13 +17,20 @@ public class Main extends JPanel {
     private JButton aggiungiTodo;
     private JPanel navBar;
 
+
+    /*
+     * Setup dei componenti grafici utile da codice per non passare da IntelliJ
+     */
     public void setupComponents() {
-        if (this.esci != null) {
-            this.esci.setIcon(new ImageIcon("src/main/java/gui/img/logout.png"));
-        }
+        esci.setBounds(0, 0, 30, 25);
+        URL imageUrl = getClass().getResource("/img/logout.png");
+        esci.setIcon(new ImageIcon(imageUrl));
+
+
     }
 
     public JPanel getMain() {
         return this.main;
     }
+
 }

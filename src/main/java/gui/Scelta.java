@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class Scelta extends JFrame {
     private JPanel Scelta;
@@ -13,19 +14,19 @@ public class Scelta extends JFrame {
 
 
     public Scelta() {
-    setTitle("ToDoApp");
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("ToDoApp");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-    loginView = new LogIn();
-    registerView = new Register();
-    
-    // Non chiamare i metodi setupComponents qui, lascialo fare al Controller
+        loginView = new LogIn();
+        registerView = new Register();
 
-    setContentPane(Scelta);
-    pack();
-    setLocationRelativeTo(null);
-    setVisible(true);
-}
+        // Non chiamare i metodi setupComponents qui, lascialo fare al Controller
+
+        setContentPane(Scelta);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
 
     public JPanel getScelta() {
         return this.Scelta;
@@ -46,4 +47,5 @@ public class Scelta extends JFrame {
     public Register getRegisterView() {
         return this.registerView;
     }
+
 }

@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class LogIn extends JPanel {
     private JTextField email;
@@ -10,9 +11,9 @@ public class LogIn extends JPanel {
     private JLabel titolo;
     private JButton back;
     private Main mainView;
-    private JPanel LogIn; 
+    private JPanel LogIn;
 
-     public LogIn() {
+    public LogIn() {
         // Lascia vuoto il costruttore o sposta l'inizializzazione dopo la creazione del form
         mainView = new Main();
     }
@@ -28,7 +29,7 @@ public class LogIn extends JPanel {
 
             this.email.setOpaque(false);
             this.password.setOpaque(false);
-            
+
             // Chiama setupComponents sulla mainView se necessario
             mainView.setupComponents();
         }
@@ -70,7 +71,9 @@ public class LogIn extends JPanel {
     public Main getMainView() {
         return mainView;
     }
+
     public JPanel getMainLogIn() {
         return this.LogIn;
     }
+
 }

@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class Register extends JPanel {
     private JButton registratiButton;
@@ -40,12 +41,15 @@ public class Register extends JPanel {
     public JButton getRegistratiButton() {
         return this.registratiButton;
     }
+
     public String getEmailText() {
         return email.getText();
     }
+
     public String getPasswordText() {
         return new String(password.getPassword());
     }
+
     public String getConfermaPasswordText() {
         return new String(confermaPassword.getPassword());
     }
