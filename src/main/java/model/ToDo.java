@@ -1,22 +1,24 @@
 package model;
 import java.util.Calendar;
+import java.net.URL;
+import java.net.URI;
 public class ToDo {
     private String titolo;
     private String descrizione;
-    private String link;
+    private URI link;
     private Calendar scadenza;
     private Calendar creazione;
     private boolean completato = false;
     private boolean manuale = false;
     private boolean scaduto = false;
     private java.awt.Color sfondo;
-    private String immagine;
+    private URL immagine;
     private Checklist checklist;
 
 
     // costruttore completo
-    public ToDo(String titolo, String descrizione, String link, Calendar scadenza, boolean completato,
-            boolean manuale, boolean scaduto, java.awt.Color sfondo, String immagine,
+    public ToDo(String titolo, String descrizione, URI link, Calendar scadenza, boolean completato,
+            boolean manuale, boolean scaduto, java.awt.Color sfondo, URL immagine,
             Checklist checklist) {
         this.titolo = titolo;
         this.descrizione = descrizione;
@@ -64,12 +66,12 @@ public class ToDo {
     }
 
 
-    public String getLink() {
+    public URI getLink() {
         return link;
     }
 
 
-    public void setLink(String link) {
+    public void setLink(URI link) {
         this.link = link;
     }
 
@@ -133,12 +135,12 @@ public class ToDo {
     }
 
 
-    public String getImmagine() {
+    public URL getImmagine() {
         return immagine;
     }
 
 
-    public void setImmagine(String immagine) {
+    public void setImmagine(URL immagine) {
         this.immagine = immagine;
     }
 

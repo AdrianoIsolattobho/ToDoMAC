@@ -7,6 +7,9 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -234,8 +237,14 @@ public class Controller {
         scadenza.set(2025, Calendar.OCTOBER, 15);
 
         // Creazione ToDo per la bacheca Tempo Libero
-        ToDo t1 = new ToDo("Lista della spesa", "Comprare tutto al supermercato", 
-                "www.supermercato.it", scadenza, false, false, false, new Color(255, 102, 102), "immagine", c1);
+        ToDo t1;
+        try {
+            t1 = new ToDo("Lista della spesa", "Comprare tutto al supermercato",
+                    new URI("https", "www.google.it", null, null), scadenza, false, false, false, new Color(255, 102, 102), null, c1);
+        } catch (URISyntaxException e) {
+            // Gestione dell'eccezione
+            t1 = new ToDo("Lista della spesa", "Comprare tutto al supermercato", scadenza, false, false, false);
+        }
         ToDo t2 = new ToDo("Preparare la cena", "Cucinare le polpette", scadenza, false, false, false);
 
         // Creazione ToDo per la bacheca Università
