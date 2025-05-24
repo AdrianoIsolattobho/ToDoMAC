@@ -12,7 +12,6 @@ public class Main extends JPanel {
     private JPanel baUni;
     private JPanel baLav;
     private JPanel baFre;
-    private JButton aggiungiTodo;
     private JPanel navBar;
     private JPanel contenitoreToDoU;
     private JPanel contenitoreToDoL;
@@ -35,11 +34,9 @@ public class Main extends JPanel {
 
     }
 
-    public JButton getAggiungiTodo() {
-        return aggiungiTodo;
-    }
 
-    public JButton getAggiungiBacheca() {
+
+    public JButton getAggiungiToDo() {
         return aggiungiToDo;
     }
 

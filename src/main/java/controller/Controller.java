@@ -63,6 +63,25 @@ public class Controller {
         view.setLocationRelativeTo(null);
         view.revalidate();
         view.repaint();
+        mainView.getAggiungiToDo().addActionListener(e -> {
+            CreaToDo creaTodoDialog = new CreaToDo(SwingUtilities.getWindowAncestor(mainView.getMain()));
+            creaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
+                // Qui va il codice per salvare il nuovo ToDo
+                String titolo = creaTodoDialog.getTitolo();
+                String descrizione = creaTodoDialog.getDescrizione();
+                String priorita = creaTodoDialog.getPriorita();
+                Object dataScadenza = creaTodoDialog.getDataScadenza();
+
+                // Logica per creare un nuovo ToDo
+                // ...
+
+                creaTodoDialog.dispose();
+                // Aggiorna l'interfaccia
+                aggiornaInterfacciaUtente(mainView);
+            });
+            creaTodoDialog.setVisible(true);
+        });
+
     }
 
     private void aggiornaInterfacciaUtente(Main mainView) {
@@ -103,7 +122,7 @@ public class Controller {
 
         // Crea un nuovo JPanel per il singolo ToDo
         JPanel todoPanel = new JPanel();
-        todoPanel.setLayout(new BorderLayout());
+        todoPanel.setLayout(new BoxLayout(todoPanel, BoxLayout.Y_AXIS));
         todoPanel.setBorder(BorderFactory.createTitledBorder(todo.getTitolo()));
 
         //set background del colore scelto
@@ -130,7 +149,7 @@ public class Controller {
         descrizionePanel.add(descrizioneLabel);
 
         //aggiunta al panel todo
-        todoPanel.add(descrizionePanel, BorderLayout.NORTH);
+        todoPanel.add(descrizionePanel);
 
         if (todo.getChecklist()!=null){
             JPanel checklistPanel = new JPanel();
@@ -161,7 +180,7 @@ public class Controller {
             }
             checklistPanel.revalidate();
             checklistPanel.repaint();
-            todoPanel.add(checklistPanel, BorderLayout.SOUTH);
+            todoPanel.add(checklistPanel);
             todoPanel.revalidate();
             todoPanel.repaint();
         }
