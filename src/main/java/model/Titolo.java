@@ -1,6 +1,6 @@
 package model;
 public enum Titolo {
-    Universita,
+    Università,
     TempoLibero,
     Lavoro
 }

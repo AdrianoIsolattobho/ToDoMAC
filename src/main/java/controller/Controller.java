@@ -3,15 +3,16 @@ package controller;
 import gui.*;
 
 import model.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Arrays;
 
 public class Controller {
 
@@ -49,17 +50,126 @@ public class Controller {
     }
 
     private void mostraMain() {
-        // Aggiorna la GUI con i dati dell'utente loggato
+
         Main mainView = view.getLogInView().getMainView();
         
-        // Qui potresti aggiornare elementi della GUI con i dati dell'utente
-        // Ad esempio, impostare il nome dell'utente, popolare le bacheche, ecc.
+        aggiornaInterfacciaUtente(mainView);
         
         view.setContentPane(mainView.getMain());
         view.pack();
         view.setLocationRelativeTo(null);
         view.revalidate();
         view.repaint();
+    }
+
+    private void aggiornaInterfacciaUtente(Main mainView) {
+        // Verifica se l'utente attuale è valido e ha delle bacheche
+        if (utenteAttuale != null && utenteAttuale.getBacheche() != null) {
+            mainView.setNomeText( utenteAttuale.getEmail());
+            Bacheca[] bachecheUtente = utenteAttuale.getBacheche();
+
+            for (Bacheca bacheca : bachecheUtente) {
+                if (bacheca != null && bacheca.getToDoList() != null) {
+
+                    JPanel contenitoreToDo = null;
+
+                    switch (bacheca.getTitolo()) {
+                        case TempoLibero: // Bacheca per Tempo Libero
+                            contenitoreToDo = mainView.getContenitoreToDoT();
+                            break;
+                        case Università: // Bacheca per Università
+                            contenitoreToDo = mainView.getContenitoreToDoU();
+                            break;
+                        case Lavoro: // Bacheca per Lavoro
+                            contenitoreToDo = mainView.getContenitoreToDoL();
+                            break;
+                    }
+
+                        // Aggiunge ogni ToDo al contenitore specifico
+                        for (ToDo todo : bacheca.getToDoList()) {
+                            visualizzaToDo(todo, contenitoreToDo);
+                        }
+
+                }
+            }
+        }
+    }
+
+    // Metodo per aggiungere visivamente un ToDo al contenitore
+    private void visualizzaToDo(@NotNull ToDo todo, @NotNull JPanel contenitoreToDo) {
+
+        // Crea un nuovo JPanel per il singolo ToDo
+        JPanel todoPanel = new JPanel();
+        todoPanel.setLayout(new BorderLayout());
+        todoPanel.setBorder(BorderFactory.createTitledBorder(todo.getTitolo()));
+
+        //set background del colore scelto
+        if (todo.getSfondo()!=null){
+            todoPanel.setBackground(todo.getSfondo());
+        }else {
+            todoPanel.setBackground(new Color(255, 255, 255));
+        }
+
+        //panel con label e checkbox
+        JPanel descrizionePanel = new JPanel();
+        descrizionePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+        // Crea e aggiungi una JLabel con il titolo del ToDo
+        JLabel descrizioneLabel = new JLabel(todo.getDescrizione());
+        descrizioneLabel.setFont(new Font("Arial", Font.PLAIN , 16));
+
+        //creazione checkbox
+        JCheckBox checkboxTodo = new JCheckBox();
+        checkboxTodo.setSelected(todo.isCompletato());
+
+        //aggiunta al panel descrizione
+        descrizionePanel.add(checkboxTodo);
+        descrizionePanel.add(descrizioneLabel);
+
+        //aggiunta al panel todo
+        todoPanel.add(descrizionePanel, BorderLayout.NORTH);
+
+        if (todo.getChecklist()!=null){
+            JPanel checklistPanel = new JPanel();
+            checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
+            checklistPanel.setBorder(BorderFactory.createTitledBorder(todo.getChecklist().getNomeChecklist()));
+
+
+            //for each delle attività
+            for (Attività att : todo.getChecklist().getAttività()) {
+                //panel delle attività
+                JPanel attivitàPanel = new JPanel();
+                attivitàPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+                // Crea una checkbox e imposta lo stato in base allo stato dell'attività
+                JCheckBox checkBoxAtt = new JCheckBox();
+                checkBoxAtt.setSelected(att.isCompletata());
+
+                //label delle attività
+                JLabel attLabel = new JLabel(att.getNome());
+                attLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
+                //aggiunta al panel attività
+                attivitàPanel.add(checkBoxAtt);
+                attivitàPanel.add(attLabel);
+
+                //aggiunta al panel checklist
+                checklistPanel.add(attivitàPanel);
+            }
+            checklistPanel.revalidate();
+            checklistPanel.repaint();
+            todoPanel.add(checklistPanel, BorderLayout.SOUTH);
+            todoPanel.revalidate();
+            todoPanel.repaint();
+        }
+
+        
+
+        contenitoreToDo.add(todoPanel);
+        
+
+        contenitoreToDo.revalidate();
+        contenitoreToDo.repaint();
     }
 
     /**
@@ -69,7 +179,7 @@ public class Controller {
      *
      * @param view la vista principale
      */
-    public Controller(Scelta view) {
+    public Controller(@NotNull Scelta view) {
         this.view = view;
         this.utentiRegistrati = new HashMap<>();
         this.bacheche = new ArrayList<>();
@@ -102,12 +212,12 @@ public class Controller {
         });
     }
 
+
     /**
      * Inizializza i dati di esempio per l'applicazione.
-     * Simile a quanto fatto in Programma.java
      */
     private void inizializzaDatiEsempio() {
-        // Creazione attività
+        // Creazione attività per la checklist della spesa
         Attività a1 = new Attività("comprare il latte", false);
         Attività a2 = new Attività("comprare il pane", false);
         Attività a3 = new Attività("comprare le uova", false);
@@ -117,58 +227,58 @@ public class Controller {
         serieAttività.add(a1);
         serieAttività.add(a2);
         serieAttività.add(a3);
-        Checklist c1 = new Checklist(serieAttività);
+        Checklist c1 = new Checklist("Compra",serieAttività);
 
-        // Creazione ToDo
+        // Creazione data di scadenza
         Calendar scadenza = Calendar.getInstance();
         scadenza.set(2025, Calendar.OCTOBER, 15);
 
-        ToDo t1 = new ToDo("comprare la spesa", "comprare la spesa al supermercato", 
-                "www.supermercato.it", scadenza, false, false, false, "sfondo", "immagine", c1);
-        ToDo t2 = new ToDo("cucinare", "cucinare le polpette", scadenza, false, false, false);
+        // Creazione ToDo per la bacheca Tempo Libero
+        ToDo t1 = new ToDo("Lista della spesa", "Comprare tutto al supermercato", 
+                "www.supermercato.it", scadenza, false, false, false, new Color(255, 102, 102), "immagine", c1);
+        ToDo t2 = new ToDo("Preparare la cena", "Cucinare le polpette", scadenza, false, false, false);
 
-        todos.add(t1);
-        todos.add(t2);
+        // Creazione ToDo per la bacheca Università
+        ToDo t3 = new ToDo("Studiare Java", "Ripassare le basi di programmazione", scadenza, true, false, false);
+        ToDo t4 = new ToDo("Preparare esame", "Completare gli esercizi", scadenza, false, true, false);
+        
+        // Creazione ToDo per la bacheca Lavoro
+        ToDo t5 = new ToDo("Meeting settimanale", "Preparare la presentazione", scadenza, false, true, false);
+        ToDo t6 = new ToDo("Email clienti", "Rispondere alle email urgenti", scadenza, true, false, false);
 
-        // Creazione bacheca
-        ArrayList<ToDo> listaToDo1 = new ArrayList<>();
-        listaToDo1.add(t1);
-        listaToDo1.add(t2);
-        Bacheca b1 = new Bacheca(Titolo.TempoLibero, "Bacheca per la spesa", Ordinamento.AZ, listaToDo1);
-        
-        bacheche.add(b1);
+        // Aggiungi tutti i ToDo alla lista generale
+        todos.addAll(Arrays.asList(t1, t2, t3, t4, t5, t6));
 
-        // Creazione utente
-        Bacheca bacheche1[] = new Bacheca[3];
-        bacheche1[0] = b1;
-        Utente u1 = new Utente("giovanni@gmail.com", "3457890", bacheche1);
-        
-        // Aggiungi utente test per login
-        Utente utenteTest = new Utente("test@email.com", "password", bacheche1);
-        
-        utentiRegistrati.put(u1.getEmail(), u1);
-        utentiRegistrati.put(utenteTest.getEmail(), utenteTest);
+        // Creazione bacheca Tempo Libero
+        ArrayList<ToDo> todoTempoLibero = new ArrayList<>();
+        todoTempoLibero.add(t1);
+        todoTempoLibero.add(t2);
+        Bacheca bTempoLibero = new Bacheca(Titolo.TempoLibero, "Bacheca personale", Ordinamento.AZ, todoTempoLibero);
 
-        // Creazione seconda bacheca per condivisione
-        ArrayList<ToDo> listaToDo2 = new ArrayList<>();
-        ToDo t3 = new ToDo("comprare la frutta", "comprare la frutta al mercato", scadenza, false, false, false);
-        listaToDo2.add(t3);
-        Bacheca b2 = new Bacheca(Titolo.TempoLibero, "Bacheca prova condivisione", Ordinamento.AZ, listaToDo2);
-        
-        todos.add(t3);
-        bacheche.add(b2);
-        
-        // Creazione utente per condivisione
-        Bacheca bacheche2[] = new Bacheca[3];
-        bacheche2[0] = b2;
-        Utente u2 = new Utente("storti@gmail.com", "356780", bacheche2);
-        utentiRegistrati.put(u2.getEmail(), u2);
+        // Creazione bacheca Università
+        ArrayList<ToDo> todoUniversità = new ArrayList<>();
+        todoUniversità.add(t3);
+        todoUniversità.add(t4);
+        Bacheca bUniversità = new Bacheca(Titolo.Università, "Bacheca università", Ordinamento.SCADENZA_ASC, todoUniversità);
 
-        // Creazione condivisione
-        ArrayList<Utente> condivisiCon = new ArrayList<>();
-        condivisiCon.add(u2);
-        Condivisione co1 = new Condivisione(u1, t1, condivisiCon);
-        condivisioni.add(co1);
+        // Creazione bacheca Lavoro
+        ArrayList<ToDo> todoLavoro = new ArrayList<>();
+        todoLavoro.add(t5);
+        todoLavoro.add(t6);
+        Bacheca bLavoro = new Bacheca(Titolo.Lavoro, "Bacheca lavoro", Ordinamento.AZ, todoLavoro);
+
+        // Aggiungi tutte le bacheche alla lista generale
+        bacheche.addAll(Arrays.asList(bTempoLibero, bUniversità, bLavoro));
+
+        // Creazione array bacheche per l'utente
+        Bacheca[] bachecheutente = new Bacheca[3];
+        bachecheutente[0] = bTempoLibero;
+        bachecheutente[1] = bUniversità;
+        bachecheutente[2] = bLavoro;
+
+        // Creazione utente con tutte le bacheche
+        Utente utente = new Utente("a", "a", bachecheutente);
+        utentiRegistrati.put(utente.getEmail(), utente);
     }
 
     /**
@@ -240,76 +350,6 @@ public class Controller {
         this.mostraLogin();
     }
 
-    /**
-     * Metodo per aggiungere un nuovo ToDo all'utente corrente.
-     * 
-     * @param titolo titolo del ToDo
-     * @param descrizione descrizione del ToDo
-     * @param scadenza data di scadenza
-     * @param bachecaIndex indice della bacheca in cui aggiungere il ToDo
-     */
-    public void aggiungiToDo(String titolo, String descrizione, Calendar scadenza, int bachecaIndex) {
-        if (utenteAttuale != null && bachecaIndex >= 0 && bachecaIndex < utenteAttuale.getBacheche().length &&
-            utenteAttuale.getBacheche()[bachecaIndex] != null) {
-            
-            ToDo nuovoToDo = new ToDo(titolo, descrizione, scadenza, false, false, false);
-            todos.add(nuovoToDo);
-            
-            Bacheca bacheca = utenteAttuale.getBacheche()[bachecaIndex];
-            bacheca.getToDoList().add(nuovoToDo);
-            
-            // Aggiorna la GUI se necessario
-        }
-    }
-
-    /**
-     * Metodo per aggiungere una nuova bacheca all'utente corrente.
-     * 
-     * @param titolo titolo della bacheca
-     * @param descrizione descrizione della bacheca
-     */
-    public void aggiungiBacheca(Titolo titolo, String descrizione) {
-        if (utenteAttuale != null) {
-            Bacheca nuovaBacheca = new Bacheca(titolo, descrizione, Ordinamento.AZ, new ArrayList<>());
-            bacheche.add(nuovaBacheca);
-            
-            // Trova uno slot vuoto nell'array delle bacheche dell'utente
-            Bacheca[] bachecheDellUtente = utenteAttuale.getBacheche();
-            for (int i = 0; i < bachecheDellUtente.length; i++) {
-                if (bachecheDellUtente[i] == null) {
-                    bachecheDellUtente[i] = nuovaBacheca;
-                    break;
-                }
-            }
-            
-            // Aggiorna la GUI se necessario
-        }
-    }
-
-    /**
-     * Metodo per condividere un ToDo con un altro utente.
-     * 
-     * @param toDoIndex indice del ToDo da condividere
-     * @param emailDestinatario email dell'utente con cui condividere
-     */
-    public void condividiToDo(int toDoIndex, String emailDestinatario) {
-        if (utenteAttuale != null && toDoIndex >= 0 && toDoIndex < todos.size()) {
-            Utente destinatario = utentiRegistrati.get(emailDestinatario);
-            if (destinatario != null) {
-                ToDo toDoCondiviso = todos.get(toDoIndex);
-                ArrayList<Utente> utentiCondivisi = new ArrayList<>();
-                utentiCondivisi.add(destinatario);
-                
-                Condivisione nuovaCondivisione = new Condivisione(utenteAttuale, toDoCondiviso, utentiCondivisi);
-                condivisioni.add(nuovaCondivisione);
-                
-                JOptionPane.showMessageDialog(view, "ToDo condiviso con successo con " + emailDestinatario, 
-                        "Condivisione", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(view, "Utente non trovato.", "Errore", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
 
     /**
      * Ordina i ToDo di una bacheca secondo il criterio specificato.
@@ -356,41 +396,7 @@ public class Controller {
         }
     }
     
-    /**
-     * Cambia il criterio di ordinamento di una bacheca e riordina i ToDo.
-     * 
-     * @param bachecaIndex indice della bacheca
-     * @param nuovoOrdinamento nuovo criterio di ordinamento
-     */
-    public void cambiaOrdinamento(int bachecaIndex, Ordinamento nuovoOrdinamento) {
-        if (utenteAttuale != null && bachecaIndex >= 0 && bachecaIndex < utenteAttuale.getBacheche().length &&
-            utenteAttuale.getBacheche()[bachecaIndex] != null) {
-            
-            // Aggiorna l'ordinamento nella bacheca e riordina i ToDo
-            ordinaToDo(bachecaIndex, nuovoOrdinamento);
-            
-            // Notifica l'utente del cambiamento
-            JOptionPane.showMessageDialog(view, 
-                    "L'ordinamento della bacheca è stato cambiato in: " + nuovoOrdinamento.name(), 
-                    "Ordinamento cambiato", 
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-    
-    /**
-     * Ordina tutte le bacheche dell'utente corrente secondo i loro rispettivi criteri di ordinamento.
-     * Può essere utile dopo l'aggiunta di nuovi ToDo o la modifica di ToDo esistenti.
-     */
-    public void ordinaTutteLeBacheche() {
-        if (utenteAttuale != null) {
-            for (int i = 0; i < utenteAttuale.getBacheche().length; i++) {
-                if (utenteAttuale.getBacheche()[i] != null) {
-                    Bacheca bacheca = utenteAttuale.getBacheche()[i];
-                    ordinaToDo(i, bacheca.getOrdinamento());
-                }
-            }
-        }
-    }
+
 
     public static void main(String[] args) {
         StileSwing.applicaStile();

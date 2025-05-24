@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import model.*;
@@ -17,14 +18,14 @@ public class Programma {
         SerieAttività.add(a1);
         SerieAttività.add(a2);
         SerieAttività.add(a3);
-        Checklist c1 = new Checklist(SerieAttività);
+        Checklist c1 = new Checklist("Spesa",SerieAttività);
 
         //creazione ToDo
         Calendar scadenza = Calendar.getInstance();
         scadenza.set(2025, 10, 15);
 
         //usando costruttore completo
-        ToDo t1 = new ToDo("comprare la spesa", "comprare la spesa al supermercato", "www.supermercato.it", scadenza, false, false, false, "sfondo", "immagine", c1);
+        ToDo t1 = new ToDo("comprare la spesa", "comprare la spesa al supermercato", "www.supermercato.it", scadenza, false, false, false, new Color(10,10,10), "immagine", c1);
         //usando cotruttore senza elementi null
         ToDo t2 = new ToDo("cucinare", "cucinare le polpette",  scadenza, false, false, false);
 

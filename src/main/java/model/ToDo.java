@@ -9,14 +9,14 @@ public class ToDo {
     private boolean completato = false;
     private boolean manuale = false;
     private boolean scaduto = false;
-    private String sfondo;
+    private java.awt.Color sfondo;
     private String immagine;
     private Checklist checklist;
 
 
     // costruttore completo
     public ToDo(String titolo, String descrizione, String link, Calendar scadenza, boolean completato,
-            boolean manuale, boolean scaduto, String sfondo, String immagine,
+            boolean manuale, boolean scaduto, java.awt.Color sfondo, String immagine,
             Checklist checklist) {
         this.titolo = titolo;
         this.descrizione = descrizione;
@@ -123,12 +123,12 @@ public class ToDo {
         this.scaduto = scaduto;
     }
 
-    public String getSfondo() {
+    public java.awt.Color getSfondo() {
         return sfondo;
     }
 
 
-    public void setSfondo(String sfondo) {
+    public void setSfondo(java.awt.Color sfondo) {
         this.sfondo = sfondo;
     }
 
