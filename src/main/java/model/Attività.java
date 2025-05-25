@@ -1,10 +1,12 @@
 package model;
+/*
+ * Classe Attività
+ * Attività che compone il CheckList
+ */
 public class Attività {
     private String nome;
     private boolean completata = false;
 
-
-    //costruttore
     public Attività(String nome, boolean completata) {
         this.nome = nome;
         this.completata = completata;
@@ -12,7 +14,6 @@ public class Attività {
 
 
 
-    //getters e setters
     public String getNome() {
         return nome;
     }

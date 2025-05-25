@@ -7,9 +7,12 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -69,7 +72,7 @@ public class Controller {
                 // Qui va il codice per salvare il nuovo ToDo
                 String titolo = creaTodoDialog.getTitolo();
                 String descrizione = creaTodoDialog.getDescrizione();
-                String priorita = creaTodoDialog.getPriorita();
+
                 Object dataScadenza = creaTodoDialog.getDataScadenza();
 
                 // Logica per creare un nuovo ToDo
@@ -151,6 +154,7 @@ public class Controller {
         //aggiunta al panel todo
         todoPanel.add(descrizionePanel);
 
+        //aggiunta checklist
         if (todo.getChecklist()!=null){
             JPanel checklistPanel = new JPanel();
             checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
@@ -184,9 +188,71 @@ public class Controller {
             todoPanel.revalidate();
             todoPanel.repaint();
         }
+        //fine checklist
 
-        
 
+        // Dopo l'aggiunta della checklist, aggiungi il link se esiste
+        if (todo.getLink() != null) {
+            JPanel uriPanel = new JPanel();
+            uriPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+            JLabel uriLabel = new JLabel("Link: ");
+            JLabel linkLabel = new JLabel("<html><a href=''>" + todo.getLink() + "</a></html>");
+            linkLabel.setForeground(Color.BLUE);
+            linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            linkLabel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (Desktop.isDesktopSupported()) {
+                        try {
+                            Desktop.getDesktop().browse(todo.getLink());
+                        } catch (IOException ex) {
+                            JOptionPane.showMessageDialog(todoPanel,
+                                    "Impossibile aprire il link: " + ex.getMessage(),
+                                    "Errore", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+            });
+
+            uriPanel.add(uriLabel);
+            uriPanel.add(linkLabel);
+            todoPanel.add(uriPanel);
+        }
+
+        // Aggiungi la data di scadenza
+        if (todo.getScadenza() != null) {
+            JPanel scadenzaPanel = new JPanel();
+            scadenzaPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+            // Formatta la data
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            String dataFormattata = dateFormat.format(todo.getScadenza().getTime());
+
+            JLabel scadenzaLabel = new JLabel("Scadenza: ");
+            JLabel dataLabel = new JLabel(dataFormattata);
+
+            // Controlla se la data di scadenza è passata
+            Calendar oggi = Calendar.getInstance();
+            oggi.set(Calendar.HOUR_OF_DAY, 0);
+            oggi.set(Calendar.MINUTE, 0);
+            oggi.set(Calendar.SECOND, 0);
+            oggi.set(Calendar.MILLISECOND, 0);
+
+            // Imposta il colore rosso se la scadenza è già passata
+            if (todo.getScadenza().before(oggi)) {
+                dataLabel.setForeground(Color.RED);
+                dataLabel.setFont(new Font(dataLabel.getFont().getName(), Font.BOLD, dataLabel.getFont().getSize()));
+            }
+
+            scadenzaPanel.add(scadenzaLabel);
+            scadenzaPanel.add(dataLabel);
+            todoPanel.add(scadenzaPanel);
+        }
+
+
+        //aggiunta al contenitore
         contenitoreToDo.add(todoPanel);
         
 
@@ -255,6 +321,10 @@ public class Controller {
         Calendar scadenza = Calendar.getInstance();
         scadenza.set(2025, Calendar.OCTOBER, 15);
 
+        //Creazione data di scadenza passata
+        Calendar scadenzaPassata = Calendar.getInstance();
+        scadenzaPassata.set(2015, Calendar.OCTOBER, 15);
+
         // Creazione ToDo per la bacheca Tempo Libero
         ToDo t1;
         try {
@@ -264,7 +334,7 @@ public class Controller {
             // Gestione dell'eccezione
             t1 = new ToDo("Lista della spesa", "Comprare tutto al supermercato", scadenza, false, false, false);
         }
-        ToDo t2 = new ToDo("Preparare la cena", "Cucinare le polpette", scadenza, false, false, false);
+        ToDo t2 = new ToDo("Preparare la cena", "Cucinare le polpette", scadenzaPassata, false, false, false);
 
         // Creazione ToDo per la bacheca Università
         ToDo t3 = new ToDo("Studiare Java", "Ripassare le basi di programmazione", scadenza, true, false, false);
@@ -376,52 +446,6 @@ public class Controller {
         JOptionPane.showMessageDialog(registerView, "Registrazione avvenuta con successo! Effettua il login.",
                 "Successo", JOptionPane.INFORMATION_MESSAGE);
         this.mostraLogin();
-    }
-
-
-    /**
-     * Ordina i ToDo di una bacheca secondo il criterio specificato.
-     * 
-     * @param bachecaIndex indice della bacheca nell'array dell'utente
-     * @param nuovoOrdinamento nuovo criterio di ordinamento
-     */
-    public void ordinaToDo(int bachecaIndex, Ordinamento nuovoOrdinamento) {
-        if (utenteAttuale != null && bachecaIndex >= 0 && bachecaIndex < utenteAttuale.getBacheche().length &&
-            utenteAttuale.getBacheche()[bachecaIndex] != null) {
-            
-            Bacheca bacheca = utenteAttuale.getBacheche()[bachecaIndex];
-            ArrayList<ToDo> toDoList = bacheca.getToDoList();
-            
-            // Imposta il nuovo ordinamento
-            bacheca.setOrdinamento(nuovoOrdinamento);
-            
-            // Ordina la lista di ToDo in base al criterio specificato
-            switch (nuovoOrdinamento) {
-                case AZ:
-                    Collections.sort(toDoList, Comparator.comparing(ToDo::getTitolo));
-                    break;
-                case ZA:
-                    Collections.sort(toDoList, Comparator.comparing(ToDo::getTitolo).reversed());
-                    break;
-                case CREAZIONE_ASC:
-                    Collections.sort(toDoList, Comparator.comparing(ToDo::getCreazione));
-                    break;
-                case CREAZIONE_DESC:
-                    Collections.sort(toDoList, Comparator.comparing(ToDo::getCreazione).reversed());
-                    break;
-                case SCADENZA_ASC:
-                    Collections.sort(toDoList, Comparator.comparing(ToDo::getScadenza));
-                    break;
-                case SCADENZA_DESC:
-                    Collections.sort(toDoList, Comparator.comparing(ToDo::getScadenza).reversed());
-                    break;
-            }
-            
-            // Aggiorna la bacheca con la lista ordinata
-            bacheca.setToDoList(toDoList);
-            
-            // Qui potresti aggiornare la GUI per mostrare la nuova sequenza ordinata
-        }
     }
     
 
