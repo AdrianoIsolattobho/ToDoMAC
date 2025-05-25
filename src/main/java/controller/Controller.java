@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -251,6 +252,35 @@ public class Controller {
             todoPanel.add(scadenzaPanel);
         }
 
+        if (todo.getImmagine()!=null){
+            JPanel immaginePanel = new JPanel();
+            immaginePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+            URL percorsoImmagine = todo.getImmagine();
+            ImageIcon iconaOriginale = new ImageIcon(percorsoImmagine);
+            Image immagine = iconaOriginale.getImage();
+
+            //odio java swing
+            // Ottieni le dimensioni originali
+            int larghezzaOriginale = iconaOriginale.getIconWidth();
+            int altezzaOriginale = iconaOriginale.getIconHeight();
+
+            // Calcola la nuova larghezza mantenendo le proporzioni
+            int altezzaDesiderata = 100;
+            int nuovaLarghezza = (int) (larghezzaOriginale * ((double) altezzaDesiderata / altezzaOriginale));
+
+            // Ridimensiona l'immagine mantenendo le proporzioni
+            Image immagineRidimensionata = immagine.getScaledInstance(nuovaLarghezza, altezzaDesiderata, Image.SCALE_SMOOTH);
+            ImageIcon iconaRidimensionata = new ImageIcon(immagineRidimensionata);
+
+
+            JLabel labelImmagine = new JLabel(iconaRidimensionata);
+
+            immaginePanel.add(labelImmagine);
+            todoPanel.add(immaginePanel);
+
+        }
+
 
         //aggiunta al contenitore
         contenitoreToDo.add(todoPanel);
@@ -341,7 +371,7 @@ public class Controller {
         ToDo t4 = new ToDo("Preparare esame", "Completare gli esercizi", scadenza, false, true, false);
         
         // Creazione ToDo per la bacheca Lavoro
-        ToDo t5 = new ToDo("Meeting settimanale", "Preparare la presentazione", scadenza, false, true, false);
+        ToDo t5 = new ToDo("Meeting settimanale", "Preparare la presentazione",null, scadenza, false, true, false,new Color(13,200,3), getClass().getResource("/img/keynote.png"),null);
         ToDo t6 = new ToDo("Email clienti", "Rispondere alle email urgenti", scadenza, true, false, false);
 
         // Aggiungi tutti i ToDo alla lista generale
