@@ -129,24 +129,31 @@ public class Controller {
         todoPanel.setLayout(new BoxLayout(todoPanel, BoxLayout.Y_AXIS));
         todoPanel.setBorder(BorderFactory.createTitledBorder(todo.getTitolo()));
 
-        //set background del colore scelto
+        //Gestione del colore di sfondo
+        Color backgroundColor;
         if (todo.getSfondo()!=null){
-            todoPanel.setBackground(todo.getSfondo());
+            backgroundColor=todo.getSfondo();
         }else {
-            todoPanel.setBackground(new Color(255, 255, 255));
+            backgroundColor=new Color(255, 255, 255);
         }
+        Color coloreTesto= getContrasto(backgroundColor);
+        todoPanel.setBackground(backgroundColor);
 
         //panel con label e checkbox
         JPanel descrizionePanel = new JPanel();
         descrizionePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        descrizionePanel.setBackground(backgroundColor);
 
         // Crea e aggiungi una JLabel con il titolo del ToDo
         JLabel descrizioneLabel = new JLabel(todo.getDescrizione());
         descrizioneLabel.setFont(new Font("Arial", Font.PLAIN , 16));
+        descrizioneLabel.setForeground(coloreTesto);
 
         //creazione checkbox
         JCheckBox checkboxTodo = new JCheckBox();
         checkboxTodo.setSelected(todo.isCompletato());
+        checkboxTodo.setBackground(backgroundColor);
+        checkboxTodo.setForeground(coloreTesto);
 
         //aggiunta al panel descrizione
         descrizionePanel.add(checkboxTodo);
@@ -160,21 +167,25 @@ public class Controller {
             JPanel checklistPanel = new JPanel();
             checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
             checklistPanel.setBorder(BorderFactory.createTitledBorder(todo.getChecklist().getNomeChecklist()));
-
+            checklistPanel.setBackground(backgroundColor);
 
             //for each delle attività
             for (Attività att : todo.getChecklist().getAttività()) {
                 //panel delle attività
                 JPanel attivitàPanel = new JPanel();
                 attivitàPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                attivitàPanel.setBackground(backgroundColor);
 
                 // Crea una checkbox e imposta lo stato in base allo stato dell'attività
                 JCheckBox checkBoxAtt = new JCheckBox();
                 checkBoxAtt.setSelected(att.isCompletata());
+                checkBoxAtt.setBackground(backgroundColor);
+                checkBoxAtt.setForeground(coloreTesto);
 
                 //label delle attività
                 JLabel attLabel = new JLabel(att.getNome());
                 attLabel.setFont(new Font("Arial", Font.BOLD, 16));
+                attLabel.setForeground(coloreTesto);
 
                 //aggiunta al panel attività
                 attivitàPanel.add(checkBoxAtt);
@@ -196,6 +207,7 @@ public class Controller {
         if (todo.getLink() != null) {
             JPanel uriPanel = new JPanel();
             uriPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+            uriPanel.setBackground(backgroundColor);
 
             JLabel uriLabel = new JLabel("Link: ");
             JLabel linkLabel = new JLabel("<html><a href=''>" + todo.getLink() + "</a></html>");
@@ -226,6 +238,7 @@ public class Controller {
         if (todo.getScadenza() != null) {
             JPanel scadenzaPanel = new JPanel();
             scadenzaPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+            scadenzaPanel.setBackground(backgroundColor);
 
             // Formatta la data
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -233,6 +246,8 @@ public class Controller {
 
             JLabel scadenzaLabel = new JLabel("Scadenza: ");
             JLabel dataLabel = new JLabel(dataFormattata);
+            dataLabel.setForeground(coloreTesto);
+            scadenzaLabel.setForeground(coloreTesto);
 
             // Controlla se la data di scadenza è passata
             Calendar oggi = Calendar.getInstance();
@@ -255,6 +270,7 @@ public class Controller {
         if (todo.getImmagine()!=null){
             JPanel immaginePanel = new JPanel();
             immaginePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+            immaginePanel.setBackground(backgroundColor);
 
             URL percorsoImmagine = todo.getImmagine();
             ImageIcon iconaOriginale = new ImageIcon(percorsoImmagine);
@@ -409,6 +425,19 @@ public class Controller {
         utentiRegistrati.put(utente.getEmail(), utente);
     }
 
+    // Metodo per calcolare se usare testo chiaro o scuro in base al colore di sfondo
+    private Color getContrasto(Color background) {
+        // Formula per calcolare la luminosità del colore
+        // Basata sulla percezione dell'occhio umano (0.299R + 0.587G + 0.114B)
+        double luminance = (0.299 * background.getRed() +
+                0.587 * background.getGreen() +
+                0.114 * background.getBlue()) / 255;
+
+        // Se la luminosità è superiore a 0.5, usare testo scuro, altrimenti testo chiaro
+        return luminance > 0.5 ? Color.BLACK : Color.WHITE;
+    }
+
+
     /**
      * Gestisce il login dell'utente.
      * Controlla se i campi sono compilati e verifica le credenziali.
@@ -430,7 +459,6 @@ public class Controller {
         Utente utente = utentiRegistrati.get(email);
         if (utente != null && utente.getPassword().equals(password)) {
             utenteAttuale = utente;
-            JOptionPane.showMessageDialog(loginView, "Login effettuato!", "Successo", JOptionPane.INFORMATION_MESSAGE);
             this.mostraMain();
         } else {
             JOptionPane.showMessageDialog(loginView, "Email o password non corretti.", "Errore",

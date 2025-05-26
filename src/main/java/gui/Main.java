@@ -25,9 +25,6 @@ public class Main extends JPanel {
         esci.setBounds(0, 0, 30, 25);
         URL imageUrl = getClass().getResource("/img/logout.png");
         esci.setIcon(new ImageIcon(imageUrl));
-        contenitoreToDoU.setOpaque(false);
-        contenitoreToDoL.setOpaque(false);
-        contenitoreToDoT.setOpaque(false);
         contenitoreToDoU.setLayout(new BoxLayout(contenitoreToDoU, BoxLayout.Y_AXIS));
         contenitoreToDoL.setLayout(new BoxLayout(contenitoreToDoL, BoxLayout.Y_AXIS));
         contenitoreToDoT.setLayout(new BoxLayout(contenitoreToDoT, BoxLayout.Y_AXIS));
