@@ -3,26 +3,32 @@ import java.util.ArrayList;
 
 public class Checklist {
     private String nomeChecklist;
-    private Boolean completata = false;
-    private ArrayList<Attività> attività = new ArrayList<>();
+    private Boolean completata;
+    private ArrayList<Attivita> attivita;
 
-    // costruttore
-    public Checklist(String nome,ArrayList<Attività> attività) {
-        this.nomeChecklist = nome;
-        this.attività = new ArrayList<>();
-        this.attività.addAll(attività);
+    public Boolean getCompletata() {
+        return completata;
     }
 
+    // costruttore
+    public Checklist(String nome,ArrayList<Attivita> attivita) {
+        this.nomeChecklist = nome;
+        this.attivita = new ArrayList<>();
+        this.attivita.addAll(attivita);
+        this.completata = false;
+    }
+
+    public void setCompletata(Boolean completata) {
+        this.completata = completata;
+    }
 
     public String getNomeChecklist() {
         return nomeChecklist;
     }
 
     // getters e setters
-    public ArrayList<Attività> getAttività() {
-        return attività;
+    public ArrayList<Attivita> getAttivita() {
+        return attivita;
     }
-    public void setAttività(ArrayList<Attività> attività) {
-        this.attività = attività;
-    }  
+
 }

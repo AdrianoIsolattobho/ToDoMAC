@@ -1,7 +1,6 @@
 package gui;
 
 import javax.swing.*;
-import java.net.URL;
 
 
 public class Main extends JPanel {
@@ -16,6 +15,7 @@ public class Main extends JPanel {
     private JPanel contenitoreToDoU;
     private JPanel contenitoreToDoL;
     private JPanel contenitoreToDoT;
+    private JButton mostraCompletati;
 
 
     /*
@@ -23,15 +23,27 @@ public class Main extends JPanel {
      */
     public void setupComponents() {
         esci.setBounds(0, 0, 30, 25);
-        URL imageUrl = getClass().getResource("/img/logout.png");
-        esci.setIcon(new ImageIcon(imageUrl));
+
+        try {
+            esci.setIcon(new ImageIcon(getClass().getResource("/img/logout.png")));
+        } catch (Exception e) {
+            // Se l'immagine non viene trovata, utilizza del testo al posto dell'icona
+            esci.setText("Esci");
+            esci.setToolTipText("Esci dall'applicazione");
+        }
         contenitoreToDoU.setLayout(new BoxLayout(contenitoreToDoU, BoxLayout.Y_AXIS));
         contenitoreToDoL.setLayout(new BoxLayout(contenitoreToDoL, BoxLayout.Y_AXIS));
         contenitoreToDoT.setLayout(new BoxLayout(contenitoreToDoT, BoxLayout.Y_AXIS));
 
     }
 
+    public JButton getEsci() {
+        return esci;
+    }
 
+    public JButton getMostraCompletati() {
+        return mostraCompletati;
+    }
 
     public JButton getAggiungiToDo() {
         return aggiungiToDo;
@@ -42,17 +54,6 @@ public class Main extends JPanel {
     }
 
 
-    public JPanel getBaFre() {
-        return baFre;
-    }
-
-    public JPanel getBaLav() {
-        return baLav;
-    }
-
-    public JPanel getBaUni() {
-        return baUni;
-    }
 
     public JPanel getMain() {
         return this.main;

@@ -1,76 +1,119 @@
 package gui;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
 
 public class CreaToDo extends JDialog {
     private JPanel mainPanel;
-    private JTextField titoloField;
-    private JTextArea descrizioneArea;
-    private JButton salvaButton;
-    private JButton annullaButton;
-    private JComboBox<String> prioritaCombo;
-    private JSpinner dataScadenzaSpinner;
+    private JTextField titolo;
+    private JButton attivitaButton;
+    private JTextField linkField;
+    private JButton colorButton;
+    private JButton dataScadenzaButton;
+    private JButton SalvaButton;
+    private JPanel savePanel;
+    private JPanel inputPanel;
+    private JPanel nomePanel;
+    private JPanel attivitaPanel;
+    private JPanel linkPanel;
+    private JPanel scadenzaPanel;
+    private JPanel colorePanel;
+    private JPanel bachecaPanel;
+    private JComboBox bachecaBox;
+    private JTextField descrizioneField;
+    private JPanel descrizionePanel;
+    private JButton sfogliaButton;
+    private JPanel previewPanel;
 
-    public CreaToDo(Window parent) {
-        super(parent, "Crea nuovo ToDo", ModalityType.APPLICATION_MODAL);
+    public void setupComponents() {
+        this.setTitle("Crea nuovo ToDo");
+        this.setModal(true);
+        this.setLocationRelativeTo(null);
+        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        this.setContentPane(mainPanel);
+        this.pack();
+    }
 
-        // Inizializzazione componenti
-        mainPanel = new JPanel(new BorderLayout(10, 10));
-        JPanel formPanel = new JPanel(new GridLayout(4, 2, 5, 5));
+    public JTextField getTitolo() {
+        return titolo;
+    }
 
-        titoloField = new JTextField();
-        descrizioneArea = new JTextArea(5, 20);
-        prioritaCombo = new JComboBox<>(new String[]{"Bassa", "Media", "Alta"});
-        dataScadenzaSpinner = new JSpinner(new SpinnerDateModel());
+    public JPanel getSavePanel() {
+        return savePanel;
+    }
 
-        formPanel.add(new JLabel("Titolo:"));
-        formPanel.add(titoloField);
-        formPanel.add(new JLabel("Descrizione:"));
-        formPanel.add(new JScrollPane(descrizioneArea));
-        formPanel.add(new JLabel("Priorità:"));
-        formPanel.add(prioritaCombo);
-        formPanel.add(new JLabel("Data scadenza:"));
-        formPanel.add(dataScadenzaSpinner);
+    public JPanel getInputPanel() {
+        return inputPanel;
+    }
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        salvaButton = new JButton("Salva");
-        annullaButton = new JButton("Annulla");
+    public JPanel getNomePanel() {
+        return nomePanel;
+    }
 
-        buttonPanel.add(salvaButton);
-        buttonPanel.add(annullaButton);
+    public JPanel getAttivitaPanel() {
+        return attivitaPanel;
+    }
 
-        mainPanel.add(formPanel, BorderLayout.CENTER);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+    public JPanel getLinkPanel() {
+        return linkPanel;
+    }
 
-        // Configurazione pulsanti
-        annullaButton.addActionListener(e -> dispose());
+    public JPanel getScadenzaPanel() {
+        return scadenzaPanel;
+    }
 
-        // Configurazione dialog
-        setContentPane(mainPanel);
-        setSize(400, 300);
-        setLocationRelativeTo(parent);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    public JPanel getColorePanel() {
+        return colorePanel;
+    }
+
+    public JPanel getBachecaPanel() {
+        return bachecaPanel;
+    }
+
+    public JComboBox getBachecaBox() {
+        return bachecaBox;
+    }
+
+    public JTextField getDescrizioneField() {
+        return descrizioneField;
+    }
+
+    public JPanel getDescrizionePanel() {
+        return descrizionePanel;
+    }
+
+    public JButton getSfogliaButton() {
+        return sfogliaButton;
+    }
+
+    public JPanel getPreviewPanel() {
+        return previewPanel;
+    }
+
+    public JPanel getMainPanel() {
+        return mainPanel;
     }
 
     public JButton getSalvaButton() {
-        return salvaButton;
+        return SalvaButton;
     }
 
-    public String getTitolo() {
-        return titoloField.getText();
+    public JTextField getTitoloField() {
+        return titolo;
     }
 
-    public String getDescrizione() {
-        return descrizioneArea.getText();
+    public JTextField getLinkField() {
+        return linkField;
     }
 
-    public String getPriorita() {
-        return (String) prioritaCombo.getSelectedItem();
+    public JButton getAttivitaButton() {
+        return attivitaButton;
     }
 
-    public Object getDataScadenza() {
-        return dataScadenzaSpinner.getValue();
+    public JButton getColorButton() {
+        return colorButton;
+    }
+
+    public JButton getDataScadenzaButton() {
+        return dataScadenzaButton;
     }
 }

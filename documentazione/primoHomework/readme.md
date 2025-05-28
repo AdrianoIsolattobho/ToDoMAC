@@ -1,7 +1,7 @@
 # Documentazione “ToDo”
 
 ## Introduzione
-Questo progetto è basato sullo sviluppo di un sistema informativo per gestire delle attività, ispirato al software **Trello**, sviluppato in **Java** con un’interfaccia grafica.
+Questo progetto è basato sullo sviluppo di un sistema informativo per gestire delle attivita, ispirato al software **Trello**, sviluppato in **Java** con un’interfaccia grafica.
 
 La documentazione comprende:
 - Un’analisi del problema.
@@ -85,22 +85,22 @@ Le relazioni tra le classi rappresentano le interazioni tra le varie entità:
 
 ### Classe `CHECKLIST`
 - **Attributi**:
-  - `attività`: Lista di attività associate al ToDo.
+  - `attivita`: Lista di attivita associate al ToDo.
 - **Relazione**:
-  - Associazione composta: una checklist è composta da attività.
+  - Associazione composta: una checklist è composta da attivita.
 - **Metodi**:
-  - Gestione dinamica delle attività.
+  - Gestione dinamica delle attivita.
 
 ---
 
 ### Classe `ATTIVITÀ`
 - **Attributi**:
-  - `nome`: Nome dell’attività.
-  - `completata`: Stato dell’attività (completata o meno).
+  - `nome`: Nome dell’attivita.
+  - `completata`: Stato dell’attivita (completata o meno).
 - **Relazione**:
-  - Ogni attività appartiene a una checklist.
+  - Ogni attivita appartiene a una checklist.
 
 ---
 
 ## Note Finali
-Questo progetto rappresenta un sistema informativo per la gestione delle attività, con un’architettura modulare e scalabile. Le scelte progettuali sono state guidate dalla necessità di mantenere il codice leggibile, riutilizzabile e facilmente estendibile.
+Questo progetto rappresenta un sistema informativo per la gestione delle attivita, con un’architettura modulare e scalabile. Le scelte progettuali sono state guidate dalla necessità di mantenere il codice leggibile, riutilizzabile e facilmente estendibile.
