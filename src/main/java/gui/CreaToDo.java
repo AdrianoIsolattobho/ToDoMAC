@@ -34,6 +34,10 @@ public class CreaToDo extends JDialog {
         this.pack();
     }
 
+    public JTextField getTitoloField(){
+        return titolo;
+    }
+
     public JPanel getSavePanel() {
         return savePanel;
     }
