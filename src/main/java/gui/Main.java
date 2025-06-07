@@ -1,12 +1,13 @@
 package gui;
 
 import javax.swing.*;
+import java.awt.*;
 
 
 public class Main extends JPanel {
     private JButton esci;
     private JLabel nome;
-    private JPanel main;
+    private JPanel mainPanel;
     private JButton aggiungiToDo;
     private JPanel baUni;
     private JPanel baLav;
@@ -26,7 +27,7 @@ public class Main extends JPanel {
 
         try {
             esci.setIcon(new ImageIcon(getClass().getResource("/img/logout.png")));
-        } catch (Exception e) {
+        } catch (Exception _) {
             // Se l'immagine non viene trovata, utilizza del testo al posto dell'icona
             esci.setText("Esci");
             esci.setToolTipText("Esci dall'applicazione");
@@ -54,9 +55,8 @@ public class Main extends JPanel {
     }
 
 
-
     public JPanel getMain() {
-        return this.main;
+        return this.mainPanel;
     }
 
     public JPanel getContenitoreToDoU() {

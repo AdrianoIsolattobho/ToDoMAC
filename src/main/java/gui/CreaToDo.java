@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class CreaToDo extends JDialog {
     private JPanel mainPanel;
@@ -9,7 +10,7 @@ public class CreaToDo extends JDialog {
     private JTextField linkField;
     private JButton colorButton;
     private JButton dataScadenzaButton;
-    private JButton SalvaButton;
+    private JButton salvaButton;
     private JPanel savePanel;
     private JPanel inputPanel;
     private JPanel nomePanel;
@@ -18,7 +19,7 @@ public class CreaToDo extends JDialog {
     private JPanel scadenzaPanel;
     private JPanel colorePanel;
     private JPanel bachecaPanel;
-    private JComboBox bachecaBox;
+    private JComboBox<String> bachecaBox;
     private JTextField descrizioneField;
     private JPanel descrizionePanel;
     private JButton sfogliaButton;
@@ -31,10 +32,6 @@ public class CreaToDo extends JDialog {
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.setContentPane(mainPanel);
         this.pack();
-    }
-
-    public JTextField getTitolo() {
-        return titolo;
     }
 
     public JPanel getSavePanel() {
@@ -69,7 +66,7 @@ public class CreaToDo extends JDialog {
         return bachecaPanel;
     }
 
-    public JComboBox getBachecaBox() {
+    public JComboBox<String> getBachecaBox() {
         return bachecaBox;
     }
 
@@ -94,10 +91,10 @@ public class CreaToDo extends JDialog {
     }
 
     public JButton getSalvaButton() {
-        return SalvaButton;
+        return salvaButton;
     }
 
-    public JTextField getTitoloField() {
+    public JTextField getTitolo() {
         return titolo;
     }
 
@@ -116,4 +113,5 @@ public class CreaToDo extends JDialog {
     public JButton getDataScadenzaButton() {
         return dataScadenzaButton;
     }
+
 }

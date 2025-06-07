@@ -1,17 +1,18 @@
 package model;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Checklist {
     private String nomeChecklist;
     private Boolean completata;
-    private ArrayList<Attivita> attivita;
+    private List<Attivita> attivita;
 
     public Boolean getCompletata() {
         return completata;
     }
 
     // costruttore
-    public Checklist(String nome,ArrayList<Attivita> attivita) {
+    public Checklist(String nome, List<Attivita> attivita) {
         this.nomeChecklist = nome;
         this.attivita = new ArrayList<>();
         this.attivita.addAll(attivita);
@@ -27,7 +28,7 @@ public class Checklist {
     }
 
     // getters e setters
-    public ArrayList<Attivita> getAttivita() {
+    public List<Attivita> getAttivita() {
         return attivita;
     }
 

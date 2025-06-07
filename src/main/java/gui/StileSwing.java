@@ -1,6 +1,6 @@
 package gui;
 
-import controller.Controller;
+
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
@@ -12,6 +12,7 @@ import java.net.URL;
  * Come se fosse un file CSS per le Swing.
  */
 public class StileSwing extends JFrame {
+    private static final String FONT_SCELTO = "Arial";
 
 
         public static void applicaStile(Boolean getDarkMode) {
@@ -20,24 +21,18 @@ public class StileSwing extends JFrame {
             final URL imageResource = Main.class.getClassLoader().getResource("img/check.png");
             final Image image = defaultToolkit.getImage(imageResource);
             final Taskbar taskbar = Taskbar.getTaskbar();
+            taskbar.setIconImage(image);
 
-            try {
-                taskbar.setIconImage(image);
-            } catch (final UnsupportedOperationException e) {
-                System.out.println("The os does not support: 'taskbar.setIconImage'");
-            } catch (final SecurityException e) {
-                System.out.println("There was a security exception for: 'taskbar.setIconImage'");
-            }
 
             // Imposta lo stile per i componenti Swing
-            if (getDarkMode) {
+            if (Boolean.TRUE.equals(getDarkMode)) {
                 //button
-                UIManager.put("Button.font", new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+                UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
                 UIManager.put("Button.foreground", java.awt.Color.BLACK);
 
                 //label
                 UIManager.put("Label.background", new java.awt.Color(50, 50, 50));
-                UIManager.put("Label.font", new java.awt.Font("Arial", java.awt.Font.PLAIN, 16));
+                UIManager.put("Label.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.PLAIN, 16));
                 UIManager.put("Label.foreground", new java.awt.Color(240, 240, 240));
 
 
@@ -48,12 +43,12 @@ public class StileSwing extends JFrame {
                 //Panel
                 UIManager.put("Panel.background", new java.awt.Color(50, 50, 50));
             } else {
-                UIManager.put("Button.font", new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+                UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
                 UIManager.put("Button.foreground", java.awt.Color.BLACK);
 
                 //label
                 UIManager.put("Label.background", new java.awt.Color(245, 245, 245));
-                UIManager.put("Label.font", new java.awt.Font("Arial", java.awt.Font.PLAIN, 16));
+                UIManager.put("Label.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.PLAIN, 16));
                 UIManager.put("Label.foreground", new java.awt.Color(30,30,30));
 
                 // TextField

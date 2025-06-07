@@ -22,26 +22,44 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.awt.Image;
+import java.util.Objects;
 
 
 /**
- *  Controller che gestisce tutte le interazioni tra modello e view
- *  come nel paradigma Model-View-Controller (MVC)
- *  o Boundary-Control-Entity (BCE)
+ * Controller che gestisce tutte le interazioni tra modello e view
+ * come nel paradigma Model-View-Controller (MVC)
+ * o Boundary-Control-Entity (BCE)
  */
 public class Controller {
 
     private Scelta view;
     private HashMap<String, Utente> utentiRegistrati;
     private Utente utenteAttuale;
-    private boolean mostraCompletati=false;
+    private boolean mostraCompletati = false;
+
+    //creazioni costanti stringhe seguendo il consiglio di SonarQube
+    private static final String UNIVERSITA = "Università";
+    private static final String TEMPOLIBERO = "Tempo libero";
+    private static final String LAVORO = "Lavoro";
+    private static final String DATE_PATTERN = "dd/MM/yyyy";
+    private static final String ERRORE = "Errore";
+
+    // Costanti per dimensioni e stringhe
+    private static final int ANTEPRIMA_LARGHEZZA = 200;
+    private static final int ANTEPRIMA_ALTEZZA = 150;
+    private static final String SELEZIONA_IMMAGINE_TITLE = "Seleziona un'immagine";
+    private static final String FILTRO_IMMAGINI_DESC = "Immagini (JPG, PNG, GIF)";
+    private static final String ANTEPRIMA_IMMAGINE_TITLE = "Anteprima immagine";
 
     /**
-    * Metodi per mostrare le varie view
-     * mostra il primo pannello con la scelta tra login e registrazione
-    */
-    private void mostraScelta() {
-        view.setContentPane(view.getScelta());
+     * Cambia il pannello corrente nella vista principale.
+     * Si occupa di impostare il nuovo pannello, ridimensionare la finestra e
+     * aggiornare la visualizzazione.
+     *
+     * @param nuovoPanel il nuovo pannello da visualizzare
+     */
+    private void cambiaPanel(JPanel nuovoPanel) {
+        view.setContentPane(nuovoPanel);
         view.pack();
         view.setLocationRelativeTo(null);
         view.revalidate();
@@ -49,60 +67,203 @@ public class Controller {
     }
 
     /**
-     * Metodi per mostrare le varie view
-     * mostra il pannello con il login
+     * Mostra il primo pannello con la scelta tra login e registrazione
+     */
+    private void mostraScelta() {
+        cambiaPanel(view.getScelta());
+    }
+
+    /**
+     * Mostra il pannello con il login
      */
     private void mostraLogin() {
-        view.setContentPane(view.getLogInView().getMainLogIn());
-        view.pack();
-        view.setLocationRelativeTo(null);
-        view.revalidate();
-        view.repaint();
+        cambiaPanel(view.getLogInView().getMainLogIn());
     }
 
     /**
-     * Metodi per mostrare le varie view
-     * mostra il pannello con la registrazione
+     * Mostra il pannello con la registrazione
      */
     private void mostraRegistrazione() {
-        view.setContentPane(view.getRegisterView().getMainRegistrazione());
-        view.pack();
-        view.setLocationRelativeTo(null);
-        view.revalidate();
-        view.repaint();
+        cambiaPanel(view.getRegisterView().getMainRegistrazione());
     }
 
     /**
-     * Metodi per mostrare le varie view
-     * mostra il pannello principale con i vari todo
-     * aggiunge gli action listener per l'aggiunta di nuovi todo
-     * per il logout dal programma
-     * e per mostrare i todo già completati
+     * Mostra il pannello principale
      */
     private void mostraMain() {
-
         Main mainView = view.getLogInView().getMainView();
-
         aggiornaInterfacciaUtente(mainView);
-
-        view.setContentPane(mainView.getMain());
-        view.pack();
-        view.setLocationRelativeTo(null);
-        view.revalidate();
-        view.repaint();
+        cambiaPanel(mainView.getMain());
         mainView.getAggiungiToDo().addActionListener(e -> aggiuntaTodo());
         mainView.getMostraCompletati().addActionListener(
-                e-> {this.mostraCompletati= !this.mostraCompletati;
+                e -> {
+                    this.mostraCompletati = !this.mostraCompletati;
                     mainView.getMostraCompletati().setText(mostraCompletati ? "Mostra senza completati" : "Mostra tutti");
-                aggiornaInterfacciaUtente(mainView);}
+                    aggiornaInterfacciaUtente(mainView);
+                }
         );
-        mainView.getEsci().addActionListener(e->mostraScelta());
-
+        mainView.getEsci().addActionListener(_ -> mostraScelta());
     }
 
     /**
-    * Metodo per mostrare il pannello CreaToDo a modi pop up e gestione del salvataggio in memoria dei dati
-    */
+     * Ridimensiona un'immagine mantenendo le proporzioni
+     *
+     * @param immagineOriginale L'immagine da ridimensionare
+     * @param larghezzaMax      Larghezza massima
+     * @param altezzaMax        Altezza massima
+     * @return L'immagine ridimensionata
+     */
+    private Image ridimensionaImmagine(Image immagineOriginale, int larghezzaMax, int altezzaMax) {
+        // Verifica che l'immagine originale non sia null
+        if (immagineOriginale == null) {
+            return null;
+        }
+
+        // Ottieni le dimensioni originali
+        int larghezzaOriginale = immagineOriginale.getWidth(null);
+        int altezzaOriginale = immagineOriginale.getHeight(null);
+
+        // Verifica che le dimensioni originali siano valide
+        if (larghezzaOriginale <= 0 || altezzaOriginale <= 0) {
+            return immagineOriginale; // Ritorna l'immagine originale senza ridimensionarla
+        }
+
+        // Calcola il rapporto di aspetto
+        double rapporto = (double) larghezzaOriginale / altezzaOriginale;
+
+        // Imposta valori predefiniti se i massimi sono 0
+        if (larghezzaMax <= 0 && altezzaMax <= 0) {
+            // Se entrambi i valori sono nulli o negativi, usa dimensioni di default
+            larghezzaMax = 100;
+            altezzaMax = 100;
+        } else if (larghezzaMax <= 0) {
+            // Se solo la larghezza è nulla, calcolala in base all'altezza
+            larghezzaMax = (int) (altezzaMax * rapporto);
+        } else if (altezzaMax <= 0) {
+            // Se solo l'altezza è nulla, calcolala in base alla larghezza
+            altezzaMax = (int) (larghezzaMax / rapporto);
+        }
+
+        // Calcola le nuove dimensioni mantenendo le proporzioni
+        int nuovaLarghezza;
+        int nuovaAltezza;
+        if (rapporto > 1) {
+            // Immagine più larga che alta
+            nuovaLarghezza = larghezzaMax;
+            nuovaAltezza = (int) Math.max(1, larghezzaMax / rapporto); // Assicura che non sia zero
+        } else {
+            // Immagine più alta che larga
+            nuovaAltezza = altezzaMax;
+            nuovaLarghezza = (int) Math.max(1, altezzaMax * rapporto); // Assicura che non sia zero
+        }
+
+        return immagineOriginale.getScaledInstance(nuovaLarghezza, nuovaAltezza, Image.SCALE_SMOOTH);
+    }
+
+    /**
+     * Mostra l'anteprima di un'immagine in un pannello
+     *
+     * @param dialog            Il dialogo che contiene il pannello
+     * @param pannelloAnteprima Il pannello dove mostrare l'anteprima
+     * @param urlImmagine       L'URL dell'immagine da mostrare
+     */
+    private void mostraAnteprimaImmagine(JDialog dialog, JPanel pannelloAnteprima, URL urlImmagine) {
+        if (urlImmagine == null || pannelloAnteprima == null) {
+            return;
+        }
+
+        try {
+            // Carica l'immagine
+            ImageIcon icona = new ImageIcon(urlImmagine);
+            Image immagine = icona.getImage();
+
+            // Verifica che l'immagine sia valida
+            if (immagine.getWidth(null) <= 0 || immagine.getHeight(null) <= 0) {
+                pannelloAnteprima.removeAll();
+                pannelloAnteprima.add(new JLabel("Immagine non valida"));
+                pannelloAnteprima.revalidate();
+                pannelloAnteprima.repaint();
+                return;
+            }
+
+            // Ridimensiona l'immagine per l'anteprima
+            Image immagineRidimensionata = ridimensionaImmagine(immagine, ANTEPRIMA_LARGHEZZA, ANTEPRIMA_ALTEZZA);
+
+            // Aggiorna il pannello di anteprima
+            pannelloAnteprima.removeAll();
+            pannelloAnteprima.add(new JLabel(new ImageIcon(immagineRidimensionata)));
+            pannelloAnteprima.setBorder(BorderFactory.createTitledBorder(ANTEPRIMA_IMMAGINE_TITLE));
+            pannelloAnteprima.revalidate();
+            pannelloAnteprima.repaint();
+
+            // Adatta la finestra alle nuove dimensioni
+            if (dialog != null) {
+                adattaFinestra(dialog);
+            }
+        } catch (Exception e) {
+            // Gestisce errori durante il caricamento
+            pannelloAnteprima.removeAll();
+            pannelloAnteprima.add(new JLabel("Errore nel caricamento dell'immagine: " + e.getMessage()));
+            pannelloAnteprima.revalidate();
+            pannelloAnteprima.repaint();
+        }
+        try {
+            // Carica l'immagine e crea l'anteprima
+            ImageIcon iconaOriginale = new ImageIcon(urlImmagine);
+            Image immagineRidimensionata = ridimensionaImmagine(
+                    iconaOriginale.getImage(), ANTEPRIMA_LARGHEZZA, ANTEPRIMA_ALTEZZA);
+
+            // Configura il pannello di anteprima
+            pannelloAnteprima.removeAll();
+            pannelloAnteprima.add(new JLabel(new ImageIcon(immagineRidimensionata)));
+            pannelloAnteprima.setBorder(BorderFactory.createTitledBorder(ANTEPRIMA_IMMAGINE_TITLE));
+            pannelloAnteprima.setVisible(true);
+
+            if (dialog != null) {
+                adattaFinestra(dialog);
+            } else {
+                // Gestione dell'errore: può essere utile loggare o sollevare un'eccezione
+                throw new IllegalArgumentException("Il parametro 'dialog' non può essere null");
+            }
+
+        } catch (Exception ex) {
+            mostraErrore(dialog, "Errore nel caricamento dell'anteprima: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Adatta la dimensione della finestra e la centra
+     *
+     * @param dialog Il dialogo da adattare
+     */
+    private void adattaFinestra(@NotNull JDialog dialog) {
+        Dimension dimensioneAttuale = dialog.getSize();
+        dialog.pack();
+
+        // Mantieni la dimensione più grande tra quella attuale e quella calcolata
+        int nuovaLarghezza = Math.max(dimensioneAttuale.width, dialog.getSize().width);
+        int nuovaAltezza = Math.max(dimensioneAttuale.height, dialog.getSize().height);
+        dialog.setSize(nuovaLarghezza, nuovaAltezza);
+
+        // Centra la finestra
+        dialog.setLocationRelativeTo(dialog.getOwner());
+        dialog.revalidate();
+        dialog.repaint();
+    }
+
+    /**
+     * Mostra un messaggio di errore
+     *
+     * @param componente Il componente padre
+     * @param messaggio  Il messaggio da mostrare
+     */
+    private void mostraErrore(Component componente, String messaggio) {
+        JOptionPane.showMessageDialog(componente, messaggio, ERRORE, JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Metodo che crea il pannello todo per aggiungerlo ciclicamente nella ui
+     */
     private void aggiuntaTodo() {
         Main mainView = view.getLogInView().getMainView();
         CreaToDo creaTodoDialog = new CreaToDo();
@@ -118,91 +279,24 @@ public class Controller {
         // Action listener per il pulsante Sfoglia per la selezione dell'immagine
         creaTodoDialog.getSfogliaButton().addActionListener(imageEvent -> {
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Seleziona un'immagine");
+            fileChooser.setDialogTitle(SELEZIONA_IMMAGINE_TITLE);
+            fileChooser.setFileFilter(new FileNameExtensionFilter(
+                    FILTRO_IMMAGINI_DESC, "jpg", "jpeg", "png", "gif"));
 
-            // Filtro per mostrare solo file di immagine
-            FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                    "Immagini (JPG, PNG, GIF)", "jpg", "jpeg", "png", "gif");
-            fileChooser.setFileFilter(filter);
-
-            int result = fileChooser.showOpenDialog(creaTodoDialog);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
+            if (fileChooser.showOpenDialog(creaTodoDialog) == JFileChooser.APPROVE_OPTION) {
                 try {
-                    // Converti il file selezionato in URL
+                    File selectedFile = fileChooser.getSelectedFile();
                     immagineScelta[0] = selectedFile.toURI().toURL();
-
-                    // Carica l'immagine per l'anteprima
-                    ImageIcon originalIcon = new ImageIcon(immagineScelta[0]);
-                    Image originalImage = originalIcon.getImage();
-
-                    // Definisci le dimensioni per l'anteprima
-                    int previewWidth = 200;
-                    int previewHeight = 150;
-
-                    // Calcola le dimensioni mantenendo le proporzioni
-                    int originalWidth = originalIcon.getIconWidth();
-                    int originalHeight = originalIcon.getIconHeight();
-                    double ratio = (double) originalWidth / originalHeight;
-
-                    int targetWidth, targetHeight;
-                    if (ratio > 1) {
-                        // Immagine più larga che alta
-                        targetWidth = previewWidth;
-                        targetHeight = (int) (previewWidth / ratio);
-                    } else {
-                        // Immagine più alta che larga
-                        targetHeight = previewHeight;
-                        targetWidth = (int) (previewHeight * ratio);
-                    }
-
-                    // Ridimensiona e mostra l'anteprima
-                    Image resizedImage = originalImage.getScaledInstance(
-                            targetWidth, targetHeight, Image.SCALE_SMOOTH);
-                    ImageIcon resizedIcon = new ImageIcon(resizedImage);
-
-                    // Mostra l'anteprima nel pannello
-                    creaTodoDialog.getPreviewPanel().removeAll();
-                    JLabel previewLabel = new JLabel(resizedIcon);
-                    creaTodoDialog.getPreviewPanel().add(previewLabel);
-
-                    // Ridimensiona il form per mostrare l'immagine
-                    Dimension currentSize = creaTodoDialog.getSize();
-
-                    // Assicurati che il pannello di anteprima sia visibile
-                    creaTodoDialog.getPreviewPanel().setVisible(true);
-
-                    // Imposta un bordo per il pannello di anteprima
-                    creaTodoDialog.getPreviewPanel().setBorder(BorderFactory.createTitledBorder("Anteprima immagine"));
-
-                    // Fai il pack della finestra per adattarla ai nuovi contenuti
-                    creaTodoDialog.pack();
-
-                    // Se la dimensione attuale è maggiore di quella calcolata dal pack, mantienila
-                    int newWidth = Math.max(currentSize.width, creaTodoDialog.getSize().width);
-                    int newHeight = Math.max(currentSize.height, creaTodoDialog.getSize().height);
-
-                    // Imposta la nuova dimensione
-                    creaTodoDialog.setSize(newWidth, newHeight);
-
-                    // Centra di nuovo la finestra
-                    creaTodoDialog.setLocationRelativeTo(creaTodoDialog.getOwner());
-
-                    // Aggiorna l'interfaccia
-                    creaTodoDialog.getPreviewPanel().revalidate();
-                    creaTodoDialog.getPreviewPanel().repaint();
-
+                    mostraAnteprimaImmagine(creaTodoDialog, creaTodoDialog.getPreviewPanel(), immagineScelta[0]);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(creaTodoDialog,
-                            "Errore nel caricamento dell'immagine: " + ex.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                    mostraErrore(creaTodoDialog, "Errore nel caricamento dell'immagine: " + ex.getMessage());
                 }
             }
         });
 
         /*Action listener per il selettore di colore
-        * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
-        */
+         * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
+         */
         creaTodoDialog.getColorButton().addActionListener(colorEvent -> {
             Color coloreIniziale = coloreScelto[0] != null ? coloreScelto[0] : Color.WHITE;
             Color nuovoColore = JColorChooser.showDialog(
@@ -229,7 +323,7 @@ public class Controller {
             // Creiamo un calendario con JSpinner
             SpinnerDateModel dateModel = new SpinnerDateModel();
             JSpinner dateSpinner = new JSpinner(dateModel);
-            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
+            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, DATE_PATTERN);
             dateSpinner.setEditor(dateEditor);
 
             // Se c'è già una data selezionata, la impostiamo
@@ -253,15 +347,13 @@ public class Controller {
                 dataScelto[0] = calendar;
 
                 // Cambia il testo del bottone per mostrare la data selezionata
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
                 creaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(selectedDate));
 
                 dateDialog.dispose();
             });
 
-            cancelButton.addActionListener(cancelEvent -> {
-                dateDialog.dispose();
-            });
+            cancelButton.addActionListener(cancelEvent -> dateDialog.dispose());
 
             buttonPanel.add(confirmButton);
             buttonPanel.add(cancelButton);
@@ -276,7 +368,7 @@ public class Controller {
         // Action listener per il pulsante Salva
         creaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
             // Qui va il codice per salvare il nuovo ToDo
-            String titoloTodo = creaTodoDialog.getTitoloField().getText();
+            String titoloTodo = creaTodoDialog.getTitolo().getText();
             String linkTesto = creaTodoDialog.getLinkField().getText();
             String descrizioneTodo = creaTodoDialog.getDescrizioneField().getText();
             // Recupera la bacheca selezionata dal ComboBox
@@ -286,7 +378,7 @@ public class Controller {
             if (titoloTodo == null || titoloTodo.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Inserisci un titolo valido per il ToDo",
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        "ERRORE", JOptionPane.ERROR_MESSAGE);
                 return; // Non chiude il dialogo se c'è un errore
             }
 
@@ -295,37 +387,33 @@ public class Controller {
 
             //check del link
             try {
-                URI link = null;
-                if (linkTesto != null && !linkTesto.trim().isEmpty()) {
-                    try {
-                        link = new URI(linkTesto);
-                    } catch (URISyntaxException ex) {
-                        JOptionPane.showMessageDialog(creaTodoDialog,
-                                "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
+                URI link = creaURI(linkTesto, creaTodoDialog);
+                if (linkTesto != null && !linkTesto.trim().isEmpty() && link == null) {
+                    return; // Uscita anticipata se la creazione dell'URI è fallita
                 }
 
                 // Crea il nuovo ToDo con tutti i dati raccolti
                 nuovoTodo = new ToDo(titoloTodo, descrizioneTodo, link, dataScelto[0], coloreScelto[0], immagineScelta[0], null);
 
-                // Aggiungi il ToDo alla bacheca Tempo Libero (potrebbe essere modificato per aggiungere a diverse bacheche)
-                switch (bachecaSelezionata){
-                    case "Tempo libero":
+                // Aggiungi il ToDo alla bacheca appropriata
+                switch (bachecaSelezionata) {
+                    case TEMPOLIBERO:
                         utenteAttuale.getTempoLibero().getToDoList().add(nuovoTodo);
                         break;
-                    case "Lavoro":
+                    case LAVORO:
                         utenteAttuale.getLavoro().getToDoList().add(nuovoTodo);
                         break;
-                    case "Università":
+                    case UNIVERSITA:
                         utenteAttuale.getUniversita().getToDoList().add(nuovoTodo);
+                        break;
+                    default:
+                        //sonarqube richiede un default case ma in questo caso può essere solo uno di questi tre elementi
+                        break;
                 }
-
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Errore durante la creazione del ToDo: " + ex.getMessage(),
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        ERRORE, JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -343,6 +431,7 @@ public class Controller {
 
     /**
      * Aggiorna l'interfaccia utente con i dati dell'utente attuale
+     *
      * @param mainView MainView della GUI
      */
     private void aggiornaInterfacciaUtente(Main mainView) {
@@ -392,7 +481,8 @@ public class Controller {
 
     /**
      * Metodo che genera il codice swing per la gui partendo dal todo in memoria
-     * @param todo il todo da visualizzare
+     *
+     * @param todo            il todo da visualizzare
      * @param contenitoreToDo il contenitore a cui applicare il todo generato
      */
     private void visualizzaToDo(@NotNull ToDo todo, @NotNull JPanel contenitoreToDo) {
@@ -425,7 +515,7 @@ public class Controller {
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new FlowLayout(FlowLayout.RIGHT, 2, 0));
         buttonsPanel.setBackground(backgroundColor);
-        
+
         // Pulsante modifica con icona di modifica (Unicode per pencil)
         JButton modificaButton = new JButton("✏");
         modificaButton.setFont(new Font("Dialog", Font.PLAIN, 14));
@@ -443,7 +533,7 @@ public class Controller {
             modificaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
 
             // Popola i campi con i dati del todo corrente
-            modificaTodoDialog.getTitoloField().setText(todo.getTitolo());
+            modificaTodoDialog.getTitolo().setText(todo.getTitolo());
             modificaTodoDialog.getDescrizioneField().setText(todo.getDescrizione());
 
             // Imposta il link se presente
@@ -458,63 +548,23 @@ public class Controller {
 
             // Imposta la data se presente
             if (todo.getScadenza() != null) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
                 modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(todo.getScadenza().getTime()));
             }
 
             // Carica l'immagine se presente
             if (todo.getImmagine() != null) {
-                try {
-                    // Carica l'immagine per l'anteprima
-                    ImageIcon originalIcon = new ImageIcon(todo.getImmagine());
-                    Image originalImage = originalIcon.getImage();
-
-                    // Definisci le dimensioni per l'anteprima
-                    int previewWidth = 200;
-                    int previewHeight = 150;
-
-                    // Calcola le dimensioni mantenendo le proporzioni
-                    int originalWidth = originalIcon.getIconWidth();
-                    int originalHeight = originalIcon.getIconHeight();
-                    double ratio = (double) originalWidth / originalHeight;
-
-                    int targetWidth, targetHeight;
-                    if (ratio > 1) {
-                        // Immagine più larga che alta
-                        targetWidth = previewWidth;
-                        targetHeight = (int) (previewWidth / ratio);
-                    } else {
-                        // Immagine più alta che larga
-                        targetHeight = previewHeight;
-                        targetWidth = (int) (previewHeight * ratio);
-                    }
-
-                    // Ridimensiona e mostra l'anteprima
-                    Image resizedImage = originalImage.getScaledInstance(
-                            targetWidth, targetHeight, Image.SCALE_SMOOTH);
-                    ImageIcon resizedIcon = new ImageIcon(resizedImage);
-
-                    // Mostra l'anteprima nel pannello
-                    modificaTodoDialog.getPreviewPanel().removeAll();
-                    JLabel previewLabel = new JLabel(resizedIcon);
-                    modificaTodoDialog.getPreviewPanel().add(previewLabel);
-                    modificaTodoDialog.getPreviewPanel().setVisible(true);
-                    modificaTodoDialog.getPreviewPanel().setBorder(BorderFactory.createTitledBorder("Anteprima immagine"));
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(modificaTodoDialog,
-                            "Errore nel caricamento dell'anteprima: " + ex.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
-                }
+                mostraAnteprimaImmagine(modificaTodoDialog, modificaTodoDialog.getPreviewPanel(), todo.getImmagine());
             }
 
             // Determina la bacheca corrente del todo
             final String bachecaCorrente;
             if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
-                bachecaCorrente = "Tempo libero";
+                bachecaCorrente = TEMPOLIBERO;
             } else if (utenteAttuale.getLavoro().getToDoList().contains(todo)) {
-                bachecaCorrente = "Lavoro";
+                bachecaCorrente = LAVORO;
             } else if (utenteAttuale.getUniversita().getToDoList().contains(todo)) {
-                bachecaCorrente = "Università";
+                bachecaCorrente = UNIVERSITA;
             } else {
                 bachecaCorrente = null;
             }
@@ -526,11 +576,11 @@ public class Controller {
             // Modifica il comportamento del pulsante Salva per aggiornare il todo esistente
             modificaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
                 // Validazione del titolo
-                String nuovoTitolo = modificaTodoDialog.getTitoloField().getText();
+                String nuovoTitolo = modificaTodoDialog.getTitolo().getText();
                 if (nuovoTitolo == null || nuovoTitolo.trim().isEmpty()) {
                     JOptionPane.showMessageDialog(modificaTodoDialog,
                             "Inserisci un titolo valido per il ToDo",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERRORE, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -543,10 +593,10 @@ public class Controller {
                 if (nuovoLink != null && !nuovoLink.trim().isEmpty()) {
                     try {
                         todo.setLink(new URI(nuovoLink));
-                    } catch (URISyntaxException ex) {
+                    } catch (URISyntaxException _) {
                         JOptionPane.showMessageDialog(modificaTodoDialog,
                                 "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
+                                ERRORE, JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 } else {
@@ -562,26 +612,28 @@ public class Controller {
 
                 // Gestisci il cambio di bacheca se necessario
                 String nuovaBacheca = (String) modificaTodoDialog.getBachecaBox().getSelectedItem();
-                if (!nuovaBacheca.equals(bachecaCorrente)) {
+                if (!Objects.equals(bachecaCorrente, nuovaBacheca)) {
                     // Rimuovi dalla bacheca attuale
-                    if (bachecaCorrente.equals("Tempo libero")) {
+                    if (Objects.equals(bachecaCorrente, TEMPOLIBERO)) {
                         utenteAttuale.getTempoLibero().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Lavoro")) {
+                    } else if (Objects.equals(bachecaCorrente, LAVORO)) {
                         utenteAttuale.getLavoro().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Università")) {
+                    } else if (Objects.equals(bachecaCorrente, UNIVERSITA)) {
                         utenteAttuale.getUniversita().getToDoList().remove(todo);
                     }
 
                     // Aggiungi alla nuova bacheca
                     switch (nuovaBacheca) {
-                        case "Tempo libero":
+                        case TEMPOLIBERO:
                             utenteAttuale.getTempoLibero().getToDoList().add(todo);
                             break;
-                        case "Lavoro":
+                        case LAVORO:
                             utenteAttuale.getLavoro().getToDoList().add(todo);
                             break;
-                        case "Università":
+                        case UNIVERSITA:
                             utenteAttuale.getUniversita().getToDoList().add(todo);
+                            break;
+                        default:
                             break;
                     }
                 }
@@ -596,7 +648,7 @@ public class Controller {
             // Mostra il dialog di modifica
             modificaTodoDialog.setVisible(true);
         });
-        
+
         // Pulsante elimina con icona del cestino (Unicode per trash)
         JButton eliminaButton = new JButton("🗑");
         eliminaButton.setFont(new Font("Dialog", Font.PLAIN, 14));
@@ -607,32 +659,32 @@ public class Controller {
         eliminaButton.setForeground(coloreTesto);
         eliminaButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         eliminaButton.addActionListener(e -> {
-                // Cerca il ToDo in tutte le bacheche e rimuovilo
-                boolean rimosso = false;
-                
-                if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
-                    utenteAttuale.getTempoLibero().getToDoList().remove(todo);
-                    rimosso = true;
-                } else if (utenteAttuale.getLavoro().getToDoList().contains(todo)) {
-                    utenteAttuale.getLavoro().getToDoList().remove(todo);
-                    rimosso = true;
-                } else if (utenteAttuale.getUniversita().getToDoList().contains(todo)) {
-                    utenteAttuale.getUniversita().getToDoList().remove(todo);
-                    rimosso = true;
-                }
-                
-                if (rimosso) {
-                    // Aggiorna l'interfaccia
-                    aggiornaInterfacciaUtente(view.getLogInView().getMainView());
-                    view.revalidate();
-                    view.repaint();
-                }
+            // Cerca il ToDo in tutte le bacheche e rimuovilo
+            boolean rimosso = false;
+
+            if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
+                utenteAttuale.getTempoLibero().getToDoList().remove(todo);
+                rimosso = true;
+            } else if (utenteAttuale.getLavoro().getToDoList().contains(todo)) {
+                utenteAttuale.getLavoro().getToDoList().remove(todo);
+                rimosso = true;
+            } else if (utenteAttuale.getUniversita().getToDoList().contains(todo)) {
+                utenteAttuale.getUniversita().getToDoList().remove(todo);
+                rimosso = true;
+            }
+
+            if (rimosso) {
+                // Aggiorna l'interfaccia
+                aggiornaInterfacciaUtente(view.getLogInView().getMainView());
+                view.revalidate();
+                view.repaint();
+            }
         });
-        
+
         // Aggiungi i pulsanti al pannello dei pulsanti
         buttonsPanel.add(modificaButton);
         buttonsPanel.add(eliminaButton);
-        
+
         // Aggiungi il pannello dei pulsanti al pannello del titolo
         titoloPanel.add(buttonsPanel, BorderLayout.EAST);
 
@@ -641,7 +693,6 @@ public class Controller {
 
         // Aggiungi un bordo al pannello principale
         todoPanel.setBorder(BorderFactory.createLineBorder(coloreTesto));
-
 
 
         //panel con label e checkbox
@@ -689,7 +740,7 @@ public class Controller {
 
 
                 // Verifica se la checklist è già completata per cambiare colore del bordo
-                if (todo.getChecklist().getCompletata()) {
+                if (Boolean.TRUE.equals(todo.getChecklist().getCompletata())) {
                     checklistPanel.setBackground(Color.GREEN);
                     TitledBorder titledBorder = BorderFactory.createTitledBorder(
                             BorderFactory.createLineBorder(Color.GREEN, 2),
@@ -709,7 +760,7 @@ public class Controller {
                 checkBoxAtt.setForeground(coloreTesto);
                 checkBoxAtt.addItemListener(e -> {
                     att.setCompletata(checkBoxAtt.isSelected());
-                    boolean controllo=false;
+                    boolean controllo = false;
                     for (Attivita att2 : todo.getChecklist().getAttivita()) {
                         if (att2.isCompletata()) {
                             controllo = true;
@@ -768,7 +819,7 @@ public class Controller {
                         } catch (IOException ex) {
                             JOptionPane.showMessageDialog(todoPanel,
                                     "Impossibile aprire il link: " + ex.getMessage(),
-                                    "Errore", JOptionPane.ERROR_MESSAGE);
+                                    ERRORE, JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
@@ -786,7 +837,7 @@ public class Controller {
             scadenzaPanel.setBackground(backgroundColor);
 
             // Formatta la data
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
             String dataFormattata = dateFormat.format(todo.getScadenza().getTime());
 
             JLabel scadenzaLabel = new JLabel("Scadenza: ");
@@ -820,29 +871,38 @@ public class Controller {
             immaginePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
             immaginePanel.setBackground(backgroundColor);
 
-            URL percorsoImmagine = todo.getImmagine();
-            ImageIcon iconaOriginale = new ImageIcon(percorsoImmagine);
-            Image immagine = iconaOriginale.getImage();
+            try {
+                // Carica l'immagine originale
+                Image immagineOriginale = new ImageIcon(todo.getImmagine()).getImage();
 
-            //odio java swing
-            // Ottieni le dimensioni originali
-            int larghezzaOriginale = iconaOriginale.getIconWidth();
-            int altezzaOriginale = iconaOriginale.getIconHeight();
+                // Verifica che l'immagine sia valida
+                if (immagineOriginale.getWidth(null) > 0 && immagineOriginale.getHeight(null) > 0) {
+                    // Carica e ridimensiona l'immagine usando il metodo comune
+                    final int ALTEZZA_TODO_IMMAGINE = 100;
+                    Image immagineRidimensionata = ridimensionaImmagine(
+                            immagineOriginale,
+                            0, // Larghezza calcolata automaticamente
+                            ALTEZZA_TODO_IMMAGINE
+                    );
 
-            // Calcola la nuova larghezza mantenendo le proporzioni
-            int altezzaDesiderata = 100;
-            int nuovaLarghezza = (int) (larghezzaOriginale * ((double) altezzaDesiderata / altezzaOriginale));
-
-            // Ridimensiona l'immagine mantenendo le proporzioni
-            Image immagineRidimensionata = immagine.getScaledInstance(nuovaLarghezza, altezzaDesiderata, Image.SCALE_SMOOTH);
-            ImageIcon iconaRidimensionata = new ImageIcon(immagineRidimensionata);
-
-
-            JLabel labelImmagine = new JLabel(iconaRidimensionata);
-
-            immaginePanel.add(labelImmagine);
-            todoPanel.add(immaginePanel);
-
+                    if (immagineRidimensionata != null) {
+                        immaginePanel.add(new JLabel(new ImageIcon(immagineRidimensionata)));
+                        todoPanel.add(immaginePanel);
+                    }
+                } else {
+                    // Messaggio per immagine non valida
+                    JLabel erroreLabel = new JLabel("Immagine non valida");
+                    erroreLabel.setForeground(coloreTesto);
+                    immaginePanel.add(erroreLabel);
+                    todoPanel.add(immaginePanel);
+                }
+            } catch (Exception _) {
+                // Gestisce qualsiasi errore durante il caricamento dell'immagine
+                JLabel erroreLabel = new JLabel("Errore caricamento immagine");
+                erroreLabel.setForeground(Color.RED);
+                immaginePanel.add(erroreLabel);
+                todoPanel.add(immaginePanel);
+            }
         }
 
 
@@ -863,7 +923,7 @@ public class Controller {
      */
     public Controller(@NotNull Scelta view) {
         this.view = view;
-        this.utentiRegistrati = this.utentiRegistrati = DatiEsempio.inizializzaDatiEsempio();
+        this.utentiRegistrati = DatiEsempio.inizializzaDatiEsempio();
 
 
         // Configurazione dei componenti dopo l'inizializzazione
@@ -890,7 +950,8 @@ public class Controller {
     }
 
     /**
-     *  Metodo per scegliere se usare il testo chiaro o scuro in base allo sfondo di personalizzato di un todo
+     * Metodo per scegliere se usare il testo chiaro o scuro in base allo sfondo di personalizzato di un todo
+     *
      * @param background il colore di sfondo usato
      * @return Il colore da utilizzare nel testo
      */
@@ -929,7 +990,7 @@ public class Controller {
             utenteAttuale = utente;
             this.mostraMain();
         } else {
-            JOptionPane.showMessageDialog(loginView, "Email o password non corretti.", "Errore",
+            JOptionPane.showMessageDialog(loginView, "Email o password non corretti.", ERRORE,
                     JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -953,13 +1014,13 @@ public class Controller {
         }
 
         if (!password.equals(confermaPassword)) {
-            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", "Errore",
+            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", ERRORE,
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (utentiRegistrati.containsKey(email)) {
-            JOptionPane.showMessageDialog(registerView, "Email già registrata.", "Errore",
+            JOptionPane.showMessageDialog(registerView, "Email già registrata.", ERRORE,
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -975,6 +1036,7 @@ public class Controller {
 
     /**
      * Rileva il Sistema Operativo sul quale viene eseguita l'applicazione.
+     *
      * @return boolean
      */
     public static boolean isDarkMode() {
@@ -991,13 +1053,17 @@ public class Controller {
 
     /**
      * Controlla se è attiva la dark mode dai reggistri di windows
+     *
      * @return boolean
      */
     public static boolean isDarkModeWindows() {
         try {
-            Process process = Runtime.getRuntime().exec(
-                    "reg query \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\" /v AppsUseLightTheme"
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                    "reg", "query",
+                    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                    "/v", "AppsUseLightTheme"
             );
+            Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
@@ -1012,20 +1078,39 @@ public class Controller {
     }
 
     /**
-     * Controlla se è attiva la dark mode dai AppleInterfaceStyle di MacOs
-     * @return boolean
+     * Controlla se è attiva la dark mode dai AppleInterfaceStyle di MacOS
      *
+     * @return boolean
      */
     public static boolean isDarkModeMac() {
         try {
-            Process process = Runtime.getRuntime().exec("defaults read -g AppleInterfaceStyle");
+            ProcessBuilder processBuilder = new ProcessBuilder("defaults", "read", "-g", "AppleInterfaceStyle");
+            Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String result = reader.readLine();
             return result != null && result.equalsIgnoreCase("Dark");
-        } catch (Exception e) {
+        } catch (Exception _) {
             // Se il comando fallisce o la chiave non esiste, assume modalità chiara
             return false;
         }
+    }
+
+
+    /**
+     * Crea il label con il link
+     * creata una funzione a parte per non innestare i try come consigliato da SonarQube
+     */
+    private URI creaURI(String linkTesto, JDialog dialogParent) {
+        if (linkTesto != null && !linkTesto.trim().isEmpty()) {
+            try {
+                return new URI(linkTesto);
+            } catch (URISyntaxException _) {
+                JOptionPane.showMessageDialog(dialogParent,
+                        "Il link inserito non è valido. Formato corretto: https://esempio.com",
+                        ERRORE, JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        return null;
     }
 
 
