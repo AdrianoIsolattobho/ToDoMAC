@@ -2,6 +2,7 @@ package gui;
 
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import java.awt.*;
 
 /**
  * Classe per gestire i placeholder nei JTextField e JPasswordField.
@@ -21,7 +22,7 @@ public class SetPlaceHolder {
      * @param passwordField la password field in cui inserire il placeholder
      * @param placeholder   il testo del placeholder
      */
-    public static void setPP(JPasswordField passwordField, String placeholder) {
+    public static void setPP(JPasswordField passwordField, String placeholder, Boolean getDarkMode) {
         passwordField.setEchoChar((char) 0);
         passwordField.setText(placeholder);
         passwordField.setForeground(java.awt.Color.GRAY);
@@ -32,7 +33,11 @@ public class SetPlaceHolder {
                 if (String.valueOf(passwordField.getPassword()).equals(placeholder)) {
                     passwordField.setText("");
                     passwordField.setEchoChar('•'); // o '*'
-                    passwordField.setForeground(java.awt.Color.BLACK);
+                    if (Boolean.TRUE.equals(getDarkMode)) {
+                        passwordField.setForeground(Color.WHITE);
+                    }else {
+                        passwordField.setForeground(Color.BLACK);
+                    }
                 }
             }
 
@@ -58,7 +63,7 @@ public class SetPlaceHolder {
      * @param textField   la text field in cui inserire il placeholder
      * @param placeholder il testo del placeholder
      */
-    public static void setTP(JTextField textField, String placeholder) {
+    public static void setTP(JTextField textField, String placeholder, Boolean getDarkMode) {
         textField.setText(placeholder);
         textField.setForeground(java.awt.Color.GRAY);
 
@@ -67,7 +72,11 @@ public class SetPlaceHolder {
             public void focusGained(java.awt.event.FocusEvent e) {
                 if (textField.getText().equals(placeholder)) {
                     textField.setText("");
-                    textField.setForeground(java.awt.Color.BLACK);
+                    if (Boolean.TRUE.equals(getDarkMode)) {
+                        textField.setForeground(Color.WHITE);
+                    }else {
+                        textField.setForeground(Color.BLACK);
+                    }
                 }
             }
 

@@ -39,6 +39,9 @@ public class StileSwing extends JFrame {
                 // TextField
                 UIManager.put("TextField.foreground", java.awt.Color.WHITE);
 
+                //Password
+                UIManager.put("PasswordField.foreground", java.awt.Color.WHITE);
+
 
                 //Panel
                 UIManager.put("Panel.background", new java.awt.Color(50, 50, 50));

@@ -1,7 +1,7 @@
 package gui;
 
 import javax.swing.*;
-import java.awt.*;
+
 
 public class LogIn extends JPanel {
     private JTextField email;
@@ -21,8 +21,8 @@ public class LogIn extends JPanel {
     // Chiamare questo metodo dopo che il form è stato inizializzato
     public void setupComponents() {
         if (this.email != null && this.password != null) {
-            SetPlaceHolder.setTP(this.email, "Email");
-            SetPlaceHolder.setPP(this.password, "Password");
+            SetPlaceHolder.setTP(this.email, "Email", GestioneDarkMode.isDarkMode());
+            SetPlaceHolder.setPP(this.password, "Password", GestioneDarkMode.isDarkMode());
 
             this.email.setBorder(new RoundedBorder(15));
             this.password.setBorder(new RoundedBorder(15));

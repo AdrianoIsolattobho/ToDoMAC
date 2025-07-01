@@ -3,6 +3,7 @@ package gui;
 import javax.swing.*;
 import java.awt.*;
 
+
 public class Register extends JPanel {
     private JButton registratiButton;
     private JPasswordField confermaPassword;
@@ -16,9 +17,9 @@ public class Register extends JPanel {
     // Chiamare questo metodo dopo che il form è stato inizializzato
     public void setupComponents() {
         if (this.email != null && this.password != null && this.confermaPassword != null) {
-            SetPlaceHolder.setTP(this.email, "Email");
-            SetPlaceHolder.setPP(this.password, "Password");
-            SetPlaceHolder.setPP(this.confermaPassword, "Conferma password");
+            SetPlaceHolder.setTP(this.email, "Email", GestioneDarkMode.isDarkMode());
+            SetPlaceHolder.setPP(this.password, "Password", GestioneDarkMode.isDarkMode());
+            SetPlaceHolder.setPP(this.confermaPassword, "Conferma password", GestioneDarkMode.isDarkMode());
 
             this.email.setBorder(new RoundedBorder(15));
             this.password.setBorder(new RoundedBorder(15));
