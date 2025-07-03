@@ -53,7 +53,7 @@
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="&lt;html&gt;&lt;div style='font-size:16px; text-align:center;'&gt;Bentornato!&lt;br&gt;Inserisci email e password per entrare&lt;/div&gt;&lt;/html&gt;"/>
+              <text value="Bentornato!&#10;Inserisci email e password per entrare"/>
             </properties>
           </component>
         </children>

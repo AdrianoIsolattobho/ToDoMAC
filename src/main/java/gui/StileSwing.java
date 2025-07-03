@@ -24,27 +24,26 @@ public class StileSwing extends JFrame {
             taskbar.setIconImage(image);
 
 
+
             // Imposta lo stile per i componenti Swing
             if (GestioneDarkMode.isDarkMode()) {
                 //button
                 UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
-                UIManager.put("Button.foreground", java.awt.Color.BLACK);
+                UIManager.put("Button.foreground", new java.awt.Color(1, 167, 225));
 
                 //label
-                UIManager.put("Label.background", new java.awt.Color(50, 50, 50));
+                UIManager.put("Label.foreground",new java.awt.Color(1, 167, 225) );
+                UIManager.put("Label.background", new java.awt.Color(18, 41, 75));
                 UIManager.put("Label.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.PLAIN, 16));
-                UIManager.put("Label.foreground", new java.awt.Color(240, 240, 240));
 
-
-                // TextField
-                UIManager.put("TextField.foreground", java.awt.Color.WHITE);
+                UIManager.put("TextField.foreground", new java.awt.Color(1, 167, 225));
 
                 //Password
-                UIManager.put("PasswordField.foreground", java.awt.Color.WHITE);
+                UIManager.put("PasswordField.foreground", new java.awt.Color(1, 167, 225));
 
 
                 //Panel
-                UIManager.put("Panel.background", new java.awt.Color(50, 50, 50));
+                UIManager.put("Panel.background", new java.awt.Color(18, 41, 75));
             } else {
                 UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
                 UIManager.put("Button.foreground", java.awt.Color.BLACK);
@@ -52,8 +51,10 @@ public class StileSwing extends JFrame {
                 //label
                 UIManager.put("Label.background", new java.awt.Color(245, 245, 245));
                 UIManager.put("Label.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.PLAIN, 16));
-                UIManager.put("Label.foreground", new java.awt.Color(30,30,30));
+                UIManager.put("Label.foreground", new java.awt.Color(18, 41, 75));
 
+
+                UIManager.put("TextField.foreground", new java.awt.Color(18, 149, 216));
                 // TextField
                 UIManager.put("TextField.foreground", java.awt.Color.BLACK);
 
