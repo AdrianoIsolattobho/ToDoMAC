@@ -1,7 +1,6 @@
 package gui;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class CreaToDo extends JDialog {
     private JPanel mainPanel;
@@ -32,10 +31,6 @@ public class CreaToDo extends JDialog {
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.setContentPane(mainPanel);
         this.pack();
-    }
-
-    public JTextField getTitoloField(){
-        return titolo;
     }
 
     public JPanel getSavePanel() {

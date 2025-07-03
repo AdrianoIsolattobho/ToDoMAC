@@ -11,7 +11,7 @@ public class LogIn extends JPanel {
     private JLabel titolo;
     private JButton back;
     private Main mainView;
-    private JPanel LogIn;
+    private JPanel logInPanel;
 
     public LogIn() {
         // Lascia vuoto il costruttore o sposta l'inizializzazione dopo la creazione del form
@@ -73,7 +73,7 @@ public class LogIn extends JPanel {
     }
 
     public JPanel getMainLogIn() {
-        return this.LogIn;
+        return this.logInPanel;
     }
 
 }

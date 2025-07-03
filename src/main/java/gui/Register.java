@@ -1,7 +1,6 @@
 package gui;
 
 import javax.swing.*;
-import java.awt.*;
 
 
 public class Register extends JPanel {
@@ -11,7 +10,7 @@ public class Register extends JPanel {
     private JTextField email;
     private JLabel titolo;
     private JButton back;
-    private JPanel Register;
+    private JPanel registerPanel;
 
 
     // Chiamare questo metodo dopo che il form è stato inizializzato
@@ -32,7 +31,7 @@ public class Register extends JPanel {
     }
 
     public JPanel getMainRegistrazione() {
-        return this.Register;
+        return this.registerPanel;
     }
 
     public JButton getBackButton() {

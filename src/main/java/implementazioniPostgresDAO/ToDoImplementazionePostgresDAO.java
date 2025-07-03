@@ -13,7 +13,7 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
 
     public ToDoImplementazionePostgresDAO() {
         try {
-            connection = DBConnessione.getInstance().connection;
+            connection = DBConnessione.getInstance().getConnection();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

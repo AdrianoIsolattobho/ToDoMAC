@@ -1,10 +1,9 @@
 package gui;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class Scelta extends JFrame {
-    private JPanel Scelta;
+    private JPanel sceltaPanel;
     private JButton registratiButton;
     private JButton logInButton;
     private JLabel titolo;
@@ -15,21 +14,21 @@ public class Scelta extends JFrame {
 
     public Scelta() {
         setTitle("ToDoApp");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         loginView = new LogIn();
         registerView = new Register();
 
         // Non chiamare i metodi setupComponents qui, lascialo fare al Controller
 
-        setContentPane(Scelta);
+        setContentPane(sceltaPanel);
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
     public JPanel getScelta() {
-        return this.Scelta;
+        return this.sceltaPanel;
     }
 
     public JButton getRegistratiButton() {

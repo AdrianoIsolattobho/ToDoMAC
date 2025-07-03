@@ -4,35 +4,34 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-
 public class DBConnessione {
     private static DBConnessione instance;
-    public Connection connection = null;
-    private String nome = "postgres";
-    private String password = "password";
-    private String url = "jdbc:postgresql://localhost:5432/todomac";
-    private String driver = "org.postgresql.Driver";
+    private Connection connection;
+    private static final String NOME = "postgres";
+    //Possiamo ignorare il problema di sonar qube riguardo alla password dato che non ci interessa la sicurezza in questo contesto
+    private static final String PASSWORD = "password";
+    private static final String URL = "jdbc:postgresql://localhost:5432/todomac";
 
-    //costruttore
-    private DBConnessione () throws SQLException{
-        try {
-            Class.forName(driver);
-            connection = DriverManager.getConnection(url,nome,password);
-        } catch (ClassNotFoundException ex){
-            System.out.println("Database Connection Creation Failed: "+ ex.getMessage());
-            ex.printStackTrace();
-        }
+
+    private DBConnessione() throws SQLException {
+        connection = DriverManager.getConnection(URL, NOME, PASSWORD);
     }
 
-    public static DBConnessione getInstance() throws SQLException {
-        //crea una nuova connessione se non esiste/è chiusa
+    public static synchronized DBConnessione getInstance() throws SQLException {
         if (instance == null) {
-            instance = new DBConnessione();
-        } else if (instance.connection.isClosed()) {
-            //riferimento a quella esistente
             instance = new DBConnessione();
         }
         return instance;
     }
 
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void closeConnection() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
+    }
 }

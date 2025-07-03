@@ -281,7 +281,7 @@ public class Controller {
         // Action listener per il pulsante Salva
         creaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
             // Qui va il codice per salvare il nuovo ToDo
-            String titoloTodo = creaTodoDialog.getTitoloField().getText();
+            String titoloTodo = creaTodoDialog.getTitolo().getText();
             String linkTesto = creaTodoDialog.getLinkField().getText();
             String descrizioneTodo = creaTodoDialog.getDescrizioneField().getText();
             // Recupera la bacheca selezionata dal ComboBox
@@ -349,6 +349,134 @@ public class Controller {
 
     }
 
+
+    private void generaTempoLibero(Main mainView) {
+        // Bacheca Tempo Libero
+        Bacheca tempoLibero = utenteAttuale.getTempoLibero();
+        boolean haToDoTempoLibero = false;
+        if (tempoLibero != null && tempoLibero.getToDoList() != null) {
+            JPanel contenitoreToDoT = mainView.getContenitoreToDoT();
+            contenitoreToDoT.removeAll();
+            mainView.setDescrizioneFreText(tempoLibero.getDescrizione());
+            mainView.getModificaDescrizioneFre().addActionListener(
+                    e -> {
+                        ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
+                        modificaDescrizioneDialog.setDescrizione(tempoLibero.getDescrizione());
+                        modificaDescrizioneDialog.getButtonOK().addActionListener(
+                                ex ->{
+                                    tempoLibero.setDescrizione(modificaDescrizioneDialog.getDescrizione());
+                                    // Chiudi il dialog
+                                    modificaDescrizioneDialog.dispose();
+                                    // Ricarica l'interfaccia principale
+                                    aggiornaInterfacciaUtente(mainView);
+                                }
+                        );
+                        modificaDescrizioneDialog.pack();
+                        modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+                        modificaDescrizioneDialog.setVisible(true);
+                    }
+            );
+            mainView.getOrdineFreButton().addActionListener(
+                    e -> {
+                        GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
+
+                        gestioneOrdineDialog.getButtonOK().addActionListener(
+                                ex ->{
+
+
+                                    gestioneOrdineDialog.dispose();
+                                    // Ricarica l'interfaccia principale
+                                    aggiornaInterfacciaUtente(mainView);
+                                }
+                        );
+                        gestioneOrdineDialog.pack();
+                        gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+                        gestioneOrdineDialog.setVisible(true);
+                    }
+            );
+            for (ToDo todo : tempoLibero.getToDoList()) {
+                if (mostraCompletati || !todo.isCompletato()) {
+                    visualizzaToDo(todo, contenitoreToDoT);
+                    haToDoTempoLibero = true;
+                }
+            }
+
+        }
+        mainView.getBaFre().setVisible(haToDoTempoLibero);
+    }
+
+    private void generaLavoro(Main mainView) {
+        // Bacheca Lavoro
+        Bacheca lavoro = utenteAttuale.getLavoro();
+        boolean haToDoLavoro = false;
+        if (lavoro != null && lavoro.getToDoList() != null) {
+            JPanel contenitoreToDoL = mainView.getContenitoreToDoL();
+            contenitoreToDoL.removeAll();
+            mainView.setDescrizioneLavText(lavoro.getDescrizione());
+            mainView.getModificaDescrizioneLav().addActionListener(
+                    e -> {
+                        ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
+                        modificaDescrizioneDialog.setDescrizione(lavoro.getDescrizione());
+                        modificaDescrizioneDialog.getButtonOK().addActionListener(
+                                ex ->{
+                                    lavoro.setDescrizione(modificaDescrizioneDialog.getDescrizione());
+                                    // Chiudi il dialog
+                                    modificaDescrizioneDialog.dispose();
+                                    // Ricarica l'interfaccia principale
+                                    aggiornaInterfacciaUtente(mainView);
+                                }
+                        );
+                        modificaDescrizioneDialog.pack();
+                        modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+                        modificaDescrizioneDialog.setVisible(true);
+                    }
+            );
+            for (ToDo todo : lavoro.getToDoList()) {
+                if (mostraCompletati || !todo.isCompletato()) {
+                    visualizzaToDo(todo, contenitoreToDoL);
+                    haToDoLavoro = true;
+                }
+            }
+        }
+        mainView.getBaLav().setVisible(haToDoLavoro);
+    }
+
+    private void generaUniversita(Main mainView) {
+        // Bacheca Università
+        Bacheca universita = utenteAttuale.getUniversita();
+        boolean haToDoUniversita = false;
+        if (universita != null && universita.getToDoList() != null) {
+            JPanel contenitoreToDoU = mainView.getContenitoreToDoU();
+            contenitoreToDoU.removeAll();
+            mainView.setDescrizioneUniText(universita.getDescrizione());
+            mainView.getModificaDescrizioneUni().addActionListener(
+                    e -> {
+                        ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
+                        modificaDescrizioneDialog.setDescrizione(universita.getDescrizione());
+                        modificaDescrizioneDialog.getButtonOK().addActionListener(
+                                ex ->{
+                                    universita.setDescrizione(modificaDescrizioneDialog.getDescrizione());
+                                    // Chiudi il dialog
+                                    modificaDescrizioneDialog.dispose();
+                                    // Ricarica l'interfaccia principale
+                                    aggiornaInterfacciaUtente(mainView);
+                                }
+                        );
+                        modificaDescrizioneDialog.pack();
+                        modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+                        modificaDescrizioneDialog.setVisible(true);
+                    }
+            );
+            for (ToDo todo : universita.getToDoList()) {
+                if (mostraCompletati || !todo.isCompletato()) {
+                    visualizzaToDo(todo, contenitoreToDoU);
+                    haToDoUniversita = true;
+                }
+            }
+        }
+        mainView.getBaUni().setVisible(haToDoUniversita);
+    }
+
     /**
      * Aggiorna l'interfaccia utente con i dati dell'utente attuale
      * @param mainView MainView della GUI
@@ -358,43 +486,10 @@ public class Controller {
         if (utenteAttuale != null) {
             mainView.setNomeText(utenteAttuale.getEmail());
 
-            // Aggiorna i contenitori per ciascuna bacheca
+            generaTempoLibero(mainView);
+            generaLavoro(mainView);
+            generaUniversita(mainView);
 
-            // Bacheca Tempo Libero
-            Bacheca tempoLibero = utenteAttuale.getTempoLibero();
-            if (tempoLibero != null && tempoLibero.getToDoList() != null) {
-                JPanel contenitoreToDoT = mainView.getContenitoreToDoT();
-                contenitoreToDoT.removeAll(); // Pulisce il contenitore prima di aggiungere nuovi elementi
-                for (ToDo todo : tempoLibero.getToDoList()) {
-                    if (mostraCompletati || !todo.isCompletato()) {
-                        visualizzaToDo(todo, contenitoreToDoT);
-                    }
-                }
-            }
-
-            // Bacheca Università
-            Bacheca universita = utenteAttuale.getUniversita();
-            if (universita != null && universita.getToDoList() != null) {
-                JPanel contenitoreToDoU = mainView.getContenitoreToDoU();
-                contenitoreToDoU.removeAll(); // Pulisce il contenitore
-                for (ToDo todo : universita.getToDoList()) {
-                    if (mostraCompletati || !todo.isCompletato()) {
-                        visualizzaToDo(todo, contenitoreToDoU);
-                    }
-                }
-            }
-
-            // Bacheca Lavoro
-            Bacheca lavoro = utenteAttuale.getLavoro();
-            if (lavoro != null && lavoro.getToDoList() != null) {
-                JPanel contenitoreToDoL = mainView.getContenitoreToDoL();
-                contenitoreToDoL.removeAll(); // Pulisce il contenitore
-                for (ToDo todo : lavoro.getToDoList()) {
-                    if (mostraCompletati || !todo.isCompletato()) {
-                        visualizzaToDo(todo, contenitoreToDoL);
-                    }
-                }
-            }
         }
     }
 
@@ -451,7 +546,7 @@ public class Controller {
             modificaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
 
             // Popola i campi con i dati del todo corrente
-            modificaTodoDialog.getTitoloField().setText(todo.getTitolo());
+            modificaTodoDialog.getTitolo().setText(todo.getTitolo());
             modificaTodoDialog.getDescrizioneField().setText(todo.getDescrizione());
 
             // Imposta il link se presente
@@ -534,7 +629,7 @@ public class Controller {
             // Modifica il comportamento del pulsante Salva per aggiornare il todo esistente
             modificaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
                 // Validazione del titolo
-                String nuovoTitolo = modificaTodoDialog.getTitoloField().getText();
+                String nuovoTitolo = modificaTodoDialog.getTitolo().getText();
                 if (nuovoTitolo == null || nuovoTitolo.trim().isEmpty()) {
                     JOptionPane.showMessageDialog(modificaTodoDialog,
                             "Inserisci un titolo valido per il ToDo",
@@ -1021,7 +1116,7 @@ public class Controller {
 
 
     public static void main(String[] args) {
-        StileSwing.applicaStile(GestioneDarkMode.isDarkMode());
+        StileSwing.applicaStile();
         SwingUtilities.invokeLater(() -> {
             Scelta view = new Scelta();
             new Controller(view);

@@ -1,5 +1,6 @@
 package model;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Bacheca {
     private Titolo titolo;
@@ -8,14 +9,12 @@ public class Bacheca {
     private ArrayList<ToDo> toDoList = new ArrayList<>(); // ArrayList per gestire dinamicamente la lista di ToDo
 
     //costruttore
-    public Bacheca(Titolo titolo, String descrizione, Ordinamento ordinamento, ArrayList<ToDo> toDoList) {
+    public Bacheca(Titolo titolo, String descrizione, Ordinamento ordinamento, List<ToDo> toDoList) {
         this.titolo = titolo;
         this.descrizione = descrizione;
         this.ordinamento = ordinamento;
         this.toDoList = new ArrayList<>();
-        for (ToDo toDo : toDoList) {
-            this.toDoList.add(toDo);
-        }
+        this.toDoList.addAll(toDoList);
     }
 
     public Bacheca(){}
@@ -47,11 +46,11 @@ public class Bacheca {
     }
 
 
-    public ArrayList<ToDo> getToDoList() {
+    public List<ToDo> getToDoList() {
         return toDoList;
     }
-    public void setToDoList(ArrayList<ToDo> toDoList) {
-        this.toDoList = toDoList;
+    public void setToDoList(List<ToDo> toDoList) {
+        this.toDoList = new ArrayList<>(toDoList);
     }
     
 }

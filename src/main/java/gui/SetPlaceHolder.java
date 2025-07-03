@@ -11,6 +11,10 @@ import java.awt.*;
  */
 public class SetPlaceHolder {
 
+    private SetPlaceHolder() {
+        throw new IllegalStateException("Utility class");
+    }
+
     /**
      * Inserisce un placeholder fittizio in un JTextField.
      * Funzionamento:

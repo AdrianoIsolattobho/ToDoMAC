@@ -15,7 +15,7 @@ public class StileSwing extends JFrame {
     private static final String FONT_SCELTO = "Arial";
 
 
-        public static void applicaStile(Boolean getDarkMode) {
+        public static void applicaStile() {
             //soluzione universale per cambiare icona sul dock (mac) e toolbar (windows)
             final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
             final URL imageResource = Main.class.getClassLoader().getResource("img/check.png");
@@ -25,7 +25,7 @@ public class StileSwing extends JFrame {
 
 
             // Imposta lo stile per i componenti Swing
-            if (Boolean.TRUE.equals(getDarkMode)) {
+            if (GestioneDarkMode.isDarkMode()) {
                 //button
                 UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
                 UIManager.put("Button.foreground", java.awt.Color.BLACK);

@@ -1,7 +1,6 @@
 package gui;
 
 import javax.swing.*;
-import java.awt.*;
 
 
 public class Main extends JPanel {
@@ -17,7 +16,27 @@ public class Main extends JPanel {
     private JPanel contenitoreToDoL;
     private JPanel contenitoreToDoT;
     private JButton mostraCompletati;
+    private JLabel descrizioneUni;
+    private JLabel descrizioneLav;
+    private JLabel descrizioneFre;
+    private JButton modificaDescrizioneUni;
+    private JButton modificaDescrizioneLav;
+    private JButton modificaDescrizioneFre;
+    private JButton ordineUniButton;
+    private JButton ordineLavButton;
+    private JButton ordineFreButton;
 
+    public JButton getOrdineUniButton() {
+        return ordineUniButton;
+    }
+
+    public JButton getOrdineLavButton() {
+        return ordineLavButton;
+    }
+
+    public JButton getOrdineFreButton() {
+        return ordineFreButton;
+    }
 
     /*
      * Setup dei componenti grafici utile da codice per non passare da IntelliJ
@@ -26,7 +45,11 @@ public class Main extends JPanel {
         esci.setBounds(0, 0, 30, 25);
 
         try {
-            esci.setIcon(new ImageIcon(getClass().getResource("/img/logout.png")));
+            if ( GestioneDarkMode.isDarkMode()){
+                esci.setIcon(new ImageIcon(getClass().getResource("/img/logout_dark.png")));
+            } else {
+                esci.setIcon(new ImageIcon(getClass().getResource("/img/logout.png")));
+            }
         } catch (Exception _) {
             // Se l'immagine non viene trovata, utilizza del testo al posto dell'icona
             esci.setText("Esci");
@@ -35,6 +58,11 @@ public class Main extends JPanel {
         contenitoreToDoU.setLayout(new BoxLayout(contenitoreToDoU, BoxLayout.Y_AXIS));
         contenitoreToDoL.setLayout(new BoxLayout(contenitoreToDoL, BoxLayout.Y_AXIS));
         contenitoreToDoT.setLayout(new BoxLayout(contenitoreToDoT, BoxLayout.Y_AXIS));
+
+        //bacheche visibili solo nel caso in cui sia presente un todo
+        baUni.setVisible(false);
+        baLav.setVisible(false);
+        baFre.setVisible(false);
 
     }
 
@@ -54,7 +82,6 @@ public class Main extends JPanel {
         this.nome.setText(nome);
     }
 
-
     public JPanel getMain() {
         return this.mainPanel;
     }
@@ -71,5 +98,50 @@ public class Main extends JPanel {
         return contenitoreToDoT;
     }
 
+    public JPanel getBaUni() {
+        return baUni;
+    }
 
+    public JPanel getBaLav() {
+        return baLav;
+    }
+
+    public JPanel getBaFre() {
+        return baFre;
+    }
+
+    public JLabel getDescrizioneUni() {
+        return descrizioneUni;
+    }
+
+    public void setDescrizioneUniText(String descrizioneUniText) {
+        this.descrizioneUni.setText(descrizioneUniText);
+    }
+
+    public JLabel getDescrizioneLav() {
+        return descrizioneLav;
+    }
+
+    public void setDescrizioneLavText(String descrizioneLavText) {
+        this.descrizioneLav.setText(descrizioneLavText);
+    }
+
+    public JLabel getDescrizioneFre() {
+        return descrizioneFre;
+    }
+
+    public void setDescrizioneFreText(String descrizioneFreText) {
+        this.descrizioneFre.setText(descrizioneFreText);
+    }
+    public JButton getModificaDescrizioneUni() {
+        return modificaDescrizioneUni;
+    }
+
+    public JButton getModificaDescrizioneLav() {
+        return modificaDescrizioneLav;
+    }
+
+    public JButton getModificaDescrizioneFre() {
+        return modificaDescrizioneFre;
+    }
 }

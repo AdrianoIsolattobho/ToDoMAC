@@ -1,11 +1,10 @@
 package gui;
 
 import javax.swing.border.Border;
-import javax.swing.*;
 import java.awt.*;
 
 public class RoundedBorder implements Border {
-    private int radius;
+    private final int radius;
 
     public RoundedBorder(int radius) {
         this.radius = radius;

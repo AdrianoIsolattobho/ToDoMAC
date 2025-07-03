@@ -13,7 +13,7 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
 
     public UtenteImplementazionePostgresDAO() {
         try {
-        connection = DBConnessione.getInstance().connection;
+        connection = DBConnessione.getInstance().getConnection();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
