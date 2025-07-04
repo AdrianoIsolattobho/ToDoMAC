@@ -11,6 +11,14 @@ public class Checklist {
         return completata;
     }
 
+    public void setNomeChecklist(String nomeChecklist) {
+        this.nomeChecklist = nomeChecklist;
+    }
+
+    public void setAttivita(List<Attivita> attivita) {
+        this.attivita = attivita;
+    }
+
     // costruttore
     public Checklist(String nome, List<Attivita> attivita) {
         this.nomeChecklist = nome;

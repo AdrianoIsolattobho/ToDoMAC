@@ -5,7 +5,7 @@ import javax.swing.*;
 public class CreaToDo extends JDialog {
     private JPanel mainPanel;
     private JTextField titolo;
-    private JButton attivitaButton;
+    private JButton checklistButton;
     private JTextField linkField;
     private JButton colorButton;
     private JButton dataScadenzaButton;
@@ -23,14 +23,17 @@ public class CreaToDo extends JDialog {
     private JPanel descrizionePanel;
     private JButton sfogliaButton;
     private JPanel previewPanel;
+    private JPanel pannelloAggiungibile;
 
-    public void setupComponents() {
-        this.setTitle("Crea nuovo ToDo");
-        this.setModal(true);
-        this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        this.setContentPane(mainPanel);
-        this.pack();
+    public JPanel getPannelloAggiungibile() {
+        return pannelloAggiungibile;
+    }
+
+    public CreaToDo() {
+        setContentPane(mainPanel);
+        setModal(true);
+        getRootPane().setDefaultButton(salvaButton);
+        this.setTitle("Modifica Descrizione");
     }
 
     public JPanel getSavePanel() {
@@ -101,8 +104,8 @@ public class CreaToDo extends JDialog {
         return linkField;
     }
 
-    public JButton getAttivitaButton() {
-        return attivitaButton;
+    public JButton getChecklistButton() {
+        return checklistButton;
     }
 
     public JButton getColorButton() {

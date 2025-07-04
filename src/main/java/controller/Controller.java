@@ -9,23 +9,26 @@ import org.jetbrains.annotations.NotNull;
 import dao.ToDoDAO;
 import dao.UtenteDAO;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.awt.Image;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.nio.file.Files.newInputStream;
 
 
 /**
@@ -36,7 +39,6 @@ import java.awt.Image;
 public class Controller {
 
     private Scelta view;
-    private HashMap<String, Utente> utentiRegistrati;
     private Utente utenteAttuale;
     private boolean mostraCompletati=false;
     private ToDoDAO toDoDAO = new ToDoImplementazionePostgresDAO();
@@ -112,14 +114,12 @@ public class Controller {
     private void aggiuntaTodo() {
         Main mainView = view.getLogInView().getMainView();
         CreaToDo creaTodoDialog = new CreaToDo();
-        creaTodoDialog.setupComponents();
         creaTodoDialog.setContentPane(creaTodoDialog.getMainPanel());
         creaTodoDialog.setLocationRelativeTo(mainView.getMain());
 
-        // Variabili per memorizzare i valori selezionati
-        final Color[] coloreScelto = {null};
-        final Calendar[] dataScelto = {null};
-        final URL[] immagineScelta = {null};
+        AtomicReference<Color> coloreScelto = new AtomicReference<>(Color.WHITE);
+        AtomicReference<Calendar> dataScelto = new AtomicReference<>();
+        AtomicReference<URL> immagineScelta = new AtomicReference<>();
 
         // Action listener per il pulsante Sfoglia per la selezione dell'immagine
         creaTodoDialog.getSfogliaButton().addActionListener(imageEvent -> {
@@ -134,73 +134,30 @@ public class Controller {
             int result = fileChooser.showOpenDialog(creaTodoDialog);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                try {
-                    // Converti il file selezionato in URL
-                    immagineScelta[0] = selectedFile.toURI().toURL();
 
-                    // Carica l'immagine per l'anteprima
-                    ImageIcon originalIcon = new ImageIcon(immagineScelta[0]);
-                    Image originalImage = originalIcon.getImage();
-
-                    // Definisci le dimensioni per l'anteprima
-                    int previewWidth = 200;
-                    int previewHeight = 150;
-
-                    // Calcola le dimensioni mantenendo le proporzioni
-                    int originalWidth = originalIcon.getIconWidth();
-                    int originalHeight = originalIcon.getIconHeight();
-                    double ratio = (double) originalWidth / originalHeight;
-
-                    int targetWidth, targetHeight;
-                    if (ratio > 1) {
-                        // Immagine più larga che alta
-                        targetWidth = previewWidth;
-                        targetHeight = (int) (previewWidth / ratio);
-                    } else {
-                        // Immagine più alta che larga
-                        targetHeight = previewHeight;
-                        targetWidth = (int) (previewHeight * ratio);
-                    }
-
-                    // Ridimensiona e mostra l'anteprima
-                    Image resizedImage = originalImage.getScaledInstance(
-                            targetWidth, targetHeight, Image.SCALE_SMOOTH);
-                    ImageIcon resizedIcon = new ImageIcon(resizedImage);
-
-                    // Mostra l'anteprima nel pannello
-                    creaTodoDialog.getPreviewPanel().removeAll();
-                    JLabel previewLabel = new JLabel(resizedIcon);
-                    creaTodoDialog.getPreviewPanel().add(previewLabel);
-
-                    // Ridimensiona il form per mostrare l'immagine
-                    Dimension currentSize = creaTodoDialog.getSize();
-
-                    // Assicurati che il pannello di anteprima sia visibile
-                    creaTodoDialog.getPreviewPanel().setVisible(true);
-
-                    // Imposta un bordo per il pannello di anteprima
-                    creaTodoDialog.getPreviewPanel().setBorder(BorderFactory.createTitledBorder("Anteprima immagine"));
-
-                    // Fai il pack della finestra per adattarla ai nuovi contenuti
-                    creaTodoDialog.pack();
-
-                    // Se la dimensione attuale è maggiore di quella calcolata dal pack, mantienila
-                    int newWidth = Math.max(currentSize.width, creaTodoDialog.getSize().width);
-                    int newHeight = Math.max(currentSize.height, creaTodoDialog.getSize().height);
-
-                    // Imposta la nuova dimensione
-                    creaTodoDialog.setSize(newWidth, newHeight);
-
-                    // Centra di nuovo la finestra
-                    creaTodoDialog.setLocationRelativeTo(creaTodoDialog.getOwner());
-
-                    // Aggiorna l'interfaccia
-                    creaTodoDialog.getPreviewPanel().revalidate();
-                    creaTodoDialog.getPreviewPanel().repaint();
-
-                } catch (Exception ex) {
+                // Controlli preventivi
+                if (!selectedFile.exists()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
-                            "Errore nel caricamento dell'immagine: " + ex.getMessage(),
+                            "Il file selezionato non esiste.",
+                            "Errore", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (!selectedFile.canRead()) {
+                    JOptionPane.showMessageDialog(creaTodoDialog,
+                            "Impossibile leggere il file selezionato.",
+                            "Errore", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                try {
+                    BufferedImage image = ImageIO.read(newInputStream(selectedFile.toPath()));
+                    caricaImmagine(new ImageIcon(image),
+                            creaTodoDialog.getPreviewPanel(), creaTodoDialog);
+                    immagineScelta.set(selectedFile.toURI().toURL());
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(creaTodoDialog,
+                            "Errore durante il caricamento dell'immagine: " + e.getMessage(),
                             "Errore", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -209,16 +166,15 @@ public class Controller {
         * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
         */
         creaTodoDialog.getColorButton().addActionListener(colorEvent -> {
-            Color coloreIniziale = coloreScelto[0] != null ? coloreScelto[0] : Color.WHITE;
-            Color nuovoColore = JColorChooser.showDialog(
+            coloreScelto.set(JColorChooser.showDialog(
                     creaTodoDialog,
-                    "Scegli un colore per il ToDo",
-                    coloreIniziale);
+                    "Scegli un colore per il ToDo", coloreScelto.get()));
 
-            if (nuovoColore != null) {
-                coloreScelto[0] = nuovoColore;
+            if (coloreScelto.get() != null) {
                 // Cambia il colore del bottone per mostrare il colore scelto
-                creaTodoDialog.getColorButton().setBackground(nuovoColore);
+                creaTodoDialog.getColorButton().setForeground(coloreScelto.get());
+                creaTodoDialog.getColorButton().repaint();
+                creaTodoDialog.getColorButton().revalidate();
             }
         });
 
@@ -237,11 +193,6 @@ public class Controller {
             JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
             dateSpinner.setEditor(dateEditor);
 
-            // Se c'è già una data selezionata, la impostiamo
-            if (dataScelto[0] != null) {
-                dateSpinner.setValue(dataScelto[0].getTime());
-            }
-
             calendarPanel.add(new JLabel("Seleziona data: "));
             calendarPanel.add(dateSpinner);
 
@@ -255,7 +206,7 @@ public class Controller {
                 java.util.Date selectedDate = (java.util.Date) dateSpinner.getValue();
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(selectedDate);
-                dataScelto[0] = calendar;
+                dataScelto.set(calendar);
 
                 // Cambia il testo del bottone per mostrare la data selezionata
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -277,6 +228,76 @@ public class Controller {
             dateDialog.setLocationRelativeTo(creaTodoDialog);
             dateDialog.setVisible(true);
         });
+
+        ArrayList<JTextField> attivitaFields = new ArrayList<>();
+        AtomicReference<JTextField> titoloCheckListRef = new AtomicReference<>();
+        creaTodoDialog.getChecklistButton().addActionListener(attivitaEvent -> {
+                JPanel checklistPanel = new JPanel();
+                checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
+
+                JPanel titoloChecklist = new JPanel();
+                titoloChecklist.setLayout(new BoxLayout(titoloChecklist, BoxLayout.X_AXIS));
+                JTextField titoloCheckListField = new JTextField(20);
+                SetPlaceHolder.setTP(titoloCheckListField, "Titolo CheckList", GestioneDarkMode.isDarkMode());
+                titoloChecklist.add(titoloCheckListField);
+                titoloCheckListRef.set(titoloCheckListField);
+                JButton aggiungiAttivitaButton = new JButton("+");
+                titoloChecklist.add(aggiungiAttivitaButton);
+                JButton cancellaCheckListButton = new JButton("X");
+                titoloChecklist.add(cancellaCheckListButton);
+                titoloChecklist.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+
+                checklistPanel.add(titoloChecklist);
+
+                creaTodoDialog.getChecklistButton().setEnabled(false);
+                creaTodoDialog.getChecklistButton().setText("V");
+                creaTodoDialog.getChecklistButton().setBackground(Color.GRAY);
+
+                cancellaCheckListButton.addActionListener(cancellaCheckListEvent -> {
+                    checklistPanel.removeAll();
+
+                    creaTodoDialog.getChecklistButton().setEnabled(true);
+                    creaTodoDialog.getChecklistButton().setText("Inserisci");
+                    creaTodoDialog.getChecklistButton().setBackground(Color.WHITE);
+                    creaTodoDialog.repaint();
+                    creaTodoDialog.pack();
+                    creaTodoDialog.revalidate();
+
+                });
+
+                aggiungiAttivitaButton.addActionListener(attivitaAddEvent -> {
+                    JPanel attivitaPanel = new JPanel();
+                    attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
+                    JTextField titoloAttivitaField = new JTextField(20);
+                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    attivitaFields.add(titoloAttivitaField);
+
+                    attivitaPanel.add(titoloAttivitaField);
+                    JButton cancellaAttivitaButton = new JButton("-");
+                    attivitaPanel.add(cancellaAttivitaButton);
+
+                    cancellaAttivitaButton.addActionListener(cancellaAttivitaEvent -> {
+                        attivitaFields.remove(titoloAttivitaField);
+                        attivitaPanel.removeAll();
+                        creaTodoDialog.repaint();
+                        creaTodoDialog.pack();
+                        creaTodoDialog.revalidate();
+                        });
+
+
+                    checklistPanel.add(attivitaPanel);
+                    creaTodoDialog.repaint();
+                    creaTodoDialog.pack();
+                    creaTodoDialog.revalidate();
+
+                });
+
+                creaTodoDialog.getPannelloAggiungibile().add(checklistPanel);
+                creaTodoDialog.repaint();
+                creaTodoDialog.pack();
+                creaTodoDialog.revalidate();
+
+            });
 
         // Action listener per il pulsante Salva
         creaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
@@ -311,7 +332,14 @@ public class Controller {
 
                 // Crea il nuovo ToDo con tutti i dati raccolti
 
-                ToDo nuovoToDo = new ToDo(titoloTodo, descrizioneTodo, link, dataScelto[0], coloreScelto[0], immagineScelta[0], null);
+                ArrayList<Attivita> attivitaDaSalvare = estraiAttivitaDaFields(attivitaFields);
+                ToDo nuovoToDo = new ToDo(titoloTodo, descrizioneTodo, link, dataScelto.get(), coloreScelto.get(), immagineScelta.get(), null);
+                if (attivitaDaSalvare != null) {
+                    Checklist c =new Checklist(titoloCheckListRef.get().getText() ,attivitaDaSalvare);
+                    nuovoToDo.setChecklist(c);
+                }
+
+
                 try{
                     toDoDAO.creaToDo(utenteAttuale.getEmail(), nuovoToDo);
                 } catch (Exception daoEx) {
@@ -345,10 +373,31 @@ public class Controller {
             }
         });
 
+        creaTodoDialog.pack();
+        creaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
         creaTodoDialog.setVisible(true);
 
     }
 
+    // Metodo helper per estrarre le attività dai campi di testo
+    private ArrayList<Attivita> estraiAttivitaDaFields(ArrayList<JTextField> attivitaFields) {
+        ArrayList<Attivita> attivita = new ArrayList<>();
+        // Se non ci sono campi attività, ritorna lista vuota
+        if (attivitaFields == null || attivitaFields.isEmpty()) {
+            return null;
+        }
+
+        // Processa solo i campi non null e non vuoti
+        for (JTextField field : attivitaFields) {
+            if (field != null) {
+                String testo = field.getText();
+                if (testo != null && !testo.trim().isEmpty()) {
+                    attivita.add(new Attivita(testo.trim()));
+                }
+            }
+        }
+        return attivita;
+    }
 
     private void generaTempoLibero(Main mainView) {
         // Bacheca Tempo Libero
@@ -382,7 +431,34 @@ public class Controller {
 
                         gestioneOrdineDialog.getButtonOK().addActionListener(
                                 ex ->{
+                                    String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
 
+                                    if (selectedCommand != null) {
+                                        // Usa uno switch per gestire le opzioni selezionate
+                                        switch (selectedCommand) {
+                                            case "AZ":
+                                                tempoLibero.setOrdinamento(Ordinamento.AZ);
+                                                break;
+                                            case "ZA":
+                                                tempoLibero.setOrdinamento(Ordinamento.ZA);
+                                                break;
+                                            case "CreazioneCrescente":
+                                                tempoLibero.setOrdinamento(Ordinamento.CREAZIONE_ASC);
+                                                break;
+                                            case "CreazioneDecrescente":
+                                                tempoLibero.setOrdinamento(Ordinamento.CREAZIONE_DESC);
+                                                break;
+                                            case "ScadenzaCrescente":
+                                                tempoLibero.setOrdinamento(Ordinamento.SCADENZA_ASC);
+                                                break;
+                                            case "ScadenzaDecrescente":
+                                                tempoLibero.setOrdinamento(Ordinamento.SCADENZA_DESC);
+                                                break;
+                                            default:
+                                                tempoLibero.setOrdinamento(null);
+                                                break;
+                                        }
+                                    }
 
                                     gestioneOrdineDialog.dispose();
                                     // Ricarica l'interfaccia principale
@@ -431,6 +507,51 @@ public class Controller {
                         modificaDescrizioneDialog.setVisible(true);
                     }
             );
+            mainView.getOrdineLavButton().addActionListener(
+                    e -> {
+                        GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
+
+                        gestioneOrdineDialog.getButtonOK().addActionListener(
+                                ex ->{
+                                    String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
+
+                                    if (selectedCommand != null) {
+                                        // Usa uno switch per gestire le opzioni selezionate
+                                        switch (selectedCommand) {
+                                            case "AZ":
+                                                lavoro.setOrdinamento(Ordinamento.AZ);
+                                                break;
+                                            case "ZA":
+                                                lavoro.setOrdinamento(Ordinamento.ZA);
+                                                break;
+                                            case "CreazioneCrescente":
+                                                lavoro.setOrdinamento(Ordinamento.CREAZIONE_ASC);
+                                                break;
+                                            case "CreazioneDecrescente":
+                                                lavoro.setOrdinamento(Ordinamento.CREAZIONE_DESC);
+                                                break;
+                                            case "ScadenzaCrescente":
+                                                lavoro.setOrdinamento(Ordinamento.SCADENZA_ASC);
+                                                break;
+                                            case "ScadenzaDecrescente":
+                                                lavoro.setOrdinamento(Ordinamento.SCADENZA_DESC);
+                                                break;
+                                            default:
+                                                lavoro.setOrdinamento(null);
+                                                break;
+                                        }
+                                    }
+
+                                    gestioneOrdineDialog.dispose();
+                                    // Ricarica l'interfaccia principale
+                                    aggiornaInterfacciaUtente(mainView);
+                                }
+                        );
+                        gestioneOrdineDialog.pack();
+                        gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+                        gestioneOrdineDialog.setVisible(true);
+                    }
+            );
             for (ToDo todo : lavoro.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
                     visualizzaToDo(todo, contenitoreToDoL);
@@ -467,6 +588,51 @@ public class Controller {
                         modificaDescrizioneDialog.setVisible(true);
                     }
             );
+            mainView.getOrdineUniButton().addActionListener(
+                    e -> {
+                        GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
+
+                        gestioneOrdineDialog.getButtonOK().addActionListener(
+                                ex ->{
+                                    String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
+
+                                    if (selectedCommand != null) {
+                                        // Usa uno switch per gestire le opzioni selezionate
+                                        switch (selectedCommand) {
+                                            case "AZ":
+                                                universita.setOrdinamento(Ordinamento.AZ);
+                                                break;
+                                            case "ZA":
+                                                universita.setOrdinamento(Ordinamento.ZA);
+                                                break;
+                                            case "CreazioneCrescente":
+                                                universita.setOrdinamento(Ordinamento.CREAZIONE_ASC);
+                                                break;
+                                            case "CreazioneDecrescente":
+                                                universita.setOrdinamento(Ordinamento.CREAZIONE_DESC);
+                                                break;
+                                            case "ScadenzaCrescente":
+                                                universita.setOrdinamento(Ordinamento.SCADENZA_ASC);
+                                                break;
+                                            case "ScadenzaDecrescente":
+                                                universita.setOrdinamento(Ordinamento.SCADENZA_DESC);
+                                                break;
+                                            default:
+                                                universita.setOrdinamento(null);
+                                                break;
+                                        }
+                                    }
+
+                                    gestioneOrdineDialog.dispose();
+                                    // Ricarica l'interfaccia principale
+                                    aggiornaInterfacciaUtente(mainView);
+                                }
+                        );
+                        gestioneOrdineDialog.pack();
+                        gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+                        gestioneOrdineDialog.setVisible(true);
+                    }
+            );
             for (ToDo todo : universita.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
                     visualizzaToDo(todo, contenitoreToDoU);
@@ -490,6 +656,480 @@ public class Controller {
             generaLavoro(mainView);
             generaUniversita(mainView);
 
+        }
+    }
+
+    private void creazioneModificaDialog(JButton modificaButton, ToDo todo){
+        modificaButton.addActionListener(e -> {
+            // Crea un'istanza del pannello CreaToDo per la modifica
+            CreaToDo modificaTodoDialog = new CreaToDo();
+            modificaTodoDialog.setContentPane(modificaTodoDialog.getMainPanel());
+            modificaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+
+            // Popola i campi con i dati del todo corrente
+            modificaTodoDialog.getTitolo().setText(todo.getTitolo());
+            modificaTodoDialog.getDescrizioneField().setText(todo.getDescrizione());
+
+            AtomicReference<Color> coloreSceltoNuovo = new AtomicReference<>(Color.WHITE);
+            AtomicReference<Calendar> dataSceltoNuovo = new AtomicReference<>();
+            AtomicReference<URL> immagineSceltaNuovo = new AtomicReference<>();
+
+            // Action listener per il pulsante Sfoglia per la selezione dell'immagine
+            modificaTodoDialog.getSfogliaButton().addActionListener(imageEvent -> {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Seleziona un'immagine");
+
+                // Filtro per mostrare solo file di immagine
+                FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                        "Immagini (JPG, PNG, GIF)", "jpg", "jpeg", "png", "gif");
+                fileChooser.setFileFilter(filter);
+
+                int result = fileChooser.showOpenDialog(modificaTodoDialog);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+
+                    // Controlli preventivi
+                    if (!selectedFile.exists()) {
+                        JOptionPane.showMessageDialog(modificaTodoDialog,
+                                "Il file selezionato non esiste.",
+                                "Errore", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    if (!selectedFile.canRead()) {
+                        JOptionPane.showMessageDialog(modificaTodoDialog,
+                                "Impossibile leggere il file selezionato.",
+                                "Errore", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    try {
+                        BufferedImage image = ImageIO.read(newInputStream(selectedFile.toPath()));
+                        caricaImmagine(new ImageIcon(image),
+                                modificaTodoDialog.getPreviewPanel(), modificaTodoDialog);
+                        immagineSceltaNuovo.set(selectedFile.toURI().toURL());
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(modificaTodoDialog,
+                                "Errore durante il caricamento dell'immagine: " + ex.getMessage(),
+                                "Errore", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+            /*Action listener per il selettore di colore
+             * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
+             */
+            modificaTodoDialog.getColorButton().addActionListener(colorEvent -> {
+                coloreSceltoNuovo.set(JColorChooser.showDialog(
+                        modificaTodoDialog,
+                        "Scegli un colore per il ToDo", coloreSceltoNuovo.get()));
+
+                if (coloreSceltoNuovo.get() != null) {
+                    // Cambia il colore del bottone per mostrare il colore scelto
+                    modificaTodoDialog.getColorButton().setForeground(coloreSceltoNuovo.get());
+                    modificaTodoDialog.getColorButton().repaint();
+                    modificaTodoDialog.getColorButton().revalidate();
+                }
+            });
+
+            // Action listener per il selettore di data ho usato l'array di date per il solito discorso del colore
+            modificaTodoDialog.getDataScadenzaButton().addActionListener(dateEvent -> {
+                // Creiamo un JDialog personalizzato per il calendario
+                JDialog dateDialog = new JDialog(modificaTodoDialog, "Seleziona data di scadenza", true);
+                dateDialog.setLayout(new BorderLayout());
+
+                // Utilizziamo JSpinner per la selezione della data
+                JPanel calendarPanel = new JPanel();
+
+                // Creiamo un calendario con JSpinner
+                SpinnerDateModel dateModel = new SpinnerDateModel();
+                JSpinner dateSpinner = new JSpinner(dateModel);
+                JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
+                dateSpinner.setEditor(dateEditor);
+
+                calendarPanel.add(new JLabel("Seleziona data: "));
+                calendarPanel.add(dateSpinner);
+
+                // Pulsanti di conferma e annulla
+                JPanel buttonPanel = new JPanel();
+                JButton confirmButton = new JButton("Conferma");
+                JButton cancelButton = new JButton("Annulla");
+
+                confirmButton.addActionListener(confirmEvent -> {
+                    // Salva la data selezionata
+                    java.util.Date selectedDate = (java.util.Date) dateSpinner.getValue();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(selectedDate);
+                    dataSceltoNuovo.set(calendar);
+
+                    // Cambia il testo del bottone per mostrare la data selezionata
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                    modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(selectedDate));
+
+                    dateDialog.dispose();
+                });
+
+                cancelButton.addActionListener(cancelEvent -> {
+                    dateDialog.dispose();
+                });
+
+                buttonPanel.add(confirmButton);
+                buttonPanel.add(cancelButton);
+
+                dateDialog.add(calendarPanel, BorderLayout.CENTER);
+                dateDialog.add(buttonPanel, BorderLayout.SOUTH);
+                dateDialog.setSize(300, 150);
+                dateDialog.setLocationRelativeTo(modificaTodoDialog);
+                dateDialog.setVisible(true);
+            });
+
+            // Imposta il link se presente
+            if (todo.getLink() != null) {
+                modificaTodoDialog.getLinkField().setText(todo.getLink().toString());
+            }
+
+            // Imposta il colore se presente
+            if (todo.getSfondo() != null) {
+                AtomicReference<Color> coloreScelto = new AtomicReference<>(todo.getSfondo());
+            }
+
+            // Imposta la data se presente
+            if (todo.getScadenza() != null) {
+                AtomicReference<Calendar> dataScelto = new AtomicReference<>(todo.getScadenza());
+            }
+
+            // Carica l'immagine se presente
+            if (todo.getImmagine() != null) {
+                caricaImmagine(new ImageIcon(todo.getImmagine()), modificaTodoDialog.getPreviewPanel(), modificaTodoDialog);
+            }
+
+            if (todo.getSfondo() != null) {
+                // Cambia il colore del bottone per mostrare il colore scelto
+                modificaTodoDialog.getColorButton().setForeground(todo.getSfondo());
+                modificaTodoDialog.getColorButton().repaint();
+                modificaTodoDialog.getColorButton().revalidate();
+            }
+
+            if (todo.getScadenza() != null) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(todo.getScadenza()));
+            }
+
+            ArrayList<JTextField> attivitaFieldsNuovo = new ArrayList<>();
+            AtomicReference<JTextField> titoloCheckListRefNuovo = new AtomicReference<>();
+            modificaTodoDialog.getChecklistButton().addActionListener(attivitaEvent -> {
+                JPanel checklistPanel = new JPanel();
+                checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
+
+                JPanel titoloChecklist = new JPanel();
+                titoloChecklist.setLayout(new BoxLayout(titoloChecklist, BoxLayout.X_AXIS));
+                JTextField titoloCheckListField = new JTextField(20);
+                SetPlaceHolder.setTP(titoloCheckListField, "Titolo CheckList", GestioneDarkMode.isDarkMode());
+                titoloChecklist.add(titoloCheckListField);
+                titoloCheckListRefNuovo.set(titoloCheckListField);
+                JButton aggiungiAttivitaButton = new JButton("+");
+                titoloChecklist.add(aggiungiAttivitaButton);
+                JButton cancellaCheckListButton = new JButton("X");
+                titoloChecklist.add(cancellaCheckListButton);
+                titoloChecklist.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+
+                checklistPanel.add(titoloChecklist);
+
+                modificaTodoDialog.getChecklistButton().setEnabled(false);
+                modificaTodoDialog.getChecklistButton().setText("V");
+                modificaTodoDialog.getChecklistButton().setBackground(Color.GRAY);
+
+                cancellaCheckListButton.addActionListener(cancellaCheckListEvent -> {
+                    checklistPanel.removeAll();
+
+                    modificaTodoDialog.getChecklistButton().setEnabled(true);
+                    modificaTodoDialog.getChecklistButton().setText("Inserisci");
+                    modificaTodoDialog.getChecklistButton().setBackground(Color.WHITE);
+                    modificaTodoDialog.repaint();
+                    modificaTodoDialog.pack();
+                    modificaTodoDialog.revalidate();
+
+                });
+
+                aggiungiAttivitaButton.addActionListener(attivitaAddEvent -> {
+                    JPanel attivitaPanel = new JPanel();
+                    attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
+                    JTextField titoloAttivitaField = new JTextField(20);
+                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    attivitaFieldsNuovo.add(titoloAttivitaField);
+
+                    attivitaPanel.add(titoloAttivitaField);
+                    JButton cancellaAttivitaButton = new JButton("-");
+                    attivitaPanel.add(cancellaAttivitaButton);
+
+                    cancellaAttivitaButton.addActionListener(cancellaAttivitaEvent -> {
+                        attivitaFieldsNuovo.remove(titoloAttivitaField);
+                        attivitaPanel.removeAll();
+                        modificaTodoDialog.repaint();
+                        modificaTodoDialog.pack();
+                        modificaTodoDialog.revalidate();
+                    });
+
+
+                    checklistPanel.add(attivitaPanel);
+                    modificaTodoDialog.repaint();
+                    modificaTodoDialog.pack();
+                    modificaTodoDialog.revalidate();
+
+                });
+
+                modificaTodoDialog.getPannelloAggiungibile().add(checklistPanel);
+                modificaTodoDialog.repaint();
+                modificaTodoDialog.pack();
+                modificaTodoDialog.revalidate();
+
+            });
+
+            if (todo.getChecklist()!=null){
+                JPanel checklistPanel = new JPanel();
+                checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
+
+                JPanel titoloChecklist = new JPanel();
+                titoloChecklist.setLayout(new BoxLayout(titoloChecklist, BoxLayout.X_AXIS));
+                JTextField titoloCheckListField = new JTextField(20);
+                SetPlaceHolder.setTP(titoloCheckListField, "Titolo CheckList", GestioneDarkMode.isDarkMode());
+                titoloCheckListField.setText(todo.getChecklist().getNomeChecklist());
+                titoloChecklist.add(titoloCheckListField);
+                titoloCheckListRefNuovo.set(titoloCheckListField);
+                JButton aggiungiAttivitaButton = new JButton("+");
+                titoloChecklist.add(aggiungiAttivitaButton);
+                JButton cancellaCheckListButton = new JButton("X");
+                titoloChecklist.add(cancellaCheckListButton);
+                titoloChecklist.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+
+                checklistPanel.add(titoloChecklist);
+
+                modificaTodoDialog.getChecklistButton().setEnabled(false);
+                modificaTodoDialog.getChecklistButton().setText("V");
+                modificaTodoDialog.getChecklistButton().setBackground(Color.GRAY);
+
+                cancellaCheckListButton.addActionListener(cancellaCheckListEvent -> {
+                    checklistPanel.removeAll();
+
+                    modificaTodoDialog.getChecklistButton().setEnabled(true);
+                    modificaTodoDialog.getChecklistButton().setText("Inserisci");
+                    modificaTodoDialog.getChecklistButton().setBackground(Color.WHITE);
+                    modificaTodoDialog.repaint();
+                    modificaTodoDialog.pack();
+                    modificaTodoDialog.revalidate();
+
+                });
+
+                aggiungiAttivitaButton.addActionListener(attivitaAddEvent -> {
+                    JPanel attivitaPanel = new JPanel();
+                    attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
+                    JTextField titoloAttivitaField = new JTextField(20);
+                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    attivitaFieldsNuovo.add(titoloAttivitaField);
+
+                    attivitaPanel.add(titoloAttivitaField);
+                    JButton cancellaAttivitaButton = new JButton("-");
+                    attivitaPanel.add(cancellaAttivitaButton);
+
+                    cancellaAttivitaButton.addActionListener(cancellaAttivitaEvent -> {
+                        attivitaFieldsNuovo.remove(titoloAttivitaField);
+                        attivitaPanel.removeAll();
+                        modificaTodoDialog.repaint();
+                        modificaTodoDialog.pack();
+                        modificaTodoDialog.revalidate();
+                    });
+
+
+                    checklistPanel.add(attivitaPanel);
+                    modificaTodoDialog.repaint();
+                    modificaTodoDialog.pack();
+                    modificaTodoDialog.revalidate();
+
+                });
+
+                for (Attivita attivitaGiaPresente: todo.getChecklist().getAttivita()){
+                    JPanel attivitaPanel = new JPanel();
+                    attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
+                    JTextField titoloAttivitaField = new JTextField(20);
+                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    titoloAttivitaField.setText(attivitaGiaPresente.getNome());
+                    attivitaFieldsNuovo.add(titoloAttivitaField);
+
+                    attivitaPanel.add(titoloAttivitaField);
+                    JButton cancellaAttivitaButton = new JButton("-");
+                    attivitaPanel.add(cancellaAttivitaButton);
+
+                    cancellaAttivitaButton.addActionListener(cancellaAttivitaEvent -> {
+                        attivitaFieldsNuovo.remove(titoloAttivitaField);
+                        attivitaPanel.removeAll();
+                        modificaTodoDialog.repaint();
+                        modificaTodoDialog.pack();
+                        modificaTodoDialog.revalidate();
+                    });
+
+
+                    checklistPanel.add(attivitaPanel);
+                    modificaTodoDialog.repaint();
+                    modificaTodoDialog.pack();
+                    modificaTodoDialog.revalidate();
+                }
+
+                modificaTodoDialog.getPannelloAggiungibile().add(checklistPanel);
+                modificaTodoDialog.repaint();
+                modificaTodoDialog.pack();
+                modificaTodoDialog.revalidate();
+            }
+
+            // Determina la bacheca corrente del todo
+            final String bachecaCorrente;
+            if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
+                bachecaCorrente = "Tempo libero";
+            } else if (utenteAttuale.getLavoro().getToDoList().contains(todo)) {
+                bachecaCorrente = "Lavoro";
+            } else if (utenteAttuale.getUniversita().getToDoList().contains(todo)) {
+                bachecaCorrente = "Università";
+            } else {
+                bachecaCorrente = null;
+            }
+
+            // Imposta la selezione della bacheca
+            modificaTodoDialog.getBachecaBox().setSelectedItem(bachecaCorrente);
+
+
+            // Modifica il comportamento del pulsante Salva per aggiornare il todo esistente
+            modificaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
+                // Validazione del titolo
+                String nuovoTitolo = modificaTodoDialog.getTitolo().getText();
+
+                if (nuovoTitolo == null || nuovoTitolo.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(modificaTodoDialog,
+                            "Inserisci un titolo valido per il ToDo",
+                            "Errore", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Aggiorna i dati del todo
+                todo.setTitolo(nuovoTitolo);
+                todo.setDescrizione(modificaTodoDialog.getDescrizioneField().getText());
+
+                ArrayList<Attivita> attivitaDaSalvareNuovo = estraiAttivitaDaFields(attivitaFieldsNuovo);
+                if (attivitaDaSalvareNuovo != null) {
+                    todo.getChecklist().setNomeChecklist(titoloCheckListRefNuovo.get().getText());
+                    todo.getChecklist().setAttivita(attivitaDaSalvareNuovo);
+                }
+
+                // Aggiorna il link se necessario
+                String nuovoLink = modificaTodoDialog.getLinkField().getText();
+                if (nuovoLink != null && !nuovoLink.trim().isEmpty()) {
+                    try {
+                        todo.setLink(new URI(nuovoLink));
+                    } catch (URISyntaxException ex) {
+                        JOptionPane.showMessageDialog(modificaTodoDialog,
+                                "Il link inserito non è valido. Formato corretto: https://esempio.com",
+                                "Errore", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                } else {
+                    todo.setLink(null);
+                }
+
+
+                todo.setSfondo(coloreSceltoNuovo.get());
+                todo.setImmagine(immagineSceltaNuovo.get());
+                todo.setScadenza(dataSceltoNuovo.get());
+
+
+                // Gestisci il cambio di bacheca se necessario
+                String nuovaBacheca = (String) modificaTodoDialog.getBachecaBox().getSelectedItem();
+                if (!nuovaBacheca.equals(bachecaCorrente)) {
+                    // Rimuovi dalla bacheca attuale
+                    if (bachecaCorrente.equals("Tempo libero")) {
+                        utenteAttuale.getTempoLibero().getToDoList().remove(todo);
+                    } else if (bachecaCorrente.equals("Lavoro")) {
+                        utenteAttuale.getLavoro().getToDoList().remove(todo);
+                    } else if (bachecaCorrente.equals("Università")) {
+                        utenteAttuale.getUniversita().getToDoList().remove(todo);
+                    }
+
+                    // Aggiungi alla nuova bacheca
+                    switch (nuovaBacheca) {
+                        case "Tempo libero":
+                            utenteAttuale.getTempoLibero().getToDoList().add(todo);
+                            break;
+                        case "Lavoro":
+                            utenteAttuale.getLavoro().getToDoList().add(todo);
+                            break;
+                        case "Università":
+                            utenteAttuale.getUniversita().getToDoList().add(todo);
+                            break;
+                    }
+                }
+
+                //salvataggio modifiche nel db
+                try{
+                    toDoDAO.modificaToDo(utenteAttuale.getEmail(), todo);
+                } catch (Exception daoEx) {
+                    JOptionPane.showMessageDialog(modificaTodoDialog,
+                            "Errore durante il salvataggio nel database: "+ daoEx.getMessage(),
+                            "Errore", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Chiudi il dialog e aggiorna l'interfaccia
+                modificaTodoDialog.dispose();
+                aggiornaInterfacciaUtente(view.getLogInView().getMainView());
+                view.revalidate();
+                view.repaint();
+            });
+
+            // Mostra il dialog di modifica
+            modificaTodoDialog.pack();
+            modificaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+            modificaTodoDialog.setVisible(true);
+        });
+    }
+
+    private void caricaImmagine(ImageIcon originalIcon, JPanel pannelloImmagine, JDialog dialogo) {
+        try {
+            // Carica l'immagine per l'anteprima
+
+            Image originalImage = originalIcon.getImage();
+
+            // Definisci le dimensioni per l'anteprima
+            int previewWidth = 200;
+            int previewHeight = 150;
+
+            // Calcola le dimensioni mantenendo le proporzioni
+            int originalWidth = originalIcon.getIconWidth();
+            int originalHeight = originalIcon.getIconHeight();
+            double ratio = (double) originalWidth / originalHeight;
+
+            int targetWidth, targetHeight;
+            if (ratio > 1) {
+                // Immagine più larga che alta
+                targetWidth = previewWidth;
+                targetHeight = (int) (previewWidth / ratio);
+            } else {
+                // Immagine più alta che larga
+                targetHeight = previewHeight;
+                targetWidth = (int) (previewHeight * ratio);
+            }
+
+            // Ridimensiona e mostra l'anteprima
+            Image resizedImage = originalImage.getScaledInstance(
+                    targetWidth, targetHeight, Image.SCALE_SMOOTH);
+            ImageIcon resizedIcon = new ImageIcon(resizedImage);
+
+            // Mostra l'anteprima nel pannello
+            pannelloImmagine.removeAll();
+            JLabel previewLabel = new JLabel(resizedIcon);
+            pannelloImmagine.add(previewLabel);
+            pannelloImmagine.setVisible(true);
+            pannelloImmagine.setBorder(BorderFactory.createTitledBorder("Anteprima immagine"));
+            dialogo.pack();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(dialogo,
+                    "Errore nel caricamento dell'anteprima: " + ex.getMessage(),
+                    "Errore", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -538,178 +1178,8 @@ public class Controller {
         modificaButton.setContentAreaFilled(false);
         modificaButton.setForeground(coloreTesto);
         modificaButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        modificaButton.addActionListener(e -> {
-            // Crea un'istanza del pannello CreaToDo per la modifica
-            CreaToDo modificaTodoDialog = new CreaToDo();
-            modificaTodoDialog.setupComponents();
-            modificaTodoDialog.setContentPane(modificaTodoDialog.getMainPanel());
-            modificaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+        creazioneModificaDialog(modificaButton,todo);
 
-            // Popola i campi con i dati del todo corrente
-            modificaTodoDialog.getTitolo().setText(todo.getTitolo());
-            modificaTodoDialog.getDescrizioneField().setText(todo.getDescrizione());
-
-            // Imposta il link se presente
-            if (todo.getLink() != null) {
-                modificaTodoDialog.getLinkField().setText(todo.getLink().toString());
-            }
-
-            // Imposta il colore se presente
-            if (todo.getSfondo() != null) {
-                modificaTodoDialog.getColorButton().setBackground(todo.getSfondo());
-            }
-
-            // Imposta la data se presente
-            if (todo.getScadenza() != null) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(todo.getScadenza().getTime()));
-            }
-
-            // Carica l'immagine se presente
-            if (todo.getImmagine() != null) {
-                try {
-                    // Carica l'immagine per l'anteprima
-                    ImageIcon originalIcon = new ImageIcon(todo.getImmagine());
-                    Image originalImage = originalIcon.getImage();
-
-                    // Definisci le dimensioni per l'anteprima
-                    int previewWidth = 200;
-                    int previewHeight = 150;
-
-                    // Calcola le dimensioni mantenendo le proporzioni
-                    int originalWidth = originalIcon.getIconWidth();
-                    int originalHeight = originalIcon.getIconHeight();
-                    double ratio = (double) originalWidth / originalHeight;
-
-                    int targetWidth, targetHeight;
-                    if (ratio > 1) {
-                        // Immagine più larga che alta
-                        targetWidth = previewWidth;
-                        targetHeight = (int) (previewWidth / ratio);
-                    } else {
-                        // Immagine più alta che larga
-                        targetHeight = previewHeight;
-                        targetWidth = (int) (previewHeight * ratio);
-                    }
-
-                    // Ridimensiona e mostra l'anteprima
-                    Image resizedImage = originalImage.getScaledInstance(
-                            targetWidth, targetHeight, Image.SCALE_SMOOTH);
-                    ImageIcon resizedIcon = new ImageIcon(resizedImage);
-
-                    // Mostra l'anteprima nel pannello
-                    modificaTodoDialog.getPreviewPanel().removeAll();
-                    JLabel previewLabel = new JLabel(resizedIcon);
-                    modificaTodoDialog.getPreviewPanel().add(previewLabel);
-                    modificaTodoDialog.getPreviewPanel().setVisible(true);
-                    modificaTodoDialog.getPreviewPanel().setBorder(BorderFactory.createTitledBorder("Anteprima immagine"));
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(modificaTodoDialog,
-                            "Errore nel caricamento dell'anteprima: " + ex.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-
-            // Determina la bacheca corrente del todo
-            final String bachecaCorrente;
-            if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
-                bachecaCorrente = "Tempo libero";
-            } else if (utenteAttuale.getLavoro().getToDoList().contains(todo)) {
-                bachecaCorrente = "Lavoro";
-            } else if (utenteAttuale.getUniversita().getToDoList().contains(todo)) {
-                bachecaCorrente = "Università";
-            } else {
-                bachecaCorrente = null;
-            }
-
-            // Imposta la selezione della bacheca
-            modificaTodoDialog.getBachecaBox().setSelectedItem(bachecaCorrente);
-
-
-            // Modifica il comportamento del pulsante Salva per aggiornare il todo esistente
-            modificaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
-                // Validazione del titolo
-                String nuovoTitolo = modificaTodoDialog.getTitolo().getText();
-                if (nuovoTitolo == null || nuovoTitolo.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(modificaTodoDialog,
-                            "Inserisci un titolo valido per il ToDo",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // Aggiorna i dati del todo
-                todo.setTitolo(nuovoTitolo);
-                todo.setDescrizione(modificaTodoDialog.getDescrizioneField().getText());
-
-                // Aggiorna il link se necessario
-                String nuovoLink = modificaTodoDialog.getLinkField().getText();
-                if (nuovoLink != null && !nuovoLink.trim().isEmpty()) {
-                    try {
-                        todo.setLink(new URI(nuovoLink));
-                    } catch (URISyntaxException ex) {
-                        JOptionPane.showMessageDialog(modificaTodoDialog,
-                                "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                } else {
-                    todo.setLink(null);
-                }
-
-                // Aggiorna il colore
-                Color nuovoColore = modificaTodoDialog.getColorButton().getBackground();
-                todo.setSfondo(nuovoColore);
-
-                // Aggiorna l'immagine e altri attributi se necessario
-                // ...
-
-                // Gestisci il cambio di bacheca se necessario
-                String nuovaBacheca = (String) modificaTodoDialog.getBachecaBox().getSelectedItem();
-                if (!nuovaBacheca.equals(bachecaCorrente)) {
-                    // Rimuovi dalla bacheca attuale
-                    if (bachecaCorrente.equals("Tempo libero")) {
-                        utenteAttuale.getTempoLibero().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Lavoro")) {
-                        utenteAttuale.getLavoro().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Università")) {
-                        utenteAttuale.getUniversita().getToDoList().remove(todo);
-                    }
-
-                    // Aggiungi alla nuova bacheca
-                    switch (nuovaBacheca) {
-                        case "Tempo libero":
-                            utenteAttuale.getTempoLibero().getToDoList().add(todo);
-                            break;
-                        case "Lavoro":
-                            utenteAttuale.getLavoro().getToDoList().add(todo);
-                            break;
-                        case "Università":
-                            utenteAttuale.getUniversita().getToDoList().add(todo);
-                            break;
-                    }
-                }
-
-                //salvataggio modifiche nel db
-                try{
-                    toDoDAO.modificaToDo(utenteAttuale.getEmail(), todo);
-                } catch (Exception daoEx) {
-                    JOptionPane.showMessageDialog(modificaTodoDialog,
-                            "Errore durante il salvataggio nel database: "+ daoEx.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // Chiudi il dialog e aggiorna l'interfaccia
-                modificaTodoDialog.dispose();
-                aggiornaInterfacciaUtente(view.getLogInView().getMainView());
-                view.revalidate();
-                view.repaint();
-            });
-
-            // Mostra il dialog di modifica
-            modificaTodoDialog.setVisible(true);
-        });
-        
         // Pulsante elimina con icona del cestino (Unicode per trash)
         JButton eliminaButton = new JButton("🗑");
         eliminaButton.setFont(new Font("Dialog", Font.PLAIN, 14));
@@ -810,7 +1280,7 @@ public class Controller {
 
 
                 // Verifica se la checklist è già completata per cambiare colore del bordo
-                if (todo.getChecklist().getCompletata()) {
+                if (Boolean.TRUE.equals(todo.getChecklist().getCompletata())) {
                     checklistPanel.setBackground(Color.GREEN);
                     TitledBorder titledBorder = BorderFactory.createTitledBorder(
                             BorderFactory.createLineBorder(Color.GREEN, 2),
@@ -1080,12 +1550,6 @@ public class Controller {
 
         if (!password.equals(confermaPassword)) {
             JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", "Errore",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        if (utentiRegistrati.containsKey(email)) {
-            JOptionPane.showMessageDialog(registerView, "Email già registrata.", "Errore",
                     JOptionPane.ERROR_MESSAGE);
             return;
         }

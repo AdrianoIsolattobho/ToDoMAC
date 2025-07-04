@@ -1,5 +1,7 @@
 package gui;
 
+import model.Ordinamento;
+
 import javax.swing.*;
 import java.awt.event.*;
 
@@ -13,6 +15,11 @@ public class GestioneOrdine extends JDialog {
     private JRadioButton dataDiCreazioneDecrescenteRadioButton;
     private JRadioButton dataScadenzaCrescenteRadioButton;
     private JRadioButton dataScadenzaDecrescenteRadioButton;
+    private ButtonGroup group;
+
+    public ButtonGroup getGroup() {
+        return group;
+    }
 
     public JButton getButtonOK() {
         return buttonOK;
@@ -46,6 +53,7 @@ public class GestioneOrdine extends JDialog {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
+        this.setTitle("Gestione Ordine");
 
 
         buttonCancel.addActionListener(new ActionListener() {
@@ -63,13 +71,21 @@ public class GestioneOrdine extends JDialog {
         });
 
         // Inizializza e raggruppa i RadioButton
-        ButtonGroup group = new ButtonGroup();
+        this.group = new ButtonGroup();
         group.add(ordineAlfabeticoAZRadioButton);
         group.add(ordineAlfabeticoZARadioButton);
         group.add(dataDiCreazioneCrescenteRadioButton);
         group.add(dataDiCreazioneDecrescenteRadioButton);
         group.add(dataScadenzaCrescenteRadioButton);
         group.add(dataScadenzaDecrescenteRadioButton);
+
+        ordineAlfabeticoAZRadioButton.setActionCommand("AZ");
+        ordineAlfabeticoZARadioButton.setActionCommand("ZA");
+        dataDiCreazioneCrescenteRadioButton.setActionCommand("CreazioneCrescente");
+        dataDiCreazioneDecrescenteRadioButton.setActionCommand("CreazioneDecrescente");
+        dataScadenzaCrescenteRadioButton.setActionCommand("ScadenzaCrescente");
+        dataScadenzaDecrescenteRadioButton.setActionCommand("ScadenzaDecrescente");
+
 
         // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(new ActionListener() {
