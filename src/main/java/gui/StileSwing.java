@@ -17,11 +17,35 @@ public class StileSwing extends JFrame {
 
         public static void applicaStile() {
             //soluzione universale per cambiare icona sul dock (mac) e toolbar (windows)
+            // Versione più sicura del tuo codice
+            //soluzione universale per cambiare icona sul dock (mac) e toolbar (windows)
             final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
             final URL imageResource = Main.class.getClassLoader().getResource("img/check.png");
             final Image image = defaultToolkit.getImage(imageResource);
-            final Taskbar taskbar = Taskbar.getTaskbar();
-            taskbar.setIconImage(image);
+
+            try {
+                // Verifica prima se la Taskbar è supportata sulla piattaforma
+                if (Taskbar.isTaskbarSupported()) {
+                    final Taskbar taskbar = Taskbar.getTaskbar();
+
+                    // Verifica se l'impostazione dell'icona è supportata
+                    if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                        taskbar.setIconImage(image);
+                    } else {
+                        System.out.println("La funzionalità ICON_IMAGE non è supportata su questa piattaforma");
+                    }
+                } else {
+                    System.out.println("Taskbar non supportata su questa piattaforma");
+                }
+            } catch (UnsupportedOperationException e) {
+                // La funzionalità Taskbar non è supportata su questa piattaforma
+                System.err.println("Taskbar non supportata su questa piattaforma: " + e.getMessage());
+            } catch (Exception e) {
+                // Gestisce altri possibili errori
+                System.err.println("Errore durante l'impostazione dell'icona: " + e.getMessage());
+            }
+
+
 
 
 

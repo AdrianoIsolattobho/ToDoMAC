@@ -24,11 +24,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.*;
 import java.awt.Image;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.nio.file.Files.newInputStream;
@@ -46,6 +43,15 @@ public class Controller {
     private boolean mostraCompletati=false;
     private ToDoDAO toDoDAO = new ToDoImplementazionePostgresDAO();
     private UtenteDAO utenteDAO = new UtenteImplementazionePostgresDAO();
+
+    //costanti stringhe
+    private static final String ERRORMESSAGE = "Errore";
+    private static final String FORMATODATA = "dd/MM/yyyy";
+    private static final String TA ="Titolo attività";
+    private static final String TL ="Tempo libero";
+    private static final String LAV= "Lavoro";
+    private static final String UNI= "Università";
+    private static final String ATTENZIONE="Attenzione";
 
     /**
     * Metodi per mostrare le varie view
@@ -129,14 +135,14 @@ public class Controller {
                 if (!selectedFile.exists()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Il file selezionato non esiste.",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 if (!selectedFile.canRead()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Impossibile leggere il file selezionato.",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -148,11 +154,11 @@ public class Controller {
                 } catch (IOException e) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Errore durante il caricamento dell'immagine: " + e.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
-    };
+    }
 
     private ActionListener generaActionListenerSceltaColore(AtomicReference<Color> coloreScelto,CreaToDo creaTodoDialog){
         return _->{
@@ -181,7 +187,7 @@ public class Controller {
             // Creiamo un calendario con JSpinner
             SpinnerDateModel dateModel = new SpinnerDateModel();
             JSpinner dateSpinner = new JSpinner(dateModel);
-            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
+            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, FORMATODATA);
             dateSpinner.setEditor(dateEditor);
 
             calendarPanel.add(new JLabel("Seleziona data: "));
@@ -194,21 +200,21 @@ public class Controller {
 
             confirmButton.addActionListener(confirmEvent -> {
                 // Salva la data selezionata
-                java.util.Date selectedDate = (java.util.Date) dateSpinner.getValue();
+                Date selectedDate = (Date) dateSpinner.getValue();
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(selectedDate);
                 dataScelto.set(calendar);
 
                 // Cambia il testo del bottone per mostrare la data selezionata
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                SimpleDateFormat dateFormat = new SimpleDateFormat(FORMATODATA);
                 creaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(selectedDate));
 
                 dateDialog.dispose();
             });
 
-            cancelButton.addActionListener(cancelEvent -> {
-                dateDialog.dispose();
-            });
+            cancelButton.addActionListener(_->
+                dateDialog.dispose()
+            );
 
             buttonPanel.add(confirmButton);
             buttonPanel.add(cancelButton);
@@ -260,7 +266,7 @@ public class Controller {
                 JPanel attivitaPanel = new JPanel();
                 attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                 JTextField titoloAttivitaField = new JTextField(20);
-                SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                SetPlaceHolder.setTP(titoloAttivitaField, TA, GestioneDarkMode.isDarkMode());
                 attivitaFields.add(titoloAttivitaField);
 
                 attivitaPanel.add(titoloAttivitaField);
@@ -297,7 +303,7 @@ public class Controller {
             } catch (URISyntaxException _) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         }
@@ -317,7 +323,7 @@ public class Controller {
             if (titoloTodo == null || titoloTodo.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Inserisci un titolo valido per il ToDo",
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                 return; // Non chiude il dialogo se c'è un errore
             }
 
@@ -344,18 +350,18 @@ public class Controller {
                 } catch (Exception daoEx) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Errore nel salvataggio del ToDo nel database: " + daoEx.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 //aggiorna bacheche in memoria
                 switch (bachecaSelezionata) {
-                    case "Tempo libero" -> utenteAttuale.getTempoLibero().getToDoList().add(nuovoToDo);
-                    case "Lavoro" -> utenteAttuale.getLavoro().getToDoList().add(nuovoToDo);
-                    case "Università" -> utenteAttuale.getUniversita().getToDoList().add(nuovoToDo);
+                    case TL -> utenteAttuale.getTempoLibero().getToDoList().add(nuovoToDo);
+                    case LAV -> utenteAttuale.getLavoro().getToDoList().add(nuovoToDo);
+                    case UNI -> utenteAttuale.getUniversita().getToDoList().add(nuovoToDo);
                     default -> {
                         JOptionPane.showMessageDialog(creaTodoDialog,
                                 "Seleziona una bacheca",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
+                                ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 }
@@ -368,7 +374,7 @@ public class Controller {
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Errore durante la creazione del ToDo: "+ ex.getMessage(),
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
             }
         };
     }
@@ -702,7 +708,7 @@ public class Controller {
             }
 
             if (todo.getScadenza() != null) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                SimpleDateFormat dateFormat = new SimpleDateFormat(FORMATODATA);
                 modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(todo.getScadenza()));
             }
 
@@ -749,7 +755,7 @@ public class Controller {
                     JPanel attivitaPanel = new JPanel();
                     attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                     JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    SetPlaceHolder.setTP(titoloAttivitaField, TA, GestioneDarkMode.isDarkMode());
                     attivitaFieldsNuovo.add(titoloAttivitaField);
 
                     attivitaPanel.add(titoloAttivitaField);
@@ -776,7 +782,7 @@ public class Controller {
                     JPanel attivitaPanel = new JPanel();
                     attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                     JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    SetPlaceHolder.setTP(titoloAttivitaField, TA, GestioneDarkMode.isDarkMode());
                     titoloAttivitaField.setText(attivitaGiaPresente.getNome());
                     attivitaFieldsNuovo.add(titoloAttivitaField);
 
@@ -808,11 +814,11 @@ public class Controller {
             // Determina la bacheca corrente del todo
             final String bachecaCorrente;
             if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
-                bachecaCorrente = "Tempo libero";
+                bachecaCorrente = TL;
             } else if (utenteAttuale.getLavoro().getToDoList().contains(todo)) {
-                bachecaCorrente = "Lavoro";
+                bachecaCorrente = LAV;
             } else if (utenteAttuale.getUniversita().getToDoList().contains(todo)) {
-                bachecaCorrente = "Università";
+                bachecaCorrente = UNI;
             } else {
                 bachecaCorrente = null;
             }
@@ -829,7 +835,7 @@ public class Controller {
                 if (nuovoTitolo == null || nuovoTitolo.trim().isEmpty()) {
                     JOptionPane.showMessageDialog(modificaTodoDialog,
                             "Inserisci un titolo valido per il ToDo",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -848,10 +854,10 @@ public class Controller {
                 if (nuovoLink != null && !nuovoLink.trim().isEmpty()) {
                     try {
                         todo.setLink(new URI(nuovoLink));
-                    } catch (URISyntaxException ex) {
+                    } catch (URISyntaxException _) {
                         JOptionPane.showMessageDialog(modificaTodoDialog,
                                 "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
+                                ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 } else {
@@ -868,25 +874,21 @@ public class Controller {
                 String nuovaBacheca = (String) modificaTodoDialog.getBachecaBox().getSelectedItem();
                 if (!nuovaBacheca.equals(bachecaCorrente)) {
                     // Rimuovi dalla bacheca attuale
-                    if (bachecaCorrente.equals("Tempo libero")) {
-                        utenteAttuale.getTempoLibero().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Lavoro")) {
-                        utenteAttuale.getLavoro().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Università")) {
-                        utenteAttuale.getUniversita().getToDoList().remove(todo);
+                    switch (bachecaCorrente) {
+                        case TL -> utenteAttuale.getTempoLibero().getToDoList().remove(todo);
+                        case LAV -> utenteAttuale.getLavoro().getToDoList().remove(todo);
+                        case UNI -> utenteAttuale.getUniversita().getToDoList().remove(todo);
+                        default -> throw new IllegalStateException("Unexpected value: " + bachecaCorrente);
                     }
 
                     // Aggiungi alla nuova bacheca
                     switch (nuovaBacheca) {
-                        case "Tempo libero":
-                            utenteAttuale.getTempoLibero().getToDoList().add(todo);
-                            break;
-                        case "Lavoro":
-                            utenteAttuale.getLavoro().getToDoList().add(todo);
-                            break;
-                        case "Università":
-                            utenteAttuale.getUniversita().getToDoList().add(todo);
-                            break;
+                        case TL-> utenteAttuale.getTempoLibero().getToDoList().add(todo);
+                        case LAV-> utenteAttuale.getLavoro().getToDoList().add(todo);
+                        case UNI-> utenteAttuale.getUniversita().getToDoList().add(todo);
+                        default -> JOptionPane.showMessageDialog(modificaTodoDialog,
+                                "Seleziona una bacheca",
+                                ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                     }
                 }
 
@@ -896,7 +898,7 @@ public class Controller {
                 } catch (Exception daoEx) {
                     JOptionPane.showMessageDialog(modificaTodoDialog,
                             "Errore durante il salvataggio nel database: "+ daoEx.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -929,7 +931,8 @@ public class Controller {
             int originalHeight = originalIcon.getIconHeight();
             double ratio = (double) originalWidth / originalHeight;
 
-            int targetWidth, targetHeight;
+            int targetWidth;
+            int targetHeight;
             if (ratio > 1) {
                 // Immagine più larga che alta
                 targetWidth = previewWidth;
@@ -955,7 +958,7 @@ public class Controller {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(dialogo,
                     "Errore nel caricamento dell'anteprima: " + ex.getMessage(),
-                    "Errore", JOptionPane.ERROR_MESSAGE);
+                    ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1040,7 +1043,7 @@ public class Controller {
                     } catch (Exception daoEx) {
                         JOptionPane.showMessageDialog(null,
                                 "Errore durante l'eliminazione nel database: "+ daoEx.getMessage(),
-                                "Errore", JOptionPane.ERROR_MESSAGE);
+                                ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 }
@@ -1185,7 +1188,7 @@ public class Controller {
                         } catch (IOException ex) {
                             JOptionPane.showMessageDialog(todoPanel,
                                     "Impossibile aprire il link: " + ex.getMessage(),
-                                    "Errore", JOptionPane.ERROR_MESSAGE);
+                                    ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
@@ -1203,7 +1206,7 @@ public class Controller {
             scadenzaPanel.setBackground(backgroundColor);
 
             // Formatta la data
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat dateFormat = new SimpleDateFormat(FORMATODATA);
             String dataFormattata = dateFormat.format(todo.getScadenza().getTime());
 
             JLabel scadenzaLabel = new JLabel("Scadenza: ");
@@ -1333,7 +1336,7 @@ public class Controller {
 
         if (email.isEmpty() || password.isEmpty() ||
                 email.equals("Email") || password.equals("Password")) {
-            JOptionPane.showMessageDialog(loginView, "Compila tutti i campi.", "Attenzione",
+            JOptionPane.showMessageDialog(loginView, "Compila tutti i campi.", ATTENZIONE,
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -1346,13 +1349,13 @@ public class Controller {
             } else {
                 JOptionPane.showMessageDialog(loginView,
                         "Credenziali non valide.",
-                        "Attenzione",
+                        ATTENZIONE,
                         JOptionPane.WARNING_MESSAGE);
             }
-        } catch (Exception ex) {
+        } catch (Exception _) {
             JOptionPane.showMessageDialog(loginView,
                     "Email o password non corretti.",
-                    "Errore", JOptionPane.ERROR_MESSAGE);
+                    ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
         }
 
         //ho riusato il modifica descrizione con il modifica password
@@ -1384,13 +1387,13 @@ public class Controller {
 
         if (email.isEmpty() || password.isEmpty() || confermaPassword.isEmpty() ||
                 email.equals("Email") || password.equals("Password") || confermaPassword.equals("Conferma password")) {
-            JOptionPane.showMessageDialog(registerView, "Compila tutti i campi.", "Attenzione",
+            JOptionPane.showMessageDialog(registerView, "Compila tutti i campi.", ATTENZIONE,
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (!password.equals(confermaPassword)) {
-            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", "Errore",
+            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", ERRORMESSAGE,
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -1400,7 +1403,7 @@ public class Controller {
             if(utenteDAO.loginValido(email, password)) {
                 JOptionPane.showMessageDialog(registerView,
                         "Utente già registrato!",
-                        "Attenzione",
+                        ATTENZIONE,
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -1414,7 +1417,7 @@ public class Controller {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(registerView,
                     "Errore durante la registrazione: "+ ex.getMessage(),
-                    "Errore", JOptionPane.ERROR_MESSAGE);
+                    ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
         }
     }
 
