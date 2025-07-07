@@ -100,6 +100,10 @@ public class ToDo {
         this.scaduto = scaduto;
     }
 
+    public Calendar getCreazione() {
+        return creazione;
+    }
+
     public boolean isCompletato() {
         return completato;
     }

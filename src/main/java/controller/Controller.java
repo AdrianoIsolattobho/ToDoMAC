@@ -14,6 +14,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -26,6 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.awt.Image;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.nio.file.Files.newInputStream;
@@ -108,21 +111,8 @@ public class Controller {
 
     }
 
-    /**
-    * Metodo per mostrare il pannello CreaToDo a modi pop up e gestione del salvataggio in memoria dei dati
-    */
-    private void aggiuntaTodo() {
-        Main mainView = view.getLogInView().getMainView();
-        CreaToDo creaTodoDialog = new CreaToDo();
-        creaTodoDialog.setContentPane(creaTodoDialog.getMainPanel());
-        creaTodoDialog.setLocationRelativeTo(mainView.getMain());
-
-        AtomicReference<Color> coloreScelto = new AtomicReference<>(Color.WHITE);
-        AtomicReference<Calendar> dataScelto = new AtomicReference<>();
-        AtomicReference<URL> immagineScelta = new AtomicReference<>();
-
-        // Action listener per il pulsante Sfoglia per la selezione dell'immagine
-        creaTodoDialog.getSfogliaButton().addActionListener(imageEvent -> {
+    private ActionListener generaActionListenerSceltaImmagine(AtomicReference<URL> immagineScelta, CreaToDo creaTodoDialog){
+        return _-> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Seleziona un'immagine");
 
@@ -161,11 +151,11 @@ public class Controller {
                             "Errore", JOptionPane.ERROR_MESSAGE);
                 }
             }
-        });
-        /*Action listener per il selettore di colore
-        * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
-        */
-        creaTodoDialog.getColorButton().addActionListener(colorEvent -> {
+        };
+    };
+
+    private ActionListener generaActionListenerSceltaColore(AtomicReference<Color> coloreScelto,CreaToDo creaTodoDialog){
+        return _->{
             coloreScelto.set(JColorChooser.showDialog(
                     creaTodoDialog,
                     "Scegli un colore per il ToDo", coloreScelto.get()));
@@ -176,10 +166,11 @@ public class Controller {
                 creaTodoDialog.getColorButton().repaint();
                 creaTodoDialog.getColorButton().revalidate();
             }
-        });
+        };
+    }
 
-        // Action listener per il selettore di data ho usato l'array di date per il solito discorso del colore
-        creaTodoDialog.getDataScadenzaButton().addActionListener(dateEvent -> {
+    private ActionListener generaActionListenerSceltaScadenza(AtomicReference<Calendar> dataScelto, CreaToDo creaTodoDialog){
+        return _->{
             // Creiamo un JDialog personalizzato per il calendario
             JDialog dateDialog = new JDialog(creaTodoDialog, "Seleziona data di scadenza", true);
             dateDialog.setLayout(new BorderLayout());
@@ -227,80 +218,94 @@ public class Controller {
             dateDialog.setSize(300, 150);
             dateDialog.setLocationRelativeTo(creaTodoDialog);
             dateDialog.setVisible(true);
-        });
+        };
+    }
 
-        ArrayList<JTextField> attivitaFields = new ArrayList<>();
-        AtomicReference<JTextField> titoloCheckListRef = new AtomicReference<>();
-        creaTodoDialog.getChecklistButton().addActionListener(attivitaEvent -> {
-                JPanel checklistPanel = new JPanel();
-                checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
+    private ActionListener generaActionListenerAggiungiCheckList(ArrayList<JTextField> attivitaFields,AtomicReference<JTextField> titoloCheckListRef,CreaToDo creaTodoDialog){
+        return _->{
+            JPanel checklistPanel = new JPanel();
+            checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
 
-                JPanel titoloChecklist = new JPanel();
-                titoloChecklist.setLayout(new BoxLayout(titoloChecklist, BoxLayout.X_AXIS));
-                JTextField titoloCheckListField = new JTextField(20);
-                SetPlaceHolder.setTP(titoloCheckListField, "Titolo CheckList", GestioneDarkMode.isDarkMode());
-                titoloChecklist.add(titoloCheckListField);
-                titoloCheckListRef.set(titoloCheckListField);
-                JButton aggiungiAttivitaButton = new JButton("+");
-                titoloChecklist.add(aggiungiAttivitaButton);
-                JButton cancellaCheckListButton = new JButton("X");
-                titoloChecklist.add(cancellaCheckListButton);
-                titoloChecklist.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+            JPanel titoloChecklist = new JPanel();
+            titoloChecklist.setLayout(new BoxLayout(titoloChecklist, BoxLayout.X_AXIS));
+            JTextField titoloCheckListField = new JTextField(20);
+            SetPlaceHolder.setTP(titoloCheckListField, "Titolo CheckList", GestioneDarkMode.isDarkMode());
+            titoloChecklist.add(titoloCheckListField);
+            titoloCheckListRef.set(titoloCheckListField);
+            JButton aggiungiAttivitaButton = new JButton("+");
+            titoloChecklist.add(aggiungiAttivitaButton);
+            JButton cancellaCheckListButton = new JButton("X");
+            titoloChecklist.add(cancellaCheckListButton);
+            titoloChecklist.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
 
-                checklistPanel.add(titoloChecklist);
+            checklistPanel.add(titoloChecklist);
 
-                creaTodoDialog.getChecklistButton().setEnabled(false);
-                creaTodoDialog.getChecklistButton().setText("V");
-                creaTodoDialog.getChecklistButton().setBackground(Color.GRAY);
+            creaTodoDialog.getChecklistButton().setEnabled(false);
+            creaTodoDialog.getChecklistButton().setText("V");
+            creaTodoDialog.getChecklistButton().setBackground(Color.GRAY);
 
-                cancellaCheckListButton.addActionListener(cancellaCheckListEvent -> {
-                    checklistPanel.removeAll();
+            cancellaCheckListButton.addActionListener(cancellaCheckListEvent -> {
+                checklistPanel.removeAll();
 
-                    creaTodoDialog.getChecklistButton().setEnabled(true);
-                    creaTodoDialog.getChecklistButton().setText("Inserisci");
-                    creaTodoDialog.getChecklistButton().setBackground(Color.WHITE);
-                    creaTodoDialog.repaint();
-                    creaTodoDialog.pack();
-                    creaTodoDialog.revalidate();
-
-                });
-
-                aggiungiAttivitaButton.addActionListener(attivitaAddEvent -> {
-                    JPanel attivitaPanel = new JPanel();
-                    attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
-                    JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
-                    attivitaFields.add(titoloAttivitaField);
-
-                    attivitaPanel.add(titoloAttivitaField);
-                    JButton cancellaAttivitaButton = new JButton("-");
-                    attivitaPanel.add(cancellaAttivitaButton);
-
-                    cancellaAttivitaButton.addActionListener(cancellaAttivitaEvent -> {
-                        attivitaFields.remove(titoloAttivitaField);
-                        attivitaPanel.removeAll();
-                        creaTodoDialog.repaint();
-                        creaTodoDialog.pack();
-                        creaTodoDialog.revalidate();
-                        });
-
-
-                    checklistPanel.add(attivitaPanel);
-                    creaTodoDialog.repaint();
-                    creaTodoDialog.pack();
-                    creaTodoDialog.revalidate();
-
-                });
-
-                creaTodoDialog.getPannelloAggiungibile().add(checklistPanel);
+                creaTodoDialog.getChecklistButton().setEnabled(true);
+                creaTodoDialog.getChecklistButton().setText("Inserisci");
+                creaTodoDialog.getChecklistButton().setBackground(Color.WHITE);
                 creaTodoDialog.repaint();
                 creaTodoDialog.pack();
                 creaTodoDialog.revalidate();
 
             });
 
-        // Action listener per il pulsante Salva
-        creaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
+            aggiungiAttivitaButton.addActionListener(attivitaAddEvent -> {
+                JPanel attivitaPanel = new JPanel();
+                attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
+                JTextField titoloAttivitaField = new JTextField(20);
+                SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                attivitaFields.add(titoloAttivitaField);
+
+                attivitaPanel.add(titoloAttivitaField);
+                JButton cancellaAttivitaButton = new JButton("-");
+                attivitaPanel.add(cancellaAttivitaButton);
+
+                cancellaAttivitaButton.addActionListener(cancellaAttivitaEvent -> {
+                    attivitaFields.remove(titoloAttivitaField);
+                    attivitaPanel.removeAll();
+                    creaTodoDialog.repaint();
+                    creaTodoDialog.pack();
+                    creaTodoDialog.revalidate();
+                });
+
+
+                checklistPanel.add(attivitaPanel);
+                creaTodoDialog.repaint();
+                creaTodoDialog.pack();
+                creaTodoDialog.revalidate();
+
+            });
+
+            creaTodoDialog.getPannelloAggiungibile().add(checklistPanel);
+            creaTodoDialog.repaint();
+            creaTodoDialog.pack();
+            creaTodoDialog.revalidate();
+        };
+    }
+
+    private URI parseLink(String linkTesto, JDialog creaTodoDialog) {
+        if (linkTesto != null && !linkTesto.trim().isEmpty()) {
+            try {
+                return new URI(linkTesto);
+            } catch (URISyntaxException _) {
+                JOptionPane.showMessageDialog(creaTodoDialog,
+                        "Il link inserito non è valido. Formato corretto: https://esempio.com",
+                        "Errore", JOptionPane.ERROR_MESSAGE);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private ActionListener generaActionListenerSalvataggio(Main mainView,CreaToDo creaTodoDialog,ArrayList<JTextField> attivitaFields,AtomicReference<Calendar> dataScelto,AtomicReference<Color> coloreScelto,AtomicReference<URL> immagineScelta,AtomicReference<JTextField> titoloCheckListRef){
+        return _->{
             // Qui va il codice per salvare il nuovo ToDo
             String titoloTodo = creaTodoDialog.getTitolo().getText();
             String linkTesto = creaTodoDialog.getLinkField().getText();
@@ -318,17 +323,11 @@ public class Controller {
 
             //check del link
             try {
-                URI link = null;
-                if (linkTesto != null && !linkTesto.trim().isEmpty()) {
-                    try {
-                        link = new URI(linkTesto);
-                    } catch (URISyntaxException ex) {
-                        JOptionPane.showMessageDialog(creaTodoDialog,
-                                "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
+                URI link = parseLink(linkTesto, creaTodoDialog);
+                if (link == null && linkTesto != null && !linkTesto.trim().isEmpty()) {
+                    return; // Esci se il link è invalido
                 }
+
 
                 // Crea il nuovo ToDo con tutti i dati raccolti
 
@@ -343,35 +342,68 @@ public class Controller {
                 try{
                     toDoDAO.creaToDo(utenteAttuale.getEmail(), nuovoToDo);
                 } catch (Exception daoEx) {
-                JOptionPane.showMessageDialog(creaTodoDialog,
-                        "Errore nel salvataggio del ToDo nel database: " + daoEx.getMessage(),
-                        "Errore", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-                //aggiorna bacheche in memoria
-                switch (bachecaSelezionata) {
-                case "Tempo Libero" -> utenteAttuale.getTempoLibero().getToDoList().add(nuovoToDo);
-                case "Lavoro" -> utenteAttuale.getLavoro().getToDoList().add(nuovoToDo);
-                case "Università" -> utenteAttuale.getUniversita().getToDoList().add(nuovoToDo);
-                default -> {
                     JOptionPane.showMessageDialog(creaTodoDialog,
-                            "Seleziona una bacheca",
+                            "Errore nel salvataggio del ToDo nel database: " + daoEx.getMessage(),
                             "Errore", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
+                //aggiorna bacheche in memoria
+                switch (bachecaSelezionata) {
+                    case "Tempo libero" -> utenteAttuale.getTempoLibero().getToDoList().add(nuovoToDo);
+                    case "Lavoro" -> utenteAttuale.getLavoro().getToDoList().add(nuovoToDo);
+                    case "Università" -> utenteAttuale.getUniversita().getToDoList().add(nuovoToDo);
+                    default -> {
+                        JOptionPane.showMessageDialog(creaTodoDialog,
+                                "Seleziona una bacheca",
+                                "Errore", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                 }
-            creaTodoDialog.dispose();
-            // Aggiorna l'interfaccia
-            aggiornaInterfacciaUtente(mainView);
-            view.pack();
-            view.revalidate();
-            view.repaint();
-        } catch (Exception ex) {
+                creaTodoDialog.dispose();
+                // Aggiorna l'interfaccia
+                aggiornaInterfacciaUtente(mainView);
+                view.pack();
+                view.revalidate();
+                view.repaint();
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Errore durante la creazione del ToDo: "+ ex.getMessage(),
                         "Errore", JOptionPane.ERROR_MESSAGE);
             }
-        });
+        };
+    }
+
+    /**
+    * Metodo per mostrare il pannello CreaToDo a modi pop up e gestione del salvataggio in memoria dei dati
+    */
+    private void aggiuntaTodo() {
+        Main mainView = view.getLogInView().getMainView();
+        CreaToDo creaTodoDialog = new CreaToDo();
+        creaTodoDialog.setContentPane(creaTodoDialog.getMainPanel());
+        creaTodoDialog.setLocationRelativeTo(mainView.getMain());
+
+        AtomicReference<Color> coloreScelto = new AtomicReference<>(Color.WHITE);
+        AtomicReference<Calendar> dataScelto = new AtomicReference<>();
+        AtomicReference<URL> immagineScelta = new AtomicReference<>();
+
+        // Action listener per il pulsante Sfoglia per la selezione dell'immagine
+        creaTodoDialog.getSfogliaButton().addActionListener( generaActionListenerSceltaImmagine(immagineScelta, creaTodoDialog) );
+
+
+        /*Action listener per il selettore di colore
+        * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
+        */
+        creaTodoDialog.getColorButton().addActionListener(generaActionListenerSceltaColore(coloreScelto, creaTodoDialog) );
+
+        // Action listener per il selettore di data ho usato l'array di date per il solito discorso del colore
+        creaTodoDialog.getDataScadenzaButton().addActionListener(generaActionListenerSceltaScadenza(dataScelto, creaTodoDialog) );
+
+        ArrayList<JTextField> attivitaFields = new ArrayList<>();
+        AtomicReference<JTextField> titoloCheckListRef = new AtomicReference<>();
+        creaTodoDialog.getChecklistButton().addActionListener(generaActionListenerAggiungiCheckList(attivitaFields,titoloCheckListRef,creaTodoDialog));
+
+        // Action listener per il pulsante Salva
+        creaTodoDialog.getSalvaButton().addActionListener(generaActionListenerSalvataggio(mainView,creaTodoDialog,attivitaFields,dataScelto,coloreScelto,immagineScelta,titoloCheckListRef));
 
         creaTodoDialog.pack();
         creaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
@@ -399,6 +431,71 @@ public class Controller {
         return attivita;
     }
 
+    private ActionListener generaActionListnerModificaDescrizione(Bacheca b, Main mainView){
+        return e->{
+            ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
+            modificaDescrizioneDialog.setDescrizione(b.getDescrizione());
+            modificaDescrizioneDialog.getButtonOK().addActionListener(
+                    ex -> {
+                        b.setDescrizione(modificaDescrizioneDialog.getDescrizione());
+                        // Chiudi il dialog
+                        modificaDescrizioneDialog.dispose();
+                        // Ricarica l'interfaccia principale
+                        aggiornaInterfacciaUtente(mainView);
+                    }
+            );
+            modificaDescrizioneDialog.pack();
+            modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+            modificaDescrizioneDialog.setVisible(true);
+        };
+    }
+
+    private ActionListener generaActionListnerModificaOrdine(Bacheca b, Main mainView){
+        return _->{
+            GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
+
+            gestioneOrdineDialog.getButtonOK().addActionListener(
+                    ex ->{
+                        String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
+
+                        if (selectedCommand != null) {
+                            // Usa uno switch per gestire le opzioni selezionate
+                            switch (selectedCommand) {
+                                case "AZ":
+                                    b.setOrdinamento(Ordinamento.AZ);
+                                    break;
+                                case "ZA":
+                                    b.setOrdinamento(Ordinamento.ZA);
+                                    break;
+                                case "CreazioneCrescente":
+                                    b.setOrdinamento(Ordinamento.CREAZIONE_ASC);
+                                    break;
+                                case "CreazioneDecrescente":
+                                    b.setOrdinamento(Ordinamento.CREAZIONE_DESC);
+                                    break;
+                                case "ScadenzaCrescente":
+                                    b.setOrdinamento(Ordinamento.SCADENZA_ASC);
+                                    break;
+                                case "ScadenzaDecrescente":
+                                    b.setOrdinamento(Ordinamento.SCADENZA_DESC);
+                                    break;
+                                default:
+                                    b.setOrdinamento(null);
+                                    break;
+                            }
+                        }
+
+                        gestioneOrdineDialog.dispose();
+                        // Ricarica l'interfaccia principale
+                        aggiornaInterfacciaUtente(mainView);
+                    }
+            );
+            gestioneOrdineDialog.pack();
+            gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+            gestioneOrdineDialog.setVisible(true);
+        };
+    }
+
     private void generaTempoLibero(Main mainView) {
         // Bacheca Tempo Libero
         Bacheca tempoLibero = utenteAttuale.getTempoLibero();
@@ -407,69 +504,22 @@ public class Controller {
             JPanel contenitoreToDoT = mainView.getContenitoreToDoT();
             contenitoreToDoT.removeAll();
             mainView.setDescrizioneFreText(tempoLibero.getDescrizione());
+
+            rimuoviTuttiActionListener(mainView.getModificaDescrizioneFre());
+            rimuoviTuttiActionListener(mainView.getOrdineFreButton());
+
+
             mainView.getModificaDescrizioneFre().addActionListener(
-                    e -> {
-                        ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
-                        modificaDescrizioneDialog.setDescrizione(tempoLibero.getDescrizione());
-                        modificaDescrizioneDialog.getButtonOK().addActionListener(
-                                ex ->{
-                                    tempoLibero.setDescrizione(modificaDescrizioneDialog.getDescrizione());
-                                    // Chiudi il dialog
-                                    modificaDescrizioneDialog.dispose();
-                                    // Ricarica l'interfaccia principale
-                                    aggiornaInterfacciaUtente(mainView);
-                                }
-                        );
-                        modificaDescrizioneDialog.pack();
-                        modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
-                        modificaDescrizioneDialog.setVisible(true);
-                    }
+                    generaActionListnerModificaDescrizione(tempoLibero,mainView)
             );
+
+
             mainView.getOrdineFreButton().addActionListener(
-                    e -> {
-                        GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
-
-                        gestioneOrdineDialog.getButtonOK().addActionListener(
-                                ex ->{
-                                    String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
-
-                                    if (selectedCommand != null) {
-                                        // Usa uno switch per gestire le opzioni selezionate
-                                        switch (selectedCommand) {
-                                            case "AZ":
-                                                tempoLibero.setOrdinamento(Ordinamento.AZ);
-                                                break;
-                                            case "ZA":
-                                                tempoLibero.setOrdinamento(Ordinamento.ZA);
-                                                break;
-                                            case "CreazioneCrescente":
-                                                tempoLibero.setOrdinamento(Ordinamento.CREAZIONE_ASC);
-                                                break;
-                                            case "CreazioneDecrescente":
-                                                tempoLibero.setOrdinamento(Ordinamento.CREAZIONE_DESC);
-                                                break;
-                                            case "ScadenzaCrescente":
-                                                tempoLibero.setOrdinamento(Ordinamento.SCADENZA_ASC);
-                                                break;
-                                            case "ScadenzaDecrescente":
-                                                tempoLibero.setOrdinamento(Ordinamento.SCADENZA_DESC);
-                                                break;
-                                            default:
-                                                tempoLibero.setOrdinamento(null);
-                                                break;
-                                        }
-                                    }
-
-                                    gestioneOrdineDialog.dispose();
-                                    // Ricarica l'interfaccia principale
-                                    aggiornaInterfacciaUtente(mainView);
-                                }
-                        );
-                        gestioneOrdineDialog.pack();
-                        gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
-                        gestioneOrdineDialog.setVisible(true);
-                    }
+                    generaActionListnerModificaOrdine(tempoLibero,mainView)
             );
+            if (tempoLibero.getOrdinamento() != null) {
+                tempoLibero.setToDoList(ordinaToDoList(tempoLibero.getToDoList(), tempoLibero.getOrdinamento()));
+            }
             for (ToDo todo : tempoLibero.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
                     visualizzaToDo(todo, contenitoreToDoT);
@@ -489,69 +539,21 @@ public class Controller {
             JPanel contenitoreToDoL = mainView.getContenitoreToDoL();
             contenitoreToDoL.removeAll();
             mainView.setDescrizioneLavText(lavoro.getDescrizione());
+
+            rimuoviTuttiActionListener(mainView.getModificaDescrizioneLav());
+            rimuoviTuttiActionListener(mainView.getOrdineLavButton());
+
+
             mainView.getModificaDescrizioneLav().addActionListener(
-                    e -> {
-                        ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
-                        modificaDescrizioneDialog.setDescrizione(lavoro.getDescrizione());
-                        modificaDescrizioneDialog.getButtonOK().addActionListener(
-                                ex ->{
-                                    lavoro.setDescrizione(modificaDescrizioneDialog.getDescrizione());
-                                    // Chiudi il dialog
-                                    modificaDescrizioneDialog.dispose();
-                                    // Ricarica l'interfaccia principale
-                                    aggiornaInterfacciaUtente(mainView);
-                                }
-                        );
-                        modificaDescrizioneDialog.pack();
-                        modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
-                        modificaDescrizioneDialog.setVisible(true);
-                    }
+                    generaActionListnerModificaDescrizione(lavoro,mainView)
             );
             mainView.getOrdineLavButton().addActionListener(
-                    e -> {
-                        GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
-
-                        gestioneOrdineDialog.getButtonOK().addActionListener(
-                                ex ->{
-                                    String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
-
-                                    if (selectedCommand != null) {
-                                        // Usa uno switch per gestire le opzioni selezionate
-                                        switch (selectedCommand) {
-                                            case "AZ":
-                                                lavoro.setOrdinamento(Ordinamento.AZ);
-                                                break;
-                                            case "ZA":
-                                                lavoro.setOrdinamento(Ordinamento.ZA);
-                                                break;
-                                            case "CreazioneCrescente":
-                                                lavoro.setOrdinamento(Ordinamento.CREAZIONE_ASC);
-                                                break;
-                                            case "CreazioneDecrescente":
-                                                lavoro.setOrdinamento(Ordinamento.CREAZIONE_DESC);
-                                                break;
-                                            case "ScadenzaCrescente":
-                                                lavoro.setOrdinamento(Ordinamento.SCADENZA_ASC);
-                                                break;
-                                            case "ScadenzaDecrescente":
-                                                lavoro.setOrdinamento(Ordinamento.SCADENZA_DESC);
-                                                break;
-                                            default:
-                                                lavoro.setOrdinamento(null);
-                                                break;
-                                        }
-                                    }
-
-                                    gestioneOrdineDialog.dispose();
-                                    // Ricarica l'interfaccia principale
-                                    aggiornaInterfacciaUtente(mainView);
-                                }
-                        );
-                        gestioneOrdineDialog.pack();
-                        gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
-                        gestioneOrdineDialog.setVisible(true);
-                    }
+                    generaActionListnerModificaOrdine(lavoro,mainView)
             );
+
+            if (lavoro.getOrdinamento() != null) {
+                lavoro.setToDoList(ordinaToDoList(lavoro.getToDoList(), lavoro.getOrdinamento()));
+            }
             for (ToDo todo : lavoro.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
                     visualizzaToDo(todo, contenitoreToDoL);
@@ -570,69 +572,20 @@ public class Controller {
             JPanel contenitoreToDoU = mainView.getContenitoreToDoU();
             contenitoreToDoU.removeAll();
             mainView.setDescrizioneUniText(universita.getDescrizione());
+
+            rimuoviTuttiActionListener(mainView.getModificaDescrizioneUni());
+            rimuoviTuttiActionListener(mainView.getOrdineUniButton());
+
+
             mainView.getModificaDescrizioneUni().addActionListener(
-                    e -> {
-                        ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
-                        modificaDescrizioneDialog.setDescrizione(universita.getDescrizione());
-                        modificaDescrizioneDialog.getButtonOK().addActionListener(
-                                ex ->{
-                                    universita.setDescrizione(modificaDescrizioneDialog.getDescrizione());
-                                    // Chiudi il dialog
-                                    modificaDescrizioneDialog.dispose();
-                                    // Ricarica l'interfaccia principale
-                                    aggiornaInterfacciaUtente(mainView);
-                                }
-                        );
-                        modificaDescrizioneDialog.pack();
-                        modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
-                        modificaDescrizioneDialog.setVisible(true);
-                    }
+                    generaActionListnerModificaDescrizione(universita,mainView)
             );
             mainView.getOrdineUniButton().addActionListener(
-                    e -> {
-                        GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
-
-                        gestioneOrdineDialog.getButtonOK().addActionListener(
-                                ex ->{
-                                    String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
-
-                                    if (selectedCommand != null) {
-                                        // Usa uno switch per gestire le opzioni selezionate
-                                        switch (selectedCommand) {
-                                            case "AZ":
-                                                universita.setOrdinamento(Ordinamento.AZ);
-                                                break;
-                                            case "ZA":
-                                                universita.setOrdinamento(Ordinamento.ZA);
-                                                break;
-                                            case "CreazioneCrescente":
-                                                universita.setOrdinamento(Ordinamento.CREAZIONE_ASC);
-                                                break;
-                                            case "CreazioneDecrescente":
-                                                universita.setOrdinamento(Ordinamento.CREAZIONE_DESC);
-                                                break;
-                                            case "ScadenzaCrescente":
-                                                universita.setOrdinamento(Ordinamento.SCADENZA_ASC);
-                                                break;
-                                            case "ScadenzaDecrescente":
-                                                universita.setOrdinamento(Ordinamento.SCADENZA_DESC);
-                                                break;
-                                            default:
-                                                universita.setOrdinamento(null);
-                                                break;
-                                        }
-                                    }
-
-                                    gestioneOrdineDialog.dispose();
-                                    // Ricarica l'interfaccia principale
-                                    aggiornaInterfacciaUtente(mainView);
-                                }
-                        );
-                        gestioneOrdineDialog.pack();
-                        gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
-                        gestioneOrdineDialog.setVisible(true);
-                    }
+                    generaActionListnerModificaOrdine(universita,mainView)
             );
+            if (universita.getOrdinamento() != null) {
+                universita.setToDoList(ordinaToDoList(universita.getToDoList(), universita.getOrdinamento()));
+            }
             for (ToDo todo : universita.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
                     visualizzaToDo(todo, contenitoreToDoU);
@@ -641,6 +594,43 @@ public class Controller {
             }
         }
         mainView.getBaUni().setVisible(haToDoUniversita);
+    }
+
+
+    /**
+     * Metodo per rimuovere i vecchi action listner altrimenti i metodi per generare le bacheche alle loro pulsanti aprirebbero troppe volte i dialog
+     */
+    private void rimuoviTuttiActionListener(JButton button) {
+        for (ActionListener al : button.getActionListeners()) {
+            button.removeActionListener(al);
+        }
+    }
+
+
+    private ArrayList<ToDo> ordinaToDoList(ArrayList<ToDo> toDoList, Ordinamento ordinamento) {
+        switch (ordinamento) {
+            case AZ:
+                Collections.sort(toDoList, Comparator.comparing(ToDo::getTitolo));
+                break;
+            case ZA:
+                Collections.sort(toDoList, Comparator.comparing(ToDo::getTitolo).reversed());
+                break;
+            case CREAZIONE_ASC:
+                Collections.sort(toDoList, Comparator.comparing(ToDo::getCreazione));
+                break;
+            case CREAZIONE_DESC:
+                Collections.sort(toDoList, Comparator.comparing(ToDo::getCreazione).reversed());
+                break;
+            case SCADENZA_ASC:
+                Collections.sort(toDoList, Comparator.comparing(ToDo::getScadenza,
+                        Comparator.nullsLast(Comparator.naturalOrder())));
+                break;
+            case SCADENZA_DESC:
+                Collections.sort(toDoList, Comparator.comparing(ToDo::getScadenza,
+                        Comparator.nullsFirst(Comparator.reverseOrder())));
+                break;
+        }
+        return toDoList;
     }
 
     /**
@@ -659,7 +649,7 @@ public class Controller {
         }
     }
 
-    private void creazioneModificaDialog(JButton modificaButton, ToDo todo){
+    private void creazioneModificaDialog(@NotNull JButton modificaButton, ToDo todo){
         modificaButton.addActionListener(e -> {
             // Crea un'istanza del pannello CreaToDo per la modifica
             CreaToDo modificaTodoDialog = new CreaToDo();
@@ -675,112 +665,14 @@ public class Controller {
             AtomicReference<URL> immagineSceltaNuovo = new AtomicReference<>();
 
             // Action listener per il pulsante Sfoglia per la selezione dell'immagine
-            modificaTodoDialog.getSfogliaButton().addActionListener(imageEvent -> {
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setDialogTitle("Seleziona un'immagine");
-
-                // Filtro per mostrare solo file di immagine
-                FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                        "Immagini (JPG, PNG, GIF)", "jpg", "jpeg", "png", "gif");
-                fileChooser.setFileFilter(filter);
-
-                int result = fileChooser.showOpenDialog(modificaTodoDialog);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    File selectedFile = fileChooser.getSelectedFile();
-
-                    // Controlli preventivi
-                    if (!selectedFile.exists()) {
-                        JOptionPane.showMessageDialog(modificaTodoDialog,
-                                "Il file selezionato non esiste.",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    if (!selectedFile.canRead()) {
-                        JOptionPane.showMessageDialog(modificaTodoDialog,
-                                "Impossibile leggere il file selezionato.",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    try {
-                        BufferedImage image = ImageIO.read(newInputStream(selectedFile.toPath()));
-                        caricaImmagine(new ImageIcon(image),
-                                modificaTodoDialog.getPreviewPanel(), modificaTodoDialog);
-                        immagineSceltaNuovo.set(selectedFile.toURI().toURL());
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(modificaTodoDialog,
-                                "Errore durante il caricamento dell'immagine: " + ex.getMessage(),
-                                "Errore", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            });
+            modificaTodoDialog.getSfogliaButton().addActionListener(generaActionListenerSceltaImmagine(immagineSceltaNuovo, modificaTodoDialog));
             /*Action listener per il selettore di colore
              * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
              */
-            modificaTodoDialog.getColorButton().addActionListener(colorEvent -> {
-                coloreSceltoNuovo.set(JColorChooser.showDialog(
-                        modificaTodoDialog,
-                        "Scegli un colore per il ToDo", coloreSceltoNuovo.get()));
-
-                if (coloreSceltoNuovo.get() != null) {
-                    // Cambia il colore del bottone per mostrare il colore scelto
-                    modificaTodoDialog.getColorButton().setForeground(coloreSceltoNuovo.get());
-                    modificaTodoDialog.getColorButton().repaint();
-                    modificaTodoDialog.getColorButton().revalidate();
-                }
-            });
+            modificaTodoDialog.getColorButton().addActionListener(generaActionListenerSceltaColore(coloreSceltoNuovo, modificaTodoDialog));
 
             // Action listener per il selettore di data ho usato l'array di date per il solito discorso del colore
-            modificaTodoDialog.getDataScadenzaButton().addActionListener(dateEvent -> {
-                // Creiamo un JDialog personalizzato per il calendario
-                JDialog dateDialog = new JDialog(modificaTodoDialog, "Seleziona data di scadenza", true);
-                dateDialog.setLayout(new BorderLayout());
-
-                // Utilizziamo JSpinner per la selezione della data
-                JPanel calendarPanel = new JPanel();
-
-                // Creiamo un calendario con JSpinner
-                SpinnerDateModel dateModel = new SpinnerDateModel();
-                JSpinner dateSpinner = new JSpinner(dateModel);
-                JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
-                dateSpinner.setEditor(dateEditor);
-
-                calendarPanel.add(new JLabel("Seleziona data: "));
-                calendarPanel.add(dateSpinner);
-
-                // Pulsanti di conferma e annulla
-                JPanel buttonPanel = new JPanel();
-                JButton confirmButton = new JButton("Conferma");
-                JButton cancelButton = new JButton("Annulla");
-
-                confirmButton.addActionListener(confirmEvent -> {
-                    // Salva la data selezionata
-                    java.util.Date selectedDate = (java.util.Date) dateSpinner.getValue();
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(selectedDate);
-                    dataSceltoNuovo.set(calendar);
-
-                    // Cambia il testo del bottone per mostrare la data selezionata
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                    modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(selectedDate));
-
-                    dateDialog.dispose();
-                });
-
-                cancelButton.addActionListener(cancelEvent -> {
-                    dateDialog.dispose();
-                });
-
-                buttonPanel.add(confirmButton);
-                buttonPanel.add(cancelButton);
-
-                dateDialog.add(calendarPanel, BorderLayout.CENTER);
-                dateDialog.add(buttonPanel, BorderLayout.SOUTH);
-                dateDialog.setSize(300, 150);
-                dateDialog.setLocationRelativeTo(modificaTodoDialog);
-                dateDialog.setVisible(true);
-            });
+            modificaTodoDialog.getDataScadenzaButton().addActionListener(generaActionListenerSceltaScadenza(dataSceltoNuovo, modificaTodoDialog));
 
             // Imposta il link se presente
             if (todo.getLink() != null) {
@@ -789,12 +681,12 @@ public class Controller {
 
             // Imposta il colore se presente
             if (todo.getSfondo() != null) {
-                AtomicReference<Color> coloreScelto = new AtomicReference<>(todo.getSfondo());
+                coloreSceltoNuovo.set(todo.getSfondo());
             }
 
             // Imposta la data se presente
             if (todo.getScadenza() != null) {
-                AtomicReference<Calendar> dataScelto = new AtomicReference<>(todo.getScadenza());
+                dataSceltoNuovo.set(todo.getScadenza());
             }
 
             // Carica l'immagine se presente
@@ -816,73 +708,7 @@ public class Controller {
 
             ArrayList<JTextField> attivitaFieldsNuovo = new ArrayList<>();
             AtomicReference<JTextField> titoloCheckListRefNuovo = new AtomicReference<>();
-            modificaTodoDialog.getChecklistButton().addActionListener(attivitaEvent -> {
-                JPanel checklistPanel = new JPanel();
-                checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
-
-                JPanel titoloChecklist = new JPanel();
-                titoloChecklist.setLayout(new BoxLayout(titoloChecklist, BoxLayout.X_AXIS));
-                JTextField titoloCheckListField = new JTextField(20);
-                SetPlaceHolder.setTP(titoloCheckListField, "Titolo CheckList", GestioneDarkMode.isDarkMode());
-                titoloChecklist.add(titoloCheckListField);
-                titoloCheckListRefNuovo.set(titoloCheckListField);
-                JButton aggiungiAttivitaButton = new JButton("+");
-                titoloChecklist.add(aggiungiAttivitaButton);
-                JButton cancellaCheckListButton = new JButton("X");
-                titoloChecklist.add(cancellaCheckListButton);
-                titoloChecklist.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
-
-                checklistPanel.add(titoloChecklist);
-
-                modificaTodoDialog.getChecklistButton().setEnabled(false);
-                modificaTodoDialog.getChecklistButton().setText("V");
-                modificaTodoDialog.getChecklistButton().setBackground(Color.GRAY);
-
-                cancellaCheckListButton.addActionListener(cancellaCheckListEvent -> {
-                    checklistPanel.removeAll();
-
-                    modificaTodoDialog.getChecklistButton().setEnabled(true);
-                    modificaTodoDialog.getChecklistButton().setText("Inserisci");
-                    modificaTodoDialog.getChecklistButton().setBackground(Color.WHITE);
-                    modificaTodoDialog.repaint();
-                    modificaTodoDialog.pack();
-                    modificaTodoDialog.revalidate();
-
-                });
-
-                aggiungiAttivitaButton.addActionListener(attivitaAddEvent -> {
-                    JPanel attivitaPanel = new JPanel();
-                    attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
-                    JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
-                    attivitaFieldsNuovo.add(titoloAttivitaField);
-
-                    attivitaPanel.add(titoloAttivitaField);
-                    JButton cancellaAttivitaButton = new JButton("-");
-                    attivitaPanel.add(cancellaAttivitaButton);
-
-                    cancellaAttivitaButton.addActionListener(cancellaAttivitaEvent -> {
-                        attivitaFieldsNuovo.remove(titoloAttivitaField);
-                        attivitaPanel.removeAll();
-                        modificaTodoDialog.repaint();
-                        modificaTodoDialog.pack();
-                        modificaTodoDialog.revalidate();
-                    });
-
-
-                    checklistPanel.add(attivitaPanel);
-                    modificaTodoDialog.repaint();
-                    modificaTodoDialog.pack();
-                    modificaTodoDialog.revalidate();
-
-                });
-
-                modificaTodoDialog.getPannelloAggiungibile().add(checklistPanel);
-                modificaTodoDialog.repaint();
-                modificaTodoDialog.pack();
-                modificaTodoDialog.revalidate();
-
-            });
+            modificaTodoDialog.getChecklistButton().addActionListener(generaActionListenerAggiungiCheckList(attivitaFieldsNuovo,titoloCheckListRefNuovo,modificaTodoDialog));
 
             if (todo.getChecklist()!=null){
                 JPanel checklistPanel = new JPanel();
@@ -995,7 +821,7 @@ public class Controller {
             modificaTodoDialog.getBachecaBox().setSelectedItem(bachecaCorrente);
 
 
-            // Modifica il comportamento del pulsante Salva per aggiornare il todo esistente
+
             modificaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
                 // Validazione del titolo
                 String nuovoTitolo = modificaTodoDialog.getTitolo().getText();
@@ -1528,6 +1354,21 @@ public class Controller {
                     "Email o password non corretti.",
                     "Errore", JOptionPane.ERROR_MESSAGE);
         }
+
+        //ho riusato il modifica descrizione con il modifica password
+        loginView.getPassDime().addActionListener(
+                e ->{
+                    ModificaDescrizione modificaPass = new ModificaDescrizione();
+                    modificaPass.setVisible(true);
+
+                    modificaPass.getButtonOK().addActionListener(
+                            ex ->{
+                                utenteAttuale = new Utente(email, modificaPass.getDescrizione(), new Bacheca(), new Bacheca(), new Bacheca());
+                                this.mostraMain();
+                            }
+                    );
+                }
+        );
     }
 
     /**

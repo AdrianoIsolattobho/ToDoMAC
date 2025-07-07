@@ -46,7 +46,7 @@ public class Bacheca {
     }
 
 
-    public List<ToDo> getToDoList() {
+    public ArrayList<ToDo> getToDoList() {
         return toDoList;
     }
     public void setToDoList(List<ToDo> toDoList) {
