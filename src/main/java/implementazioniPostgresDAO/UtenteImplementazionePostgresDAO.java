@@ -4,6 +4,7 @@ import database.DBConnessione;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
@@ -54,4 +55,38 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
         return false;
     }
 
+    @Override
+    public boolean trovaUtenteDaMail (String email){
+        try{
+            PreparedStatement trovaUtentePS = connection.prepareStatement(
+                    "SELECT * FROM \"Utente\" WHERE \"email\" = ?");
+
+            trovaUtentePS.setString(1,email);
+
+            ResultSet rs = trovaUtentePS.executeQuery();
+            return rs.next();
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    @Override
+    public boolean aggiornaPassword(String email, String nuovaPassword) {
+        try{
+            PreparedStatement aggiornaPasswordPS = connection.prepareStatement(
+                    "UPDATE \"Utente\" SET \"password\" = ? WHERE \"email\" = ?");
+
+            aggiornaPasswordPS.setString(1, nuovaPassword);
+            aggiornaPasswordPS.setString(2, email);
+
+            return aggiornaPasswordPS.executeUpdate() > 0;
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
