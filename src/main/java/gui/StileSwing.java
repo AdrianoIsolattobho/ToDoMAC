@@ -14,7 +14,10 @@ import java.net.URL;
 public class StileSwing extends JFrame {
     private static final String FONT_SCELTO = "Arial";
 
-
+    /**
+     * Ricerca nel URL dato l'immagine
+     * Se la trova e le funzioni utilizzate sono supportate dall'OS allora la imposta come IMAGE_ICON
+     */
         public static void applicaStile() {
             //soluzione universale per cambiare icona sul dock (mac) e toolbar (windows)
             // Versione più sicura del tuo codice
@@ -49,8 +52,13 @@ public class StileSwing extends JFrame {
 
 
 
-            // Imposta lo stile per i componenti Swing
+            /**
+             * Prende in input il return di gui.GestioneDarkMode
+             * in base all'input imposta lo stile per i componenti Swing*/
             if (GestioneDarkMode.isDarkMode()) {
+
+                /*Tema Scuro*/
+
                 //button
                 UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
                 UIManager.put("Button.foreground", new java.awt.Color(1, 167, 225));
@@ -60,6 +68,7 @@ public class StileSwing extends JFrame {
                 UIManager.put("Label.background", new java.awt.Color(18, 41, 75));
                 UIManager.put("Label.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.PLAIN, 16));
 
+                //textField
                 UIManager.put("TextField.foreground", new java.awt.Color(1, 167, 225));
 
                 //Password
@@ -69,6 +78,9 @@ public class StileSwing extends JFrame {
                 //Panel
                 UIManager.put("Panel.background", new java.awt.Color(18, 41, 75));
             } else {
+
+                /*Tema Chiaro*/
+
                 UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
                 UIManager.put("Button.foreground", java.awt.Color.BLACK);
 
@@ -78,12 +90,12 @@ public class StileSwing extends JFrame {
                 UIManager.put("Label.foreground", new java.awt.Color(18, 41, 75));
 
 
-                UIManager.put("TextField.foreground", new java.awt.Color(18, 149, 216));
                 // TextField
-                UIManager.put("TextField.foreground", java.awt.Color.BLACK);
+                UIManager.put("TextField.foreground", new java.awt.Color(18, 149, 216));
+
 
                 //Password
-                UIManager.put("PasswordField.foreground", java.awt.Color.BLACK);
+                UIManager.put("PasswordField.foreground", new java.awt.Color(18, 149, 216));
 
                 //Panel
                 UIManager.put("Panel.background", new java.awt.Color(245, 245, 245));

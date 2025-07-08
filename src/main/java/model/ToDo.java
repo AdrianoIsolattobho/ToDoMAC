@@ -11,7 +11,6 @@ public class ToDo {
     private Calendar scadenza;
     private Calendar creazione;
     private boolean completato;
-    private boolean manuale;
     private boolean scaduto;
     private java.awt.Color sfondo;
     private URL immagine;
@@ -26,12 +25,13 @@ public class ToDo {
         this.scadenza = scadenza;
         this.creazione = Calendar.getInstance(); // data di creazione impostata alla data corrente
         this.completato = false;
-        this.manuale = false;
         this.scaduto = false;
         this.sfondo = sfondo;
         this.immagine = immagine;
         this.checklist = checklist;
     }
+
+    public ToDo(){}
 
     // getters e setters
     public String getTitolo() {
@@ -52,14 +52,6 @@ public class ToDo {
 
     public void setScadenza(Calendar scadenza) {
         this.scadenza = scadenza;
-    }
-
-    public void setCreazione(Calendar creazione) {
-        this.creazione = creazione;
-    }
-
-    public void setManuale(boolean manuale) {
-        this.manuale = manuale;
     }
 
     public void setSfondo(Color sfondo) {

@@ -1,6 +1,7 @@
 package implementazioniPostgresDAO;
 
 import database.DBConnessione;
+import model.Utente;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -53,5 +54,7 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
         }
         return false;
     }
+
+
 
 }

@@ -25,12 +25,8 @@ public class GestioneDarkMode {
         }
     }
 
-    /**
+    /*+
      * Controlla se è attiva la dark mode dai registri di windows
-     * @return boolean
-     */
-    /**
-     * Controlla se è attiva la dark mode dai registri di Windows.
      * @return boolean
      */
     public static boolean isDarkModeWindows() {
