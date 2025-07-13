@@ -11,7 +11,6 @@ public class Main extends JPanel {
     private JPanel baUni;
     private JPanel baLav;
     private JPanel baFre;
-    private JPanel navBar;
     private JPanel contenitoreToDoU;
     private JPanel contenitoreToDoL;
     private JPanel contenitoreToDoT;
@@ -25,6 +24,46 @@ public class Main extends JPanel {
     private JButton ordineUniButton;
     private JButton ordineLavButton;
     private JButton ordineFreButton;
+    private JPanel baSca;
+    private JButton mostraInScadenza;
+    private JPanel contenitoreTodoSca;
+    private JTextField campoRicerca;
+    private JButton buttonRicerca;
+    private JPanel baRic;
+    private JPanel contenitoreToDoRIc;
+    private JButton buttonAzzera;
+
+    public JButton getButtonAzzera() {
+        return buttonAzzera;
+    }
+
+    public JPanel getContenitoreToDoRIc() {
+        return contenitoreToDoRIc;
+    }
+
+    public JPanel getBaRic() {
+        return baRic;
+    }
+
+    public JButton getButtonRicerca() {
+        return buttonRicerca;
+    }
+
+    public JTextField getCampoRicerca() {
+        return campoRicerca;
+    }
+
+    public JPanel getContenitoreTodoSca() {
+        return contenitoreTodoSca;
+    }
+
+    public JPanel getBaSca() {
+        return baSca;
+    }
+
+    public JButton getMostraInScadenza() {
+        return mostraInScadenza;
+    }
 
     public JButton getOrdineUniButton() {
         return ordineUniButton;

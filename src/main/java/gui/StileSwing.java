@@ -4,6 +4,7 @@ package gui;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.util.logging.Logger;
 
 /**
  * Classe per applicare uno stile personalizzato a Swing.
@@ -25,6 +26,8 @@ public class StileSwing extends JFrame {
             final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
             final URL imageResource = Main.class.getClassLoader().getResource("img/check.png");
             final Image image = defaultToolkit.getImage(imageResource);
+            Logger logger = Logger.getLogger("StileSwing");
+
 
             try {
                 // Verifica prima se la Taskbar è supportata sulla piattaforma
@@ -35,26 +38,19 @@ public class StileSwing extends JFrame {
                     if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
                         taskbar.setIconImage(image);
                     } else {
-                        System.out.println("La funzionalità ICON_IMAGE non è supportata su questa piattaforma");
+                        logger.info("La funzionalità ICON_IMAGE non è supportata su questa piattaforma");
                     }
                 } else {
-                    System.out.println("Taskbar non supportata su questa piattaforma");
+                    logger.info("Taskbar non supportata su questa piattaforma");
                 }
             } catch (UnsupportedOperationException e) {
                 // La funzionalità Taskbar non è supportata su questa piattaforma
-                System.err.println("Taskbar non supportata su questa piattaforma: " + e.getMessage());
+                logger.info("Taskbar non supportata su questa piattaforma: " + e.getMessage());
             } catch (Exception e) {
                 // Gestisce altri possibili errori
-                System.err.println("Errore durante l'impostazione dell'icona: " + e.getMessage());
+                logger.info("Errore durante l'impostazione dell'icona: " + e.getMessage());
             }
-
-
-
-
-
-            /**
-             * Prende in input il return di gui.GestioneDarkMode
-             * in base all'input imposta lo stile per i componenti Swing*/
+            
             if (GestioneDarkMode.isDarkMode()) {
 
                 /*Tema Scuro*/

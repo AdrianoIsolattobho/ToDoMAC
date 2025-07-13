@@ -215,8 +215,6 @@ public class Controller {
             azzeraRicerca(mainView);
         });
 
-        SetPlaceHolder.setTP(mainView.getCampoRicerca(), "Ricerca un ToDo", GestioneDarkMode.isDarkMode());
-
         // Ricerca in tempo reale (opzionale)
         mainView.getCampoRicerca().addKeyListener(new KeyAdapter() {
             @Override
@@ -787,10 +785,6 @@ public class Controller {
         JPanel contenitoreToDoSca = mainView.getContenitoreTodoSca();
         contenitoreToDoSca.removeAll();
         Calendar oggi = Calendar.getInstance();
-        oggi.set(Calendar.HOUR_OF_DAY, 0);
-        oggi.set(Calendar.MINUTE, 0);
-        oggi.set(Calendar.SECOND, 0);
-        oggi.set(Calendar.MILLISECOND, 0);
 
         boolean haToDoUniversita = checkScaduti(universita, oggi, contenitoreToDoSca);
         boolean haToDoTempoLibero = checkScaduti(tempoLibero, oggi, contenitoreToDoSca);

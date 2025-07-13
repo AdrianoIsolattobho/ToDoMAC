@@ -6,7 +6,6 @@ public class Scelta extends JFrame {
     private JPanel sceltaPanel;
     private JButton registratiButton;
     private JButton logInButton;
-    private JLabel titolo;
 
     private LogIn loginView;
     private Register registerView;

@@ -19,6 +19,9 @@ public class Utente {
         this.lavoro = lavoro;
     }
 
+    //costruttore vuoto per il recupero password
+    public Utente(){}
+
     // getters e setters
     public String getEmail() {
         return email;

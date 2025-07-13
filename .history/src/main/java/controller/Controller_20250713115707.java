@@ -215,8 +215,6 @@ public class Controller {
             azzeraRicerca(mainView);
         });
 
-        SetPlaceHolder.setTP(mainView.getCampoRicerca(), "Ricerca un ToDo", GestioneDarkMode.isDarkMode());
-
         // Ricerca in tempo reale (opzionale)
         mainView.getCampoRicerca().addKeyListener(new KeyAdapter() {
             @Override

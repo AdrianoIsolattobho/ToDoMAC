@@ -57,7 +57,7 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
     }
 
     @Override
-    public boolean trovaUtenteDaMail (String email){
+    public Utente trovaUtenteDaMail (String email){
         try{
             PreparedStatement trovaUtentePS = connection.prepareStatement(
                     "SELECT * FROM \"Utente\" WHERE \"email\" = ?");
@@ -65,12 +65,12 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
             trovaUtentePS.setString(1,email);
 
             ResultSet rs = trovaUtentePS.executeQuery();
-            return rs.next();
+            return new Utente();
 
         } catch (SQLException e){
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
 
 

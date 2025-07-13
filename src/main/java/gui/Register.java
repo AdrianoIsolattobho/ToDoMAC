@@ -8,7 +8,6 @@ public class Register extends JPanel {
     private JPasswordField confermaPassword;
     private JPasswordField password;
     private JTextField email;
-    private JLabel titolo;
     private JButton back;
     private JPanel registerPanel;
 

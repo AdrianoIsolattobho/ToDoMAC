@@ -15,7 +15,9 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -52,50 +54,6 @@ public class Controller {
     private static final Font FONTICONE = new Font("Dialog", Font.BOLD, 18);
     private static final String AGGIUNGI = "aggiungi";
     private static final String RIMUOVI = "rimuovi";
-
-    /**
-     * Gestisce la ricerca e visualizza i risultati
-     */
-    private void gestisciRicerca(String termineRicerca, Main mainView) {
-        ArrayList<ToDo> risultati = filtraToDoPerRicerca(termineRicerca);
-
-        // Nascondi tutte le bacheche normali
-        mainView.getBaFre().setVisible(false);
-        mainView.getBaLav().setVisible(false);
-        mainView.getBaUni().setVisible(false);
-        mainView.getBaSca().setVisible(false);
-
-        // Mostra pannello risultati ricerca
-        JPanel pannelloRisultati = mainView.getContenitoreToDoRIc();
-        pannelloRisultati.removeAll();
-
-        if (risultati.isEmpty()) {
-            JLabel nessunRisultato = new JLabel("Nessun ToDo trovato per: " + termineRicerca);
-            pannelloRisultati.add(nessunRisultato);
-        } else {
-            for (ToDo todo : risultati) {
-                if (mostraCompletati || !todo.isCompletato()) {
-                    visualizzaToDo(todo, pannelloRisultati, false);
-                }
-            }
-        }
-
-        // Aggiorna il titolo del pannello
-        mainView.getBaRic().setBorder(BorderFactory.createTitledBorder("Risultati ricerca: " + termineRicerca));
-        mainView.getBaRic().setVisible(true);
-
-        pannelloRisultati.revalidate();
-        pannelloRisultati.repaint();
-    }
-
-    /**
-     * Azzera la ricerca e mostra tutte le bacheche
-     */
-    private void azzeraRicerca(Main mainView) {
-        // Ripristina la visualizzazione normale
-        aggiornaInterfacciaUtente(mainView);
-        mainView.getBaSca().setVisible(false);
-    }
 
     /**
      * Metodo per filtrare i ToDo in base al termine di ricerca
@@ -139,8 +97,17 @@ public class Controller {
      * Verifica se un ToDo corrisponde al termine di ricerca
      */
     private boolean corrispondeRicerca(ToDo todo, String termine) {
-        // Cerca nel titolo e nella descrizione
-        return todo.getTitolo() != null && todo.getTitolo().toLowerCase().contains(termine) || todo.getDescrizione() != null && todo.getDescrizione().toLowerCase().contains(termine);
+        // Cerca nel titolo
+        if (todo.getTitolo() != null && todo.getTitolo().toLowerCase().contains(termine)) {
+            return true;
+        }
+
+        // Cerca nella descrizione
+        if (todo.getDescrizione() != null && todo.getDescrizione().toLowerCase().contains(termine)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -202,33 +169,6 @@ public class Controller {
         mainView.getEsci().addActionListener(e -> mostraPanel(view.getScelta()));
 
         mainView.getMostraInScadenza().addActionListener(_ -> mainView.getBaSca().setVisible(true));
-
-        // ActionListener per la ricerca
-        mainView.getButtonRicerca().addActionListener(e -> {
-            String termineRicerca = mainView.getCampoRicerca().getText();
-            gestisciRicerca(termineRicerca, mainView);
-        });
-
-        // ActionListener per azzerare la ricerca
-        mainView.getButtonAzzera().addActionListener(e -> {
-            mainView.getCampoRicerca().setText("");
-            azzeraRicerca(mainView);
-        });
-
-        SetPlaceHolder.setTP(mainView.getCampoRicerca(), "Ricerca un ToDo", GestioneDarkMode.isDarkMode());
-
-        // Ricerca in tempo reale (opzionale)
-        mainView.getCampoRicerca().addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                String termineRicerca = mainView.getCampoRicerca().getText();
-                if (termineRicerca.length() >= 2) { // Inizia la ricerca dopo 2 caratteri
-                    gestisciRicerca(termineRicerca, mainView);
-                } else if (termineRicerca.isEmpty()) {
-                    azzeraRicerca(mainView);
-                }
-            }
-        });
 
     }
 
@@ -768,10 +708,10 @@ public class Controller {
         mainView.getBaUni().setVisible(haToDoUniversita);
     }
 
-    private Boolean checkScaduti(Bacheca bacheca, Calendar oggi, JPanel contenitoreToDoSca) {
+    private Boolean checkScaduti(Bacheca bacheca, Date oggi, JPanel contenitoreToDoSca) {
         if (bacheca != null && bacheca.getToDoList() != null) {
             for (ToDo todo : bacheca.getToDoList()) {
-                if (todo.getScadenza().compareTo(oggi) <= 0) {
+                if (todo.getScadenza().before(oggi) || todo.getScadenza().equals(oggi)) {
                     visualizzaToDo(todo, contenitoreToDoSca, false);
                     return true;
                 }
@@ -792,9 +732,9 @@ public class Controller {
         oggi.set(Calendar.SECOND, 0);
         oggi.set(Calendar.MILLISECOND, 0);
 
-        boolean haToDoUniversita = checkScaduti(universita, oggi, contenitoreToDoSca);
-        boolean haToDoTempoLibero = checkScaduti(tempoLibero, oggi, contenitoreToDoSca);
-        boolean haToDoLavoro = checkScaduti(lavoro, oggi, contenitoreToDoSca);
+        boolean haToDoUniversita = checkScaduti(universita, oggi.getTime(), contenitoreToDoSca);
+        boolean haToDoTempoLibero = checkScaduti(tempoLibero, oggi.getTime(), contenitoreToDoSca);
+        boolean haToDoLavoro = checkScaduti(lavoro, oggi.getTime(), contenitoreToDoSca);
 
         if (!haToDoUniversita && !haToDoTempoLibero && !haToDoLavoro) {
             mainView.getBaSca().add(new JLabel("Nessun todo in scadenza oggi"));

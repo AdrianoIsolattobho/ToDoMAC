@@ -1,10 +1,8 @@
 package gui;
 
-import controller.Controller;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
 
 public class ResetPassword extends JDialog {
     private JPanel contentPanel;
@@ -19,40 +17,49 @@ public class ResetPassword extends JDialog {
         setContentPane(contentPanel);
         setModal(true);
         setTitle("Reset Password");
-        pack();
+        setSize(450, 350);
+        setupComponents();
         setLocationRelativeTo(null);
-        setVisible(true);
 
-        bottoneReset.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String emailText = email.getText();
-                String passwordText = new String(password.getPassword());
-                String confermaPasswordText = new String(confermaPassword.getPassword());
 
-                if (emailText.isEmpty() || passwordText.isEmpty() || confermaPasswordText.isEmpty()) {
-                    JOptionPane.showMessageDialog(contentPanel, "Inserire tutti i campi", "Errore", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                if (!passwordText.equals(confermaPasswordText)) {
-                    JOptionPane.showMessageDialog(contentPanel, "Le password non corrispondono", "Errore", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+        //Più diretto e veloce rispetto a richiamare la finestra genitore con SwingUtilities
+        // possibile farlo perchè questa classe estende JDialog
 
-                Controller controller = new Controller("ResetPassword");
-
-                Boolean successo = controller.resetPassword(emailText, passwordText);
-
-                if (successo) {
-                    JOptionPane.showMessageDialog(contentPanel, "Password resettata con successo", "Informazione", JOptionPane.INFORMATION_MESSAGE);
-                    SwingUtilities.getWindowAncestor(contentPanel).dispose();
-                } else {
-                    JOptionPane.showMessageDialog(contentPanel, "Errore: utente non trovato", "Errore", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        //Più diretto e veloce rispetto a richiamare la finestra genitore con SwingUtilities, possibile farlo perchè questa classe estende JDialog
         buttonCancel.addActionListener(e -> dispose());
     }
+
+    // Chiamare questo metodo dopo che il form è stato inizializzato
+    public void setupComponents() {
+        if (this.email != null && this.password != null) {
+            SetPlaceHolder.setTP(this.email, "Email", GestioneDarkMode.isDarkMode());
+            SetPlaceHolder.setPP(this.password, "Password", GestioneDarkMode.isDarkMode());
+            SetPlaceHolder.setPP(this.confermaPassword, "Conferma password", GestioneDarkMode.isDarkMode());
+
+            this.email.setBorder(new RoundedBorder(15));
+            this.password.setBorder(new RoundedBorder(15));
+            this.confermaPassword.setBorder(new RoundedBorder(15));
+
+            this.email.setOpaque(false);
+            this.password.setOpaque(false);
+            this.confermaPassword.setOpaque(false);
+        }
+    }
+
+    public JButton getBottoneReset() {
+        return bottoneReset;
+    }
+
+    public JTextField getEmail() {
+        return email;
+    }
+
+    public JPasswordField getPassword() {
+        return password;
+    }
+
+    public JPasswordField getConfermaPassword() {
+        return confermaPassword;
+    }
+
+
 }
