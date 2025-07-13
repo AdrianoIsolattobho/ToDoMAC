@@ -66,11 +66,13 @@ public class Controller {
     }
 
     /**
-     * Metodi per mostrare le varie view
-     * mostra il pannello con il login
+     * Metodo helper che esegue delle funzioni di base per mostrare al meglio un
+     * pannello
+     * 
+     * @param scelto il pannello da mostrare
      */
-    private void mostraLogin() {
-        view.setContentPane(view.getLogInView().getMainLogIn());
+    private void mostraPanel(JPanel scelto) {
+        view.setContentPane(scelto);
         view.pack();
         view.setLocationRelativeTo(null);
         view.revalidate();
@@ -78,20 +80,7 @@ public class Controller {
     }
 
     /**
-     * Metodi per mostrare le varie view
-     * mostra il pannello con la registrazione
-     */
-    private void mostraRegistrazione() {
-        view.setContentPane(view.getRegisterView().getMainRegistrazione());
-        view.pack();
-        view.setLocationRelativeTo(null);
-        view.revalidate();
-        view.repaint();
-    }
-
-    /**
-     * Metodi per mostrare le varie view
-     * mostra il pannello principale con i vari todo
+     * Metodo per mostrare la view principale
      * aggiunge gli action listener per l'aggiunta di nuovi todo
      * per il logout dal programma
      * e per mostrare i todo già completati
@@ -102,12 +91,12 @@ public class Controller {
 
         aggiornaInterfacciaUtente(mainView);
 
-        view.setContentPane(mainView.getMain());
-        view.pack();
-        view.setLocationRelativeTo(null);
-        view.revalidate();
-        view.repaint();
+        mostraPanel(mainView.getMain());
+
+        // action listener della aggiunta di un nuovo todo
         mainView.getAggiungiToDo().addActionListener(e -> aggiuntaTodo());
+
+        // action listener per mostrare i todo già completati
         mainView.getMostraCompletati().addActionListener(
                 e -> {
                     this.mostraCompletati = !this.mostraCompletati;
@@ -130,11 +119,11 @@ public class Controller {
                     "Immagini (JPG, PNG, GIF)", "jpg", "jpeg", "png", "gif");
             fileChooser.setFileFilter(filter);
 
+            // check della validità del file, se il file è valido chiama caricaImmagine che
+            // ne mostra una preview
             int result = fileChooser.showOpenDialog(creaTodoDialog);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-
-                // Controlli preventivi
                 if (!selectedFile.exists()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Il file selezionato non esiste.",
@@ -163,9 +152,18 @@ public class Controller {
         };
     }
 
+    /**
+     * Metodo estratto da AggiuntaTodo e usato anche in ModificaTodo per salvare il
+     * colore
+     * ActionListener per la selezione del colore
+     * 
+     * @param coloreScelto   riferimento al colore selezionato
+     * @param creaTodoDialog il dialog da cui viene chiamato il metodo
+     */
     private ActionListener generaActionListenerSceltaColore(AtomicReference<Color> coloreScelto,
             CreaToDo creaTodoDialog) {
         return _ -> {
+            // usiamo la funzione base JColorChooser che ci permette di scegliere il colore
             coloreScelto.set(JColorChooser.showDialog(
                     creaTodoDialog,
                     "Scegli un colore per il ToDo", coloreScelto.get()));
@@ -179,6 +177,14 @@ public class Controller {
         };
     }
 
+    /**
+     * Metodo estratto da AggiuntaTodo e usato anche in ModificaTodo per salvare la
+     * data di scadenza
+     * ActionListener per la selezione della data di scadenza
+     * 
+     * @param dataScelto     riferimento alla data selezionata
+     * @param creaTodoDialog il dialog da cui viene chiamato il metodo
+     */
     private ActionListener generaActionListenerSceltaScadenza(AtomicReference<Calendar> dataScelto,
             CreaToDo creaTodoDialog) {
         return _ -> {
@@ -230,6 +236,15 @@ public class Controller {
         };
     }
 
+    /**
+     * Metodo estratto da AggiuntaTodo e usato anche in ModificaTodo per salvare la
+     * CheckList
+     * ActionListener per la creare il pannello da cui verrà poi ricavata la
+     * CheckList
+     * 
+     * @param attivitaFields riferimento all' array di attività da salvare
+     * @param creaTodoDialog il dialog da cui viene chiamato il metodo
+     */
     private ActionListener generaActionListenerAggiungiCheckList(ArrayList<JTextField> attivitaFields,
             AtomicReference<JTextField> titoloCheckListRef, CreaToDo creaTodoDialog) {
         return _ -> {
@@ -256,7 +271,8 @@ public class Controller {
 
             cancellaCheckListButton.addActionListener(cancellaCheckListEvent -> {
                 checklistPanel.removeAll();
-
+                attivitaFields.clear();
+                titoloCheckListRef.set(null);
                 creaTodoDialog.getChecklistButton().setEnabled(true);
                 creaTodoDialog.getChecklistButton().setText("Inserisci");
                 creaTodoDialog.getChecklistButton().setBackground(Color.WHITE);
@@ -299,6 +315,12 @@ public class Controller {
         };
     }
 
+    /**
+     * Metodo Helper per controllare la validità del link inserito nel campo Link
+     * 
+     * @param linkTesto      il link da controllare
+     * @param creaTodoDialog il dialog da cui viene chiamato il metodo
+     */
     private URI parseLink(String linkTesto, JDialog creaTodoDialog) {
         if (linkTesto != null && !linkTesto.trim().isEmpty()) {
             try {
@@ -468,10 +490,13 @@ public class Controller {
     private ActionListener generaActionListnerModificaDescrizione(Bacheca b, Main mainView) {
         return e -> {
             ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
+            modificaDescrizioneDialog.setTitle("Modifica descrizione bacheca: " + b.getTitolo());
+            SetPlaceHolder.setTP(modificaDescrizioneDialog.getTextField(), "Descrizione",
+                    GestioneDarkMode.isDarkMode());
             modificaDescrizioneDialog.setDescrizione(b.getDescrizione());
             modificaDescrizioneDialog.getButtonOK().addActionListener(
                     ex -> {
-                        b.setDescrizione(modificaDescrizioneDialog.getDescrizione());
+                        b.setDescrizione(modificaDescrizioneDialog.getTextFieldText());
                         // Chiudi il dialog
                         modificaDescrizioneDialog.dispose();
                         // Ricarica l'interfaccia principale
@@ -530,6 +555,10 @@ public class Controller {
         };
     }
 
+    /**
+     * Metodo per generare la bacheca tempo libero, mostra il pannello solo se sono
+     * presenti dei todo e richiama i metodi per generare gli action listener
+     */
     private void generaTempoLibero(Main mainView) {
         // Bacheca Tempo Libero
         Bacheca tempoLibero = utenteAttuale.getTempoLibero();
@@ -552,7 +581,7 @@ public class Controller {
             }
             for (ToDo todo : tempoLibero.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
-                    visualizzaToDo(todo, contenitoreToDoT);
+                    visualizzaToDo(todo, contenitoreToDoT, false);
                     haToDoTempoLibero = true;
                 }
             }
@@ -561,6 +590,10 @@ public class Controller {
         mainView.getBaFre().setVisible(haToDoTempoLibero);
     }
 
+    /**
+     * Metodo per generare la bacheca lavoro, mostra il pannello solo se sono
+     * presenti dei todo e richiama i metodi per generare gli action listener
+     */
     private void generaLavoro(Main mainView) {
         // Bacheca Lavoro
         Bacheca lavoro = utenteAttuale.getLavoro();
@@ -583,7 +616,7 @@ public class Controller {
             }
             for (ToDo todo : lavoro.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
-                    visualizzaToDo(todo, contenitoreToDoL);
+                    visualizzaToDo(todo, contenitoreToDoL, false);
                     haToDoLavoro = true;
                 }
             }
@@ -591,6 +624,10 @@ public class Controller {
         mainView.getBaLav().setVisible(haToDoLavoro);
     }
 
+    /**
+     * Metodo per generare la bacheca università, mostra il pannello solo se sono
+     * presenti dei todo e richiama i metodi per generare gli action listener
+     */
     private void generaUniversita(Main mainView) {
         // Bacheca Università
         Bacheca universita = utenteAttuale.getUniversita();
@@ -612,7 +649,7 @@ public class Controller {
             }
             for (ToDo todo : universita.getToDoList()) {
                 if (mostraCompletati || !todo.isCompletato()) {
-                    visualizzaToDo(todo, contenitoreToDoU);
+                    visualizzaToDo(todo, contenitoreToDoU, false);
                     haToDoUniversita = true;
                 }
             }
@@ -889,7 +926,7 @@ public class Controller {
                 if (nuovoLink != null && !nuovoLink.trim().isEmpty()) {
                     try {
                         todo.setLink(new URI(nuovoLink));
-                    } catch (URISyntaxException ex) {
+                    } catch (URISyntaxException _) {
                         JOptionPane.showMessageDialog(modificaTodoDialog,
                                 "Il link inserito non è valido. Formato corretto: https://esempio.com",
                                 ERROR, JOptionPane.ERROR_MESSAGE);
@@ -1002,13 +1039,103 @@ public class Controller {
         }
     }
 
+    private JButton generaModificaButton(Color coloreTesto, ToDo todo) {
+        // Pulsante modifica con icona di modifica (Unicode per pencil)
+        JButton modificaButton = new JButton("✏");
+        modificaButton.setFont(new Font("Dialog", Font.PLAIN, 14));
+        modificaButton.setToolTipText("Modifica");
+        modificaButton.setFocusPainted(false);
+        modificaButton.setBorderPainted(false);
+        modificaButton.setContentAreaFilled(false);
+        modificaButton.setForeground(coloreTesto);
+        modificaButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        creazioneModificaDialog(modificaButton, todo);
+        return modificaButton;
+    }
+
+    private JButton generaShareButton(Color coloreTesto, ToDo todo) {
+        // Pulsante share con icona della freccia(➢)
+        JButton shareButton = new JButton("➢");
+        shareButton.setFont(new Font("Dialog", Font.PLAIN, 14));
+        shareButton.setToolTipText("Condividi");
+        shareButton.setFocusPainted(false);
+        shareButton.setBorderPainted(false);
+        shareButton.setContentAreaFilled(false);
+        shareButton.setForeground(coloreTesto);
+        shareButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        shareButton.addActionListener(e -> {
+            ModificaDescrizione condividiConDialog = new ModificaDescrizione();
+            condividiConDialog.setVisible(true);
+            condividiConDialog.setTitle("Condividi con");
+            SetPlaceHolder.setTP(condividiConDialog.getTextField(), "Inserisci la email con cui vuoi condividere",
+                    GestioneDarkMode.isDarkMode());
+
+            condividiConDialog.getButtonOK().addActionListener(_ -> {
+                String emailCondivisa = condividiConDialog.getTextFieldText();
+                // marta
+                // aggiungere query che controlla che la stringa data dal risultato sia presente
+                // nel db
+                Utente utenteCondiviso = null;
+                Condivisione condivido = new Condivisione(utenteAttuale, todo, utenteCondiviso);
+            });
+        });
+        return shareButton;
+    }
+
+    public JButton generaEliminaButton(Color coloreTesto, ToDo todo) {
+        // Pulsante elimina con icona del cestino (Unicode per trash)
+        JButton eliminaButton = new JButton("🗑");
+        eliminaButton.setFont(new Font("Dialog", Font.PLAIN, 14));
+        eliminaButton.setToolTipText("Elimina");
+        eliminaButton.setFocusPainted(false);
+        eliminaButton.setBorderPainted(false);
+        eliminaButton.setContentAreaFilled(false);
+        eliminaButton.setForeground(coloreTesto);
+        eliminaButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        eliminaButton.addActionListener(e -> {
+            int conferma = JOptionPane.showConfirmDialog(null,
+                    "Sei sicuro di voler eliminare questo ToDo?",
+                    "Conferma eliminazione", JOptionPane.YES_NO_OPTION);
+            if (conferma != JOptionPane.YES_OPTION) {
+                return;
+            }
+            boolean rimosso = false;
+
+            if (utenteAttuale.getTempoLibero().getToDoList().remove(todo))
+                rimosso = true;
+            if (utenteAttuale.getLavoro().getToDoList().remove(todo))
+                rimosso = true;
+            if (utenteAttuale.getUniversita().getToDoList().remove(todo))
+                rimosso = true;
+
+            if (rimosso) {
+                try {
+                    toDoDAO.eliminaToDo(utenteAttuale.getEmail(), todo.getTitolo());
+
+                    // aggiorna l'interfaccia utente
+                    aggiornaInterfacciaUtente(view.getLogInView().getMainView());
+                    view.revalidate();
+                    view.repaint();
+
+                } catch (Exception daoEx) {
+                    JOptionPane.showMessageDialog(null,
+                            "Errore durante l'eliminazione nel database: " + daoEx.getMessage(),
+                            ERROR, JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+        });
+
+        return eliminaButton;
+    }
+
     /**
      * Metodo che genera il codice swing per la gui partendo dal todo in memoria
      * 
      * @param todo            il todo da visualizzare
      * @param contenitoreToDo il contenitore a cui applicare il todo generato
      */
-    private void visualizzaToDo(@NotNull ToDo todo, @NotNull JPanel contenitoreToDo) {
+    private void visualizzaToDo(@NotNull ToDo todo, @NotNull JPanel contenitoreToDo, Boolean isCondiviso) {
 
         // Crea un nuovo JPanel per il singolo ToDo
         JPanel todoPanel = new JPanel();
@@ -1213,7 +1340,7 @@ public class Controller {
 
             JLabel uriLabel = new JLabel("Link: ");
             uriLabel.setForeground(coloreTesto);
-            JLabel linkLabel = new JLabel("<html><a href=''>" + todo.getLink() + "</a></html>");
+            JLabel linkLabel = new JLabel("<html><a href='" + todo.getLink() + "'>" + todo.getLink() + "</a></html>");
             linkLabel.setForeground(Color.BLUE);
             linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -1267,7 +1394,7 @@ public class Controller {
                 dataLabel.setForeground(Color.RED);
                 dataLabel.setFont(new Font(dataLabel.getFont().getName(), Font.BOLD, dataLabel.getFont().getSize()));
             }
-//aaaaaaaaaaaaaaaa
+            // aaaaaaaaaaaaaaaa
             scadenzaPanel.add(scadenzaLabel);
             scadenzaPanel.add(dataLabel);
             todoPanel.add(scadenzaPanel);
@@ -1300,13 +1427,89 @@ public class Controller {
             immaginePanel.add(labelImmagine);
             todoPanel.add(immaginePanel);
 
+            if (isCondiviso) {
+                todoPanel.add(generaCondiviso(coloreTesto));
+            }
+
+            // aggiunta al contenitore
+            contenitoreToDo.add(todoPanel);
+
+            contenitoreToDo.revalidate();
+            contenitoreToDo.repaint();
+        }
+    }
+
+    private static @NotNull JPanel generaPanelImmagine(@NotNull ToDo todo, Color backgroundColor) {
+        JPanel immaginePanel = new JPanel();
+        immaginePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        immaginePanel.setBackground(backgroundColor);
+
+        URL percorsoImmagine = todo.getImmagine();
+        ImageIcon iconaOriginale = new ImageIcon(percorsoImmagine);
+        Image immagine = iconaOriginale.getImage();
+
+        // Ottieni le dimensioni originali
+        int larghezzaOriginale = iconaOriginale.getIconWidth();
+        int altezzaOriginale = iconaOriginale.getIconHeight();
+
+        // Calcola la nuova larghezza mantenendo le proporzioni
+        int altezzaDesiderata = 100;
+        int nuovaLarghezza = (int) (larghezzaOriginale * ((double) altezzaDesiderata / altezzaOriginale));
+
+        // Ridimensiona l'immagine mantenendo le proporzioni
+        Image immagineRidimensionata = immagine.getScaledInstance(nuovaLarghezza, altezzaDesiderata,
+                Image.SCALE_SMOOTH);
+        ImageIcon iconaRidimensionata = new ImageIcon(immagineRidimensionata);
+
+        JLabel labelImmagine = new JLabel(iconaRidimensionata);
+
+        immaginePanel.add(labelImmagine);
+        return immaginePanel;
+    }
+
+    private static @NotNull JPanel generaPanelScadenza(@NotNull ToDo todo, Color backgroundColor, Color coloreTesto) {
+        JPanel scadenzaPanel = new JPanel();
+        scadenzaPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        scadenzaPanel.setBackground(backgroundColor);
+
+        // Formatta la data
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE);
+        String dataFormattata = dateFormat.format(todo.getScadenza().getTime());
+
+        JLabel scadenzaLabel = new JLabel("Scadenza: ");
+        JLabel dataLabel = new JLabel(dataFormattata);
+        dataLabel.setForeground(coloreTesto);
+        scadenzaLabel.setForeground(coloreTesto);
+
+        // Controlla se la data di scadenza è passata
+        Calendar oggi = Calendar.getInstance();
+        oggi.set(Calendar.HOUR_OF_DAY, 0);
+        oggi.set(Calendar.MINUTE, 0);
+        oggi.set(Calendar.SECOND, 0);
+        oggi.set(Calendar.MILLISECOND, 0);
+
+        // Imposta il colore rosso se la scadenza è già passata
+        if (todo.getScadenza().before(oggi)) {
+            todo.setScaduto(true);
+        }
+        if (todo.isScaduto()) {
+            dataLabel.setForeground(Color.RED);
+            dataLabel.setFont(new Font(dataLabel.getFont().getName(), Font.BOLD, dataLabel.getFont().getSize()));
         }
 
-        // aggiunta al contenitore
-        contenitoreToDo.add(todoPanel);
+        scadenzaPanel.add(scadenzaLabel);
+        scadenzaPanel.add(dataLabel);
+        return scadenzaPanel;
+    }
 
-        contenitoreToDo.revalidate();
-        contenitoreToDo.repaint();
+    public JPanel generaCondiviso(Color coloreTesto) {
+        JPanel condivisionePanel = new JPanel();
+        condivisionePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JLabel condivisoDaLabel = new JLabel("Condiviso da: ");
+        condivisoDaLabel.setForeground(coloreTesto);
+        JLabel condivisoDa = new JLabel();
+        condivisoDa.setForeground(Color.BLUE);
+        return condivisionePanel;
     }
 
     /**
@@ -1324,19 +1527,21 @@ public class Controller {
         view.getRegisterView().setupComponents();
 
         view.getLogInButton().addActionListener(e -> {
-            this.mostraLogin();
+            this.mostraPanel(view.getLogInView().getMainLogIn());
+            ;
 
             LogIn loginView = view.getLogInView();
-            loginView.getBack().addActionListener(ev -> this.mostraScelta());
+            loginView.getBack().addActionListener(ev -> mostraPanel(view.getScelta()));
             // Gestione click su "entra"
             loginView.getEntra().addActionListener(ev -> gestisciLogin(loginView));
         });
 
         view.getRegistratiButton().addActionListener(e -> {
-            this.mostraRegistrazione();
+            this.mostraPanel(view.getRegisterView().getMainRegistrazione());
+            ;
 
             Register registerView = view.getRegisterView();
-            registerView.getBackButton().addActionListener(ev -> this.mostraScelta());
+            registerView.getBackButton().addActionListener(ev -> mostraPanel(view.getScelta()));
             // Listener per il pulsante "Registrati"
             registerView.getRegistratiButton().addActionListener(ev -> gestisciRegistrazione(registerView));
         });
@@ -1389,7 +1594,7 @@ public class Controller {
                         ATTENTION,
                         JOptionPane.WARNING_MESSAGE);
             }
-        } catch (Exception ex) {
+        } catch (Exception _) {
             JOptionPane.showMessageDialog(loginView,
                     "Email o password non corretti.",
                     ERROR, JOptionPane.ERROR_MESSAGE);
@@ -1400,17 +1605,20 @@ public class Controller {
                 e -> {
                     ModificaDescrizione modificaPass = new ModificaDescrizione();
                     modificaPass.setVisible(true);
+                    modificaPass.setTitle("Modifica password");
+                    SetPlaceHolder.setTP(modificaPass.getTextField(), "Inserisci la nuova password",
+                            GestioneDarkMode.isDarkMode());
 
                     modificaPass.getButtonOK().addActionListener(
                             ex -> {
-                                utenteAttuale = new Utente(email, modificaPass.getDescrizione(), new Bacheca(),
+                                utenteAttuale = new Utente(email, modificaPass.getTextFieldText(), new Bacheca(),
                                         new Bacheca(), new Bacheca());
                                 this.mostraMain();
                             });
                 });
     }
 
-    private void importaBacheca(){
+    private void importaBacheca() {
         Bacheca b1 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.TEMPO_LIBERO.toString());
         Bacheca b2 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.LAVORO.toString());
         Bacheca b3 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.UNIVERSITA.toString());
@@ -1418,7 +1626,7 @@ public class Controller {
         List<ToDo> lavoro = (b2 != null && b2.getToDoList() != null) ? b2.getToDoList() : new ArrayList<>();
         List<ToDo> universita = (b3 != null && b3.getToDoList() != null) ? b3.getToDoList() : new ArrayList<>();
 
-            // Popola le ToDoList di ciascuna bacheca senza duplicazioni
+        // Popola le ToDoList di ciascuna bacheca senza duplicazioni
         if (b1 != null) {
             System.out.println("ToDo caricati in TEMPO_LIBERO:");
             for (ToDo t : b1.getToDoList()) {
@@ -1443,7 +1651,7 @@ public class Controller {
             universita.addAll(b3.getToDoList());
         }
 
-// Assegna le liste alle bacheche dell'utente attuale
+        // Assegna le liste alle bacheche dell'utente attuale
         utenteAttuale.getTempoLibero().setToDoList(tempoLibero);
         utenteAttuale.getLavoro().setToDoList(lavoro);
         utenteAttuale.getUniversita().setToDoList(universita);
@@ -1489,7 +1697,8 @@ public class Controller {
                     "Registrazione avvenuta con successo! Effettua il LogIn",
                     "Successo",
                     JOptionPane.INFORMATION_MESSAGE);
-            this.mostraLogin();
+            this.mostraPanel(view.getLogInView().getMainLogIn());
+            ;
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(registerView,
                     "Errore durante la registrazione: " + ex.getMessage(),

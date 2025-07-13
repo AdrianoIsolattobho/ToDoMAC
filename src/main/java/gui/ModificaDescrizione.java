@@ -13,7 +13,6 @@ public class ModificaDescrizione extends JDialog {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
-        this.setTitle("Modifica");
 
         buttonCancel.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -40,8 +39,11 @@ public class ModificaDescrizione extends JDialog {
     public void setDescrizione(String descrizione) {
         this.textField.setText(descrizione);
     }
+    public JTextField getTextField() {
+        return this.textField;
+    }
 
-    public String getDescrizione() {
+    public String getTextFieldText() {
         return this.textField.getText();
     }
 

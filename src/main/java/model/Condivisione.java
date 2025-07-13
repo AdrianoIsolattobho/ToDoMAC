@@ -3,13 +3,13 @@ import java.util.ArrayList;
 
 public class Condivisione {
     private Utente creatore;
-    private ArrayList<Utente> condivisiCon;
+    private ArrayList<Utente> condivisiCon=new ArrayList<>();
     private ToDo toDoCondiviso;
 
-    public Condivisione(Utente creatore, ToDo toDoCondiviso, ArrayList<Utente> condivisiCon) {
+    public Condivisione(Utente creatore, ToDo toDoCondiviso, Utente condivisiCon) {
         this.creatore = creatore;
         this.toDoCondiviso = toDoCondiviso;
-        this.condivisiCon = condivisiCon;
+        this.condivisiCon.add(condivisiCon);
     }
 
     public Utente getCreatore() {
