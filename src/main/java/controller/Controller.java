@@ -2,8 +2,8 @@ package controller;
 
 import gui.*;
 
-import implementazioniPostgresDAO.ToDoImplementazionePostgresDAO;
-import implementazioniPostgresDAO.UtenteImplementazionePostgresDAO;
+import implementazioni_postgres_dao.ToDoImplementazionePostgresDAO;
+import implementazioni_postgres_dao.UtenteImplementazionePostgresDAO;
 import model.*;
 import org.jetbrains.annotations.NotNull;
 import dao.ToDoDAO;
@@ -24,33 +24,39 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.*;
 import java.awt.Image;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 import static java.nio.file.Files.newInputStream;
 
-
 /**
- *  Controller che gestisce tutte le interazioni tra modello e view
- *  come nel paradigma Model-View-Controller (MVC)
- *  o Boundary-Control-Entity (BCE)
+ * Controller che gestisce tutte le interazioni tra modello e view
+ * come nel paradigma Model-View-Controller (MVC)
+ * o Boundary-Control-Entity (BCE)
  */
 public class Controller {
 
     private Scelta view;
     private Utente utenteAttuale;
-    private boolean mostraCompletati=false;
+    private boolean mostraCompletati = false;
     private ToDoDAO toDoDAO = new ToDoImplementazionePostgresDAO();
     private UtenteDAO utenteDAO = new UtenteImplementazionePostgresDAO();
+    private static final Logger loggers = Logger.getLogger(Controller.class.getName());
+    private static final String ERROR = "Errore";
+    private static final String DATE = "dd/MM/yyyy";
+    private static final String FREETIME = "Tempo libero";
+    private static final String UNI = "Università";
+    private static final String WORK = "Lavoro";
+    private static final String ACTIVITY = "Titolo attività";
+    private static final String ATTENTION = "Attenzione";
 
     /**
-    * Metodi per mostrare le varie view
+     * Metodi per mostrare le varie view
      * mostra il primo pannello con la scelta tra login e registrazione
-    */
+     */
     private void mostraScelta() {
         view.setContentPane(view.getScelta());
         view.pack();
@@ -103,16 +109,19 @@ public class Controller {
         view.repaint();
         mainView.getAggiungiToDo().addActionListener(e -> aggiuntaTodo());
         mainView.getMostraCompletati().addActionListener(
-                e-> {this.mostraCompletati= !this.mostraCompletati;
-                    mainView.getMostraCompletati().setText(mostraCompletati ? "Mostra senza completati" : "Mostra tutti");
-                aggiornaInterfacciaUtente(mainView);}
-        );
-        mainView.getEsci().addActionListener(e->mostraScelta());
+                e -> {
+                    this.mostraCompletati = !this.mostraCompletati;
+                    mainView.getMostraCompletati()
+                            .setText(mostraCompletati ? "Mostra senza completati" : "Mostra tutti");
+                    aggiornaInterfacciaUtente(mainView);
+                });
+        mainView.getEsci().addActionListener(e -> mostraScelta());
 
     }
 
-    private ActionListener generaActionListenerSceltaImmagine(AtomicReference<URL> immagineScelta, CreaToDo creaTodoDialog){
-        return _-> {
+    private ActionListener generaActionListenerSceltaImmagine(AtomicReference<URL> immagineScelta,
+            CreaToDo creaTodoDialog) {
+        return _ -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Seleziona un'immagine");
 
@@ -129,14 +138,14 @@ public class Controller {
                 if (!selectedFile.exists()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Il file selezionato non esiste.",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 if (!selectedFile.canRead()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Impossibile leggere il file selezionato.",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -148,14 +157,15 @@ public class Controller {
                 } catch (IOException e) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Errore durante il caricamento dell'immagine: " + e.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
-    };
+    }
 
-    private ActionListener generaActionListenerSceltaColore(AtomicReference<Color> coloreScelto,CreaToDo creaTodoDialog){
-        return _->{
+    private ActionListener generaActionListenerSceltaColore(AtomicReference<Color> coloreScelto,
+            CreaToDo creaTodoDialog) {
+        return _ -> {
             coloreScelto.set(JColorChooser.showDialog(
                     creaTodoDialog,
                     "Scegli un colore per il ToDo", coloreScelto.get()));
@@ -169,8 +179,9 @@ public class Controller {
         };
     }
 
-    private ActionListener generaActionListenerSceltaScadenza(AtomicReference<Calendar> dataScelto, CreaToDo creaTodoDialog){
-        return _->{
+    private ActionListener generaActionListenerSceltaScadenza(AtomicReference<Calendar> dataScelto,
+            CreaToDo creaTodoDialog) {
+        return _ -> {
             // Creiamo un JDialog personalizzato per il calendario
             JDialog dateDialog = new JDialog(creaTodoDialog, "Seleziona data di scadenza", true);
             dateDialog.setLayout(new BorderLayout());
@@ -181,7 +192,7 @@ public class Controller {
             // Creiamo un calendario con JSpinner
             SpinnerDateModel dateModel = new SpinnerDateModel();
             JSpinner dateSpinner = new JSpinner(dateModel);
-            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
+            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, DATE);
             dateSpinner.setEditor(dateEditor);
 
             calendarPanel.add(new JLabel("Seleziona data: "));
@@ -194,21 +205,19 @@ public class Controller {
 
             confirmButton.addActionListener(confirmEvent -> {
                 // Salva la data selezionata
-                java.util.Date selectedDate = (java.util.Date) dateSpinner.getValue();
+                Date selectedDate = (Date) dateSpinner.getValue();
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(selectedDate);
                 dataScelto.set(calendar);
 
                 // Cambia il testo del bottone per mostrare la data selezionata
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                SimpleDateFormat dateFormat = new SimpleDateFormat(DATE);
                 creaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(selectedDate));
 
                 dateDialog.dispose();
             });
 
-            cancelButton.addActionListener(cancelEvent -> {
-                dateDialog.dispose();
-            });
+            cancelButton.addActionListener(cancelEvent -> dateDialog.dispose());
 
             buttonPanel.add(confirmButton);
             buttonPanel.add(cancelButton);
@@ -221,8 +230,9 @@ public class Controller {
         };
     }
 
-    private ActionListener generaActionListenerAggiungiCheckList(ArrayList<JTextField> attivitaFields,AtomicReference<JTextField> titoloCheckListRef,CreaToDo creaTodoDialog){
-        return _->{
+    private ActionListener generaActionListenerAggiungiCheckList(ArrayList<JTextField> attivitaFields,
+            AtomicReference<JTextField> titoloCheckListRef, CreaToDo creaTodoDialog) {
+        return _ -> {
             JPanel checklistPanel = new JPanel();
             checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
 
@@ -260,7 +270,7 @@ public class Controller {
                 JPanel attivitaPanel = new JPanel();
                 attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                 JTextField titoloAttivitaField = new JTextField(20);
-                SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                SetPlaceHolder.setTP(titoloAttivitaField, ACTIVITY, GestioneDarkMode.isDarkMode());
                 attivitaFields.add(titoloAttivitaField);
 
                 attivitaPanel.add(titoloAttivitaField);
@@ -274,7 +284,6 @@ public class Controller {
                     creaTodoDialog.pack();
                     creaTodoDialog.revalidate();
                 });
-
 
                 checklistPanel.add(attivitaPanel);
                 creaTodoDialog.repaint();
@@ -297,15 +306,18 @@ public class Controller {
             } catch (URISyntaxException _) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        ERROR, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         }
         return null;
     }
 
-    private ActionListener generaActionListenerSalvataggio(Main mainView,CreaToDo creaTodoDialog,ArrayList<JTextField> attivitaFields,AtomicReference<Calendar> dataScelto,AtomicReference<Color> coloreScelto,AtomicReference<URL> immagineScelta,AtomicReference<JTextField> titoloCheckListRef){
-        return _->{
+    private ActionListener generaActionListenerSalvataggio(Main mainView, CreaToDo creaTodoDialog,
+            ArrayList<JTextField> attivitaFields, AtomicReference<Calendar> dataScelto,
+            AtomicReference<Color> coloreScelto, AtomicReference<URL> immagineScelta,
+            AtomicReference<JTextField> titoloCheckListRef) {
+        return _ -> {
             // Qui va il codice per salvare il nuovo ToDo
             String titoloTodo = creaTodoDialog.getTitolo().getText();
             String linkTesto = creaTodoDialog.getLinkField().getText();
@@ -317,45 +329,59 @@ public class Controller {
             if (titoloTodo == null || titoloTodo.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Inserisci un titolo valido per il ToDo",
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        ERROR, JOptionPane.ERROR_MESSAGE);
                 return; // Non chiude il dialogo se c'è un errore
             }
 
-            //check del link
+            // check del link
             try {
                 URI link = parseLink(linkTesto, creaTodoDialog);
                 if (link == null && linkTesto != null && !linkTesto.trim().isEmpty()) {
                     return; // Esci se il link è invalido
                 }
 
-
                 // Crea il nuovo ToDo con tutti i dati raccolti
 
                 ArrayList<Attivita> attivitaDaSalvare = estraiAttivitaDaFields(attivitaFields);
-                ToDo nuovoToDo = new ToDo(titoloTodo, descrizioneTodo, link, dataScelto.get(), coloreScelto.get(), immagineScelta.get(), null);
+                ToDo nuovoToDo = new ToDo(titoloTodo, descrizioneTodo, link, dataScelto.get(), coloreScelto.get(),
+                        immagineScelta.get(), null);
                 if (attivitaDaSalvare != null) {
-                    Checklist c =new Checklist(titoloCheckListRef.get().getText() ,attivitaDaSalvare);
+                    Checklist c = new Checklist(titoloCheckListRef.get().getText(), attivitaDaSalvare);
                     nuovoToDo.setChecklist(c);
                 }
 
-
-                try{
-                    toDoDAO.creaToDo(utenteAttuale.getEmail(), nuovoToDo);
+                try {
+                    Bacheca bacheca = null;
+                    switch (bachecaSelezionata) {
+                        case FREETIME -> {
+                            bacheca = utenteAttuale.getTempoLibero();
+                            bacheca.setTitolo(Titolo.TEMPO_LIBERO);
+                        }
+                        case WORK -> {
+                            bacheca = utenteAttuale.getLavoro();
+                            bacheca.setTitolo(Titolo.LAVORO);
+                        }
+                        case UNI -> {
+                            bacheca = utenteAttuale.getUniversita();
+                            bacheca.setTitolo(Titolo.UNIVERSITA);
+                        }
+                    }
+                    toDoDAO.creaToDo(utenteAttuale.getEmail(), nuovoToDo, bacheca);
                 } catch (Exception daoEx) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Errore nel salvataggio del ToDo nel database: " + daoEx.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                //aggiorna bacheche in memoria
+                // aggiorna bacheche in memoria
                 switch (bachecaSelezionata) {
-                    case "Tempo libero" -> utenteAttuale.getTempoLibero().getToDoList().add(nuovoToDo);
-                    case "Lavoro" -> utenteAttuale.getLavoro().getToDoList().add(nuovoToDo);
-                    case "Università" -> utenteAttuale.getUniversita().getToDoList().add(nuovoToDo);
+                    case FREETIME -> utenteAttuale.getTempoLibero().getToDoList().add(nuovoToDo);
+                    case WORK -> utenteAttuale.getLavoro().getToDoList().add(nuovoToDo);
+                    case UNI -> utenteAttuale.getUniversita().getToDoList().add(nuovoToDo);
                     default -> {
                         JOptionPane.showMessageDialog(creaTodoDialog,
                                 "Seleziona una bacheca",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
+                                ERROR, JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 }
@@ -367,15 +393,16 @@ public class Controller {
                 view.repaint();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
-                        "Errore durante la creazione del ToDo: "+ ex.getMessage(),
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+                        "Errore durante la creazione del ToDo: " + ex.getMessage(),
+                        ERROR, JOptionPane.ERROR_MESSAGE);
             }
         };
     }
 
     /**
-    * Metodo per mostrare il pannello CreaToDo a modi pop up e gestione del salvataggio in memoria dei dati
-    */
+     * Metodo per mostrare il pannello CreaToDo a modi pop up e gestione del
+     * salvataggio in memoria dei dati
+     */
     private void aggiuntaTodo() {
         Main mainView = view.getLogInView().getMainView();
         CreaToDo creaTodoDialog = new CreaToDo();
@@ -387,23 +414,30 @@ public class Controller {
         AtomicReference<URL> immagineScelta = new AtomicReference<>();
 
         // Action listener per il pulsante Sfoglia per la selezione dell'immagine
-        creaTodoDialog.getSfogliaButton().addActionListener( generaActionListenerSceltaImmagine(immagineScelta, creaTodoDialog) );
+        creaTodoDialog.getSfogliaButton()
+                .addActionListener(generaActionListenerSceltaImmagine(immagineScelta, creaTodoDialog));
 
+        /*
+         * Action listener per il selettore di colore
+         * vengono usati array perchè durante il runtime della gui i metodi lambda hanno
+         * bisogno di variabili final
+         */
+        creaTodoDialog.getColorButton()
+                .addActionListener(generaActionListenerSceltaColore(coloreScelto, creaTodoDialog));
 
-        /*Action listener per il selettore di colore
-        * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
-        */
-        creaTodoDialog.getColorButton().addActionListener(generaActionListenerSceltaColore(coloreScelto, creaTodoDialog) );
-
-        // Action listener per il selettore di data ho usato l'array di date per il solito discorso del colore
-        creaTodoDialog.getDataScadenzaButton().addActionListener(generaActionListenerSceltaScadenza(dataScelto, creaTodoDialog) );
+        // Action listener per il selettore di data ho usato l'array di date per il
+        // solito discorso del colore
+        creaTodoDialog.getDataScadenzaButton()
+                .addActionListener(generaActionListenerSceltaScadenza(dataScelto, creaTodoDialog));
 
         ArrayList<JTextField> attivitaFields = new ArrayList<>();
         AtomicReference<JTextField> titoloCheckListRef = new AtomicReference<>();
-        creaTodoDialog.getChecklistButton().addActionListener(generaActionListenerAggiungiCheckList(attivitaFields,titoloCheckListRef,creaTodoDialog));
+        creaTodoDialog.getChecklistButton().addActionListener(
+                generaActionListenerAggiungiCheckList(attivitaFields, titoloCheckListRef, creaTodoDialog));
 
         // Action listener per il pulsante Salva
-        creaTodoDialog.getSalvaButton().addActionListener(generaActionListenerSalvataggio(mainView,creaTodoDialog,attivitaFields,dataScelto,coloreScelto,immagineScelta,titoloCheckListRef));
+        creaTodoDialog.getSalvaButton().addActionListener(generaActionListenerSalvataggio(mainView, creaTodoDialog,
+                attivitaFields, dataScelto, coloreScelto, immagineScelta, titoloCheckListRef));
 
         creaTodoDialog.pack();
         creaTodoDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
@@ -431,8 +465,8 @@ public class Controller {
         return attivita;
     }
 
-    private ActionListener generaActionListnerModificaDescrizione(Bacheca b, Main mainView){
-        return e->{
+    private ActionListener generaActionListnerModificaDescrizione(Bacheca b, Main mainView) {
+        return e -> {
             ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
             modificaDescrizioneDialog.setDescrizione(b.getDescrizione());
             modificaDescrizioneDialog.getButtonOK().addActionListener(
@@ -442,21 +476,22 @@ public class Controller {
                         modificaDescrizioneDialog.dispose();
                         // Ricarica l'interfaccia principale
                         aggiornaInterfacciaUtente(mainView);
-                    }
-            );
+                    });
             modificaDescrizioneDialog.pack();
             modificaDescrizioneDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
             modificaDescrizioneDialog.setVisible(true);
         };
     }
 
-    private ActionListener generaActionListnerModificaOrdine(Bacheca b, Main mainView){
-        return _->{
+    private ActionListener generaActionListnerModificaOrdine(Bacheca b, Main mainView) {
+        return _ -> {
             GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
 
             gestioneOrdineDialog.getButtonOK().addActionListener(
-                    ex ->{
-                        String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand() : null;
+                    ex -> {
+                        String selectedCommand = gestioneOrdineDialog.getGroup().getSelection() != null
+                                ? gestioneOrdineDialog.getGroup().getSelection().getActionCommand()
+                                : null;
 
                         if (selectedCommand != null) {
                             // Usa uno switch per gestire le opzioni selezionate
@@ -488,8 +523,7 @@ public class Controller {
                         gestioneOrdineDialog.dispose();
                         // Ricarica l'interfaccia principale
                         aggiornaInterfacciaUtente(mainView);
-                    }
-            );
+                    });
             gestioneOrdineDialog.pack();
             gestioneOrdineDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
             gestioneOrdineDialog.setVisible(true);
@@ -508,15 +542,11 @@ public class Controller {
             rimuoviTuttiActionListener(mainView.getModificaDescrizioneFre());
             rimuoviTuttiActionListener(mainView.getOrdineFreButton());
 
-
             mainView.getModificaDescrizioneFre().addActionListener(
-                    generaActionListnerModificaDescrizione(tempoLibero,mainView)
-            );
-
+                    generaActionListnerModificaDescrizione(tempoLibero, mainView));
 
             mainView.getOrdineFreButton().addActionListener(
-                    generaActionListnerModificaOrdine(tempoLibero,mainView)
-            );
+                    generaActionListnerModificaOrdine(tempoLibero, mainView));
             if (tempoLibero.getOrdinamento() != null) {
                 tempoLibero.setToDoList(ordinaToDoList(tempoLibero.getToDoList(), tempoLibero.getOrdinamento()));
             }
@@ -543,13 +573,10 @@ public class Controller {
             rimuoviTuttiActionListener(mainView.getModificaDescrizioneLav());
             rimuoviTuttiActionListener(mainView.getOrdineLavButton());
 
-
             mainView.getModificaDescrizioneLav().addActionListener(
-                    generaActionListnerModificaDescrizione(lavoro,mainView)
-            );
+                    generaActionListnerModificaDescrizione(lavoro, mainView));
             mainView.getOrdineLavButton().addActionListener(
-                    generaActionListnerModificaOrdine(lavoro,mainView)
-            );
+                    generaActionListnerModificaOrdine(lavoro, mainView));
 
             if (lavoro.getOrdinamento() != null) {
                 lavoro.setToDoList(ordinaToDoList(lavoro.getToDoList(), lavoro.getOrdinamento()));
@@ -576,13 +603,10 @@ public class Controller {
             rimuoviTuttiActionListener(mainView.getModificaDescrizioneUni());
             rimuoviTuttiActionListener(mainView.getOrdineUniButton());
 
-
             mainView.getModificaDescrizioneUni().addActionListener(
-                    generaActionListnerModificaDescrizione(universita,mainView)
-            );
+                    generaActionListnerModificaDescrizione(universita, mainView));
             mainView.getOrdineUniButton().addActionListener(
-                    generaActionListnerModificaOrdine(universita,mainView)
-            );
+                    generaActionListnerModificaOrdine(universita, mainView));
             if (universita.getOrdinamento() != null) {
                 universita.setToDoList(ordinaToDoList(universita.getToDoList(), universita.getOrdinamento()));
             }
@@ -596,16 +620,15 @@ public class Controller {
         mainView.getBaUni().setVisible(haToDoUniversita);
     }
 
-
     /**
-     * Metodo per rimuovere i vecchi action listner altrimenti i metodi per generare le bacheche alle loro pulsanti aprirebbero troppe volte i dialog
+     * Metodo per rimuovere i vecchi action listner altrimenti i metodi per generare
+     * le bacheche alle loro pulsanti aprirebbero troppe volte i dialog
      */
     private void rimuoviTuttiActionListener(JButton button) {
         for (ActionListener al : button.getActionListeners()) {
             button.removeActionListener(al);
         }
     }
-
 
     private ArrayList<ToDo> ordinaToDoList(ArrayList<ToDo> toDoList, Ordinamento ordinamento) {
         switch (ordinamento) {
@@ -635,6 +658,7 @@ public class Controller {
 
     /**
      * Aggiorna l'interfaccia utente con i dati dell'utente attuale
+     * 
      * @param mainView MainView della GUI
      */
     private void aggiornaInterfacciaUtente(Main mainView) {
@@ -649,7 +673,7 @@ public class Controller {
         }
     }
 
-    private void creazioneModificaDialog(@NotNull JButton modificaButton, ToDo todo){
+    private void creazioneModificaDialog(@NotNull JButton modificaButton, ToDo todo) {
         modificaButton.addActionListener(e -> {
             // Crea un'istanza del pannello CreaToDo per la modifica
             CreaToDo modificaTodoDialog = new CreaToDo();
@@ -665,14 +689,20 @@ public class Controller {
             AtomicReference<URL> immagineSceltaNuovo = new AtomicReference<>();
 
             // Action listener per il pulsante Sfoglia per la selezione dell'immagine
-            modificaTodoDialog.getSfogliaButton().addActionListener(generaActionListenerSceltaImmagine(immagineSceltaNuovo, modificaTodoDialog));
-            /*Action listener per il selettore di colore
-             * vengono usati array perchè durante il runtime della gui i metodi lambda hanno bisogno di variabili final
+            modificaTodoDialog.getSfogliaButton()
+                    .addActionListener(generaActionListenerSceltaImmagine(immagineSceltaNuovo, modificaTodoDialog));
+            /*
+             * Action listener per il selettore di colore
+             * vengono usati array perchè durante il runtime della gui i metodi lambda hanno
+             * bisogno di variabili final
              */
-            modificaTodoDialog.getColorButton().addActionListener(generaActionListenerSceltaColore(coloreSceltoNuovo, modificaTodoDialog));
+            modificaTodoDialog.getColorButton()
+                    .addActionListener(generaActionListenerSceltaColore(coloreSceltoNuovo, modificaTodoDialog));
 
-            // Action listener per il selettore di data ho usato l'array di date per il solito discorso del colore
-            modificaTodoDialog.getDataScadenzaButton().addActionListener(generaActionListenerSceltaScadenza(dataSceltoNuovo, modificaTodoDialog));
+            // Action listener per il selettore di data ho usato l'array di date per il
+            // solito discorso del colore
+            modificaTodoDialog.getDataScadenzaButton()
+                    .addActionListener(generaActionListenerSceltaScadenza(dataSceltoNuovo, modificaTodoDialog));
 
             // Imposta il link se presente
             if (todo.getLink() != null) {
@@ -691,7 +721,8 @@ public class Controller {
 
             // Carica l'immagine se presente
             if (todo.getImmagine() != null) {
-                caricaImmagine(new ImageIcon(todo.getImmagine()), modificaTodoDialog.getPreviewPanel(), modificaTodoDialog);
+                caricaImmagine(new ImageIcon(todo.getImmagine()), modificaTodoDialog.getPreviewPanel(),
+                        modificaTodoDialog);
             }
 
             if (todo.getSfondo() != null) {
@@ -702,15 +733,16 @@ public class Controller {
             }
 
             if (todo.getScadenza() != null) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(todo.getScadenza()));
+                SimpleDateFormat dateFormat = new SimpleDateFormat(DATE);
+                modificaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(todo.getScadenza().getTime()));
             }
 
             ArrayList<JTextField> attivitaFieldsNuovo = new ArrayList<>();
             AtomicReference<JTextField> titoloCheckListRefNuovo = new AtomicReference<>();
-            modificaTodoDialog.getChecklistButton().addActionListener(generaActionListenerAggiungiCheckList(attivitaFieldsNuovo,titoloCheckListRefNuovo,modificaTodoDialog));
+            modificaTodoDialog.getChecklistButton().addActionListener(generaActionListenerAggiungiCheckList(
+                    attivitaFieldsNuovo, titoloCheckListRefNuovo, modificaTodoDialog));
 
-            if (todo.getChecklist()!=null){
+            if (todo.getChecklist() != null) {
                 JPanel checklistPanel = new JPanel();
                 checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
 
@@ -749,7 +781,7 @@ public class Controller {
                     JPanel attivitaPanel = new JPanel();
                     attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                     JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    SetPlaceHolder.setTP(titoloAttivitaField, ACTIVITY, GestioneDarkMode.isDarkMode());
                     attivitaFieldsNuovo.add(titoloAttivitaField);
 
                     attivitaPanel.add(titoloAttivitaField);
@@ -764,7 +796,6 @@ public class Controller {
                         modificaTodoDialog.revalidate();
                     });
 
-
                     checklistPanel.add(attivitaPanel);
                     modificaTodoDialog.repaint();
                     modificaTodoDialog.pack();
@@ -772,11 +803,11 @@ public class Controller {
 
                 });
 
-                for (Attivita attivitaGiaPresente: todo.getChecklist().getAttivita()){
+                for (Attivita attivitaGiaPresente : todo.getChecklist().getAttivita()) {
                     JPanel attivitaPanel = new JPanel();
                     attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                     JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, "Titolo attività", GestioneDarkMode.isDarkMode());
+                    SetPlaceHolder.setTP(titoloAttivitaField, ACTIVITY, GestioneDarkMode.isDarkMode());
                     titoloAttivitaField.setText(attivitaGiaPresente.getNome());
                     attivitaFieldsNuovo.add(titoloAttivitaField);
 
@@ -791,7 +822,6 @@ public class Controller {
                         modificaTodoDialog.pack();
                         modificaTodoDialog.revalidate();
                     });
-
 
                     checklistPanel.add(attivitaPanel);
                     modificaTodoDialog.repaint();
@@ -808,19 +838,17 @@ public class Controller {
             // Determina la bacheca corrente del todo
             final String bachecaCorrente;
             if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
-                bachecaCorrente = "Tempo libero";
+                bachecaCorrente = FREETIME;
             } else if (utenteAttuale.getLavoro().getToDoList().contains(todo)) {
-                bachecaCorrente = "Lavoro";
+                bachecaCorrente = WORK;
             } else if (utenteAttuale.getUniversita().getToDoList().contains(todo)) {
-                bachecaCorrente = "Università";
+                bachecaCorrente = UNI;
             } else {
                 bachecaCorrente = null;
             }
 
             // Imposta la selezione della bacheca
             modificaTodoDialog.getBachecaBox().setSelectedItem(bachecaCorrente);
-
-
 
             modificaTodoDialog.getSalvaButton().addActionListener(saveEvent -> {
                 // Validazione del titolo
@@ -829,7 +857,7 @@ public class Controller {
                 if (nuovoTitolo == null || nuovoTitolo.trim().isEmpty()) {
                     JOptionPane.showMessageDialog(modificaTodoDialog,
                             "Inserisci un titolo valido per il ToDo",
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -837,10 +865,23 @@ public class Controller {
                 todo.setTitolo(nuovoTitolo);
                 todo.setDescrizione(modificaTodoDialog.getDescrizioneField().getText());
 
+                // Aggiorna la checklist se presente
                 ArrayList<Attivita> attivitaDaSalvareNuovo = estraiAttivitaDaFields(attivitaFieldsNuovo);
                 if (attivitaDaSalvareNuovo != null) {
-                    todo.getChecklist().setNomeChecklist(titoloCheckListRefNuovo.get().getText());
-                    todo.getChecklist().setAttivita(attivitaDaSalvareNuovo);
+                    if (todo.getChecklist() == null) {
+                        // Crea una nuova checklist se non esiste
+                        Checklist nuovaChecklist = new Checklist(
+                                titoloCheckListRefNuovo.get() != null ? titoloCheckListRefNuovo.get().getText() : "",
+                                attivitaDaSalvareNuovo);
+                        todo.setChecklist(nuovaChecklist);
+                    } else {
+                        todo.getChecklist().setNomeChecklist(
+                                titoloCheckListRefNuovo.get() != null ? titoloCheckListRefNuovo.get().getText() : "");
+                        todo.getChecklist().setAttivita(attivitaDaSalvareNuovo);
+                    }
+                } else {
+                    // Se non ci sono attività, rimuovi la checklist
+                    todo.setChecklist(null);
                 }
 
                 // Aggiorna il link se necessario
@@ -851,52 +892,53 @@ public class Controller {
                     } catch (URISyntaxException ex) {
                         JOptionPane.showMessageDialog(modificaTodoDialog,
                                 "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                                "Errore", JOptionPane.ERROR_MESSAGE);
+                                ERROR, JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 } else {
                     todo.setLink(null);
                 }
 
-
                 todo.setSfondo(coloreSceltoNuovo.get());
                 todo.setImmagine(immagineSceltaNuovo.get());
                 todo.setScadenza(dataSceltoNuovo.get());
-
 
                 // Gestisci il cambio di bacheca se necessario
                 String nuovaBacheca = (String) modificaTodoDialog.getBachecaBox().getSelectedItem();
                 if (!nuovaBacheca.equals(bachecaCorrente)) {
                     // Rimuovi dalla bacheca attuale
-                    if (bachecaCorrente.equals("Tempo libero")) {
+                    if (bachecaCorrente.equals(FREETIME)) {
                         utenteAttuale.getTempoLibero().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Lavoro")) {
+                    } else if (bachecaCorrente.equals(WORK)) {
                         utenteAttuale.getLavoro().getToDoList().remove(todo);
-                    } else if (bachecaCorrente.equals("Università")) {
+                    } else if (bachecaCorrente.equals(UNI)) {
                         utenteAttuale.getUniversita().getToDoList().remove(todo);
                     }
 
                     // Aggiungi alla nuova bacheca
                     switch (nuovaBacheca) {
-                        case "Tempo libero":
+                        case FREETIME:
                             utenteAttuale.getTempoLibero().getToDoList().add(todo);
                             break;
-                        case "Lavoro":
+                        case WORK:
                             utenteAttuale.getLavoro().getToDoList().add(todo);
                             break;
-                        case "Università":
+                        case UNI:
                             utenteAttuale.getUniversita().getToDoList().add(todo);
+                            break;
+                        default:
+                            loggers.info("hai selezionato una bacheca non in lista, riprova!");
                             break;
                     }
                 }
 
-                //salvataggio modifiche nel db
-                try{
+                // salvataggio modifiche nel db
+                try {
                     toDoDAO.modificaToDo(utenteAttuale.getEmail(), todo);
                 } catch (Exception daoEx) {
                     JOptionPane.showMessageDialog(modificaTodoDialog,
-                            "Errore durante il salvataggio nel database: "+ daoEx.getMessage(),
-                            "Errore", JOptionPane.ERROR_MESSAGE);
+                            "Errore durante il salvataggio nel database: " + daoEx.getMessage(),
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -929,7 +971,8 @@ public class Controller {
             int originalHeight = originalIcon.getIconHeight();
             double ratio = (double) originalWidth / originalHeight;
 
-            int targetWidth, targetHeight;
+            int targetWidth;
+            int targetHeight;
             if (ratio > 1) {
                 // Immagine più larga che alta
                 targetWidth = previewWidth;
@@ -955,13 +998,14 @@ public class Controller {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(dialogo,
                     "Errore nel caricamento dell'anteprima: " + ex.getMessage(),
-                    "Errore", JOptionPane.ERROR_MESSAGE);
+                    ERROR, JOptionPane.ERROR_MESSAGE);
         }
     }
 
     /**
      * Metodo che genera il codice swing per la gui partendo dal todo in memoria
-     * @param todo il todo da visualizzare
+     * 
+     * @param todo            il todo da visualizzare
      * @param contenitoreToDo il contenitore a cui applicare il todo generato
      */
     private void visualizzaToDo(@NotNull ToDo todo, @NotNull JPanel contenitoreToDo) {
@@ -970,8 +1014,7 @@ public class Controller {
         JPanel todoPanel = new JPanel();
         todoPanel.setLayout(new BoxLayout(todoPanel, BoxLayout.Y_AXIS));
 
-
-        //Gestione del colore di sfondo
+        // Gestione del colore di sfondo
         Color backgroundColor;
         if (todo.getSfondo() != null) {
             backgroundColor = todo.getSfondo();
@@ -994,7 +1037,7 @@ public class Controller {
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new FlowLayout(FlowLayout.RIGHT, 2, 0));
         buttonsPanel.setBackground(backgroundColor);
-        
+
         // Pulsante modifica con icona di modifica (Unicode per pencil)
         JButton modificaButton = new JButton("✏");
         modificaButton.setFont(new Font("Dialog", Font.PLAIN, 14));
@@ -1004,7 +1047,7 @@ public class Controller {
         modificaButton.setContentAreaFilled(false);
         modificaButton.setForeground(coloreTesto);
         modificaButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        creazioneModificaDialog(modificaButton,todo);
+        creazioneModificaDialog(modificaButton, todo);
 
         // Pulsante elimina con icona del cestino (Unicode per trash)
         JButton eliminaButton = new JButton("🗑");
@@ -1016,40 +1059,43 @@ public class Controller {
         eliminaButton.setForeground(coloreTesto);
         eliminaButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         eliminaButton.addActionListener(e -> {
-                int conferma = JOptionPane.showConfirmDialog(null,
-                        "Sei sicuro di voler eliminare questo ToDo?",
-                        "Conferma eliminazione", JOptionPane.YES_NO_OPTION);
-                if(conferma != JOptionPane.YES_OPTION) {
+            int conferma = JOptionPane.showConfirmDialog(null,
+                    "Sei sicuro di voler eliminare questo ToDo?",
+                    "Conferma eliminazione", JOptionPane.YES_NO_OPTION);
+            if (conferma != JOptionPane.YES_OPTION) {
+                return;
+            }
+            boolean rimosso = false;
+
+            if (utenteAttuale.getTempoLibero().getToDoList().remove(todo))
+                rimosso = true;
+            if (utenteAttuale.getLavoro().getToDoList().remove(todo))
+                rimosso = true;
+            if (utenteAttuale.getUniversita().getToDoList().remove(todo))
+                rimosso = true;
+
+            if (rimosso) {
+                try {
+                    toDoDAO.eliminaToDo(utenteAttuale.getEmail(), todo.getTitolo());
+
+                    // aggiorna l'interfaccia utente
+                    aggiornaInterfacciaUtente(view.getLogInView().getMainView());
+                    view.revalidate();
+                    view.repaint();
+
+                } catch (Exception daoEx) {
+                    JOptionPane.showMessageDialog(null,
+                            "Errore durante l'eliminazione nel database: " + daoEx.getMessage(),
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                boolean rimosso = false;
-
-                if(utenteAttuale.getTempoLibero().getToDoList().remove(todo)) rimosso = true;
-                if(utenteAttuale.getLavoro().getToDoList().remove(todo)) rimosso = true;
-                if(utenteAttuale.getUniversita().getToDoList().remove(todo)) rimosso = true;
-
-                if(rimosso) {
-                    try{
-                        toDoDAO.eliminaToDo(utenteAttuale.getEmail(), todo.getTitolo());
-
-                        //aggiorna l'interfaccia utente
-                        aggiornaInterfacciaUtente(view.getLogInView().getMainView());
-                        view.revalidate();
-                        view.repaint();
-
-                    } catch (Exception daoEx) {
-                        JOptionPane.showMessageDialog(null,
-                                "Errore durante l'eliminazione nel database: "+ daoEx.getMessage(),
-                                "Errore", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                }
+            }
         });
-        
+
         // Aggiungi i pulsanti al pannello dei pulsanti
         buttonsPanel.add(modificaButton);
         buttonsPanel.add(eliminaButton);
-        
+
         // Aggiungi il pannello dei pulsanti al pannello del titolo
         titoloPanel.add(buttonsPanel, BorderLayout.EAST);
 
@@ -1059,9 +1105,7 @@ public class Controller {
         // Aggiungi un bordo al pannello principale
         todoPanel.setBorder(BorderFactory.createLineBorder(coloreTesto));
 
-
-
-        //panel con label e checkbox
+        // panel con label e checkbox
         JPanel descrizionePanel = new JPanel();
         descrizionePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         descrizionePanel.setBackground(backgroundColor);
@@ -1070,7 +1114,7 @@ public class Controller {
         JLabel descrizioneLabel = new JLabel(todo.getDescrizione());
         descrizioneLabel.setForeground(coloreTesto);
 
-        //creazione checkbox
+        // creazione checkbox
         JCheckBox checkboxTodo = new JCheckBox();
         checkboxTodo.setSelected(todo.isCompletato());
         checkboxTodo.setBackground(backgroundColor);
@@ -1083,27 +1127,26 @@ public class Controller {
             view.repaint();
         });
 
-        //aggiunta al panel descrizione
+        // aggiunta al panel descrizione
         descrizionePanel.add(checkboxTodo);
         descrizionePanel.add(descrizioneLabel);
 
-        //aggiunta al panel todo
+        // aggiunta al panel todo
         todoPanel.add(descrizionePanel);
 
-        //aggiunta checklist
+        // aggiunta checklist
         if (todo.getChecklist() != null) {
             JPanel checklistPanel = new JPanel();
             checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
             checklistPanel.setBorder(BorderFactory.createTitledBorder(todo.getChecklist().getNomeChecklist()));
             checklistPanel.setBackground(backgroundColor);
 
-            //for each delle attività
+            // for each delle attività
             for (Attivita att : todo.getChecklist().getAttivita()) {
-                //panel delle attività
+                // panel delle attività
                 JPanel attivitaPanel = new JPanel();
                 attivitaPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
                 attivitaPanel.setBackground(backgroundColor);
-
 
                 // Verifica se la checklist è già completata per cambiare colore del bordo
                 if (Boolean.TRUE.equals(todo.getChecklist().getCompletata())) {
@@ -1118,7 +1161,6 @@ public class Controller {
                     checklistPanel.setBackground(backgroundColor);
                 }
 
-
                 // Crea una checkbox e imposta lo stato in base allo stato dell'attività
                 JCheckBox checkBoxAtt = new JCheckBox();
                 checkBoxAtt.setSelected(att.isCompletata());
@@ -1126,7 +1168,7 @@ public class Controller {
                 checkBoxAtt.setForeground(coloreTesto);
                 checkBoxAtt.addItemListener(e -> {
                     att.setCompletata(checkBoxAtt.isSelected());
-                    boolean controllo=false;
+                    boolean controllo = false;
                     for (Attivita att2 : todo.getChecklist().getAttivita()) {
                         if (att2.isCompletata()) {
                             controllo = true;
@@ -1143,15 +1185,15 @@ public class Controller {
                     view.repaint();
                 });
 
-                //label delle attività
+                // label delle attività
                 JLabel attLabel = new JLabel(att.getNome());
                 attLabel.setForeground(coloreTesto);
 
-                //aggiunta al panel attività
+                // aggiunta al panel attività
                 attivitaPanel.add(checkBoxAtt);
                 attivitaPanel.add(attLabel);
 
-                //aggiunta al panel checklist
+                // aggiunta al panel checklist
                 checklistPanel.add(attivitaPanel);
             }
 
@@ -1161,8 +1203,7 @@ public class Controller {
             todoPanel.revalidate();
             todoPanel.repaint();
         }
-        //fine checklist
-
+        // fine checklist
 
         // Dopo l'aggiunta della checklist, aggiungi il link se esiste
         if (todo.getLink() != null) {
@@ -1185,7 +1226,7 @@ public class Controller {
                         } catch (IOException ex) {
                             JOptionPane.showMessageDialog(todoPanel,
                                     "Impossibile aprire il link: " + ex.getMessage(),
-                                    "Errore", JOptionPane.ERROR_MESSAGE);
+                                    ERROR, JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
@@ -1203,7 +1244,7 @@ public class Controller {
             scadenzaPanel.setBackground(backgroundColor);
 
             // Formatta la data
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE);
             String dataFormattata = dateFormat.format(todo.getScadenza().getTime());
 
             JLabel scadenzaLabel = new JLabel("Scadenza: ");
@@ -1226,7 +1267,7 @@ public class Controller {
                 dataLabel.setForeground(Color.RED);
                 dataLabel.setFont(new Font(dataLabel.getFont().getName(), Font.BOLD, dataLabel.getFont().getSize()));
             }
-
+//aaaaaaaaaaaaaaaa
             scadenzaPanel.add(scadenzaLabel);
             scadenzaPanel.add(dataLabel);
             todoPanel.add(scadenzaPanel);
@@ -1250,9 +1291,9 @@ public class Controller {
             int nuovaLarghezza = (int) (larghezzaOriginale * ((double) altezzaDesiderata / altezzaOriginale));
 
             // Ridimensiona l'immagine mantenendo le proporzioni
-            Image immagineRidimensionata = immagine.getScaledInstance(nuovaLarghezza, altezzaDesiderata, Image.SCALE_SMOOTH);
+            Image immagineRidimensionata = immagine.getScaledInstance(nuovaLarghezza, altezzaDesiderata,
+                    Image.SCALE_SMOOTH);
             ImageIcon iconaRidimensionata = new ImageIcon(immagineRidimensionata);
-
 
             JLabel labelImmagine = new JLabel(iconaRidimensionata);
 
@@ -1261,10 +1302,8 @@ public class Controller {
 
         }
 
-
-        //aggiunta al contenitore
+        // aggiunta al contenitore
         contenitoreToDo.add(todoPanel);
-
 
         contenitoreToDo.revalidate();
         contenitoreToDo.repaint();
@@ -1279,7 +1318,6 @@ public class Controller {
      */
     public Controller(@NotNull Scelta view) {
         this.view = view;
-
 
         // Configurazione dei componenti dopo l'inizializzazione
         view.getLogInView().setupComponents();
@@ -1305,7 +1343,9 @@ public class Controller {
     }
 
     /**
-     *  Metodo per scegliere se usare il testo chiaro o scuro in base allo sfondo di personalizzato di un todo
+     * Metodo per scegliere se usare il testo chiaro o scuro in base allo sfondo di
+     * personalizzato di un todo
+     * 
      * @param background il colore di sfondo usato
      * @return Il colore da utilizzare nel testo
      */
@@ -1316,10 +1356,10 @@ public class Controller {
                 0.587 * background.getGreen() +
                 0.114 * background.getBlue()) / 255;
 
-        // Se la luminosità è superiore a 0.5, usare testo scuro, altrimenti testo chiaro
+        // Se la luminosità è superiore a 0.5, usare testo scuro, altrimenti testo
+        // chiaro
         return luminance > 0.5 ? Color.BLACK : Color.WHITE;
     }
-
 
     /**
      * Gestisce il login dell'utente.
@@ -1333,42 +1373,81 @@ public class Controller {
 
         if (email.isEmpty() || password.isEmpty() ||
                 email.equals("Email") || password.equals("Password")) {
-            JOptionPane.showMessageDialog(loginView, "Compila tutti i campi.", "Attenzione",
+            JOptionPane.showMessageDialog(loginView, "Compila tutti i campi.", ATTENTION,
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         // Verifica le credenziali
         try {
             if (utenteDAO.loginValido(email, password)) {
                 utenteAttuale = new Utente(email, password, new Bacheca(), new Bacheca(), new Bacheca());
+                this.importaBacheca();
                 this.mostraMain();
             } else {
                 JOptionPane.showMessageDialog(loginView,
                         "Credenziali non valide.",
-                        "Attenzione",
+                        ATTENTION,
                         JOptionPane.WARNING_MESSAGE);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(loginView,
                     "Email o password non corretti.",
-                    "Errore", JOptionPane.ERROR_MESSAGE);
+                    ERROR, JOptionPane.ERROR_MESSAGE);
         }
 
-        //ho riusato il modifica descrizione con il modifica password
+        // ho riusato il modifica descrizione con il modifica password
         loginView.getPassDime().addActionListener(
-                e ->{
+                e -> {
                     ModificaDescrizione modificaPass = new ModificaDescrizione();
                     modificaPass.setVisible(true);
 
                     modificaPass.getButtonOK().addActionListener(
-                            ex ->{
-                                utenteAttuale = new Utente(email, modificaPass.getDescrizione(), new Bacheca(), new Bacheca(), new Bacheca());
+                            ex -> {
+                                utenteAttuale = new Utente(email, modificaPass.getDescrizione(), new Bacheca(),
+                                        new Bacheca(), new Bacheca());
                                 this.mostraMain();
-                            }
-                    );
-                }
-        );
+                            });
+                });
+    }
+
+    private void importaBacheca(){
+        Bacheca b1 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.TEMPO_LIBERO.toString());
+        Bacheca b2 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.LAVORO.toString());
+        Bacheca b3 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.UNIVERSITA.toString());
+        List<ToDo> tempoLibero = (b1 != null && b1.getToDoList() != null) ? b1.getToDoList() : new ArrayList<>();
+        List<ToDo> lavoro = (b2 != null && b2.getToDoList() != null) ? b2.getToDoList() : new ArrayList<>();
+        List<ToDo> universita = (b3 != null && b3.getToDoList() != null) ? b3.getToDoList() : new ArrayList<>();
+
+            // Popola le ToDoList di ciascuna bacheca senza duplicazioni
+        if (b1 != null) {
+            System.out.println("ToDo caricati in TEMPO_LIBERO:");
+            for (ToDo t : b1.getToDoList()) {
+                System.out.println(" - " + t.getTitolo());
+            }
+            tempoLibero.addAll(b1.getToDoList());
+        }
+
+        if (b2 != null) {
+            System.out.println("ToDo caricati in LAVORO:");
+            for (ToDo t : b2.getToDoList()) {
+                System.out.println(" - " + t.getTitolo());
+            }
+            lavoro.addAll(b2.getToDoList());
+        }
+
+        if (b3 != null) {
+            System.out.println("ToDo caricati in UNIVERSITA:");
+            for (ToDo t : b3.getToDoList()) {
+                System.out.println(" - " + t.getTitolo());
+            }
+            universita.addAll(b3.getToDoList());
+        }
+
+// Assegna le liste alle bacheche dell'utente attuale
+        utenteAttuale.getTempoLibero().setToDoList(tempoLibero);
+        utenteAttuale.getLavoro().setToDoList(lavoro);
+        utenteAttuale.getUniversita().setToDoList(universita);
+
     }
 
     /**
@@ -1384,27 +1463,27 @@ public class Controller {
 
         if (email.isEmpty() || password.isEmpty() || confermaPassword.isEmpty() ||
                 email.equals("Email") || password.equals("Password") || confermaPassword.equals("Conferma password")) {
-            JOptionPane.showMessageDialog(registerView, "Compila tutti i campi.", "Attenzione",
+            JOptionPane.showMessageDialog(registerView, "Compila tutti i campi.", ATTENTION,
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (!password.equals(confermaPassword)) {
-            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", "Errore",
+            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", ERROR,
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         // Registrazione del nuovo utente con bacheche vuote
-        try{
-            if(utenteDAO.loginValido(email, password)) {
+        try {
+            if (utenteDAO.loginValido(email, password)) {
                 JOptionPane.showMessageDialog(registerView,
                         "Utente già registrato!",
-                        "Attenzione",
+                        ATTENTION,
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            utenteDAO.registraUtente(email,password);
+            utenteDAO.registraUtente(email, password);
 
             JOptionPane.showMessageDialog(registerView,
                     "Registrazione avvenuta con successo! Effettua il LogIn",
@@ -1413,12 +1492,10 @@ public class Controller {
             this.mostraLogin();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(registerView,
-                    "Errore durante la registrazione: "+ ex.getMessage(),
-                    "Errore", JOptionPane.ERROR_MESSAGE);
+                    "Errore durante la registrazione: " + ex.getMessage(),
+                    ERROR, JOptionPane.ERROR_MESSAGE);
         }
     }
-
-
 
     public static void main(String[] args) {
         StileSwing.applicaStile();

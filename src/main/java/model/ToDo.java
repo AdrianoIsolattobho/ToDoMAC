@@ -1,4 +1,5 @@
 package model;
+
 import java.awt.*;
 import java.util.Calendar;
 import java.net.URL;
@@ -16,7 +17,6 @@ public class ToDo {
     private java.awt.Color sfondo;
     private URL immagine;
     private Checklist checklist;
-
 
     public ToDo(String titolo, String descrizione, URI link, Calendar scadenza, java.awt.Color sfondo, URL immagine,
             Checklist checklist) {
@@ -82,11 +82,9 @@ public class ToDo {
         return descrizione;
     }
 
-
     public URI getLink() {
         return link;
     }
-
 
     public Calendar getScadenza() {
         return scadenza;
@@ -108,24 +106,16 @@ public class ToDo {
         return completato;
     }
 
-
     public java.awt.Color getSfondo() {
         return sfondo;
     }
-
 
     public URL getImmagine() {
         return immagine;
     }
 
-
-
     public Checklist getChecklist() {
         return checklist;
     }
 
-
-
-    
 }
-

@@ -2,7 +2,7 @@ package gui;
 
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import java.awt.*;
+
 
 /**
  * Classe per gestire i placeholder nei JTextField e JPasswordField.
@@ -38,9 +38,9 @@ public class SetPlaceHolder {
                     passwordField.setText("");
                     passwordField.setEchoChar('•'); // o '*'
                     if (Boolean.TRUE.equals(getDarkMode)) {
-                        passwordField.setForeground(Color.WHITE);
+                        passwordField.setForeground(new java.awt.Color(1, 167, 225));
                     }else {
-                        passwordField.setForeground(Color.BLACK);
+                        passwordField.setForeground (new java.awt.Color(18, 41, 75));
                     }
                 }
             }
@@ -77,9 +77,9 @@ public class SetPlaceHolder {
                 if (textField.getText().equals(placeholder)) {
                     textField.setText("");
                     if (Boolean.TRUE.equals(getDarkMode)) {
-                        textField.setForeground(Color.WHITE);
+                        textField.setForeground(new java.awt.Color(1, 167, 225));
                     }else {
-                        textField.setForeground(Color.BLACK);
+                        textField.setForeground(new java.awt.Color(18, 41, 75));
                     }
                 }
             }
