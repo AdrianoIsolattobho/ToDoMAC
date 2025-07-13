@@ -1,4 +1,4 @@
-package implementazioniPostgresDAO;
+package implementazioni_postgres_dao;
 
 import database.DBConnessione;
 import model.Utente;

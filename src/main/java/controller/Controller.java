@@ -2,8 +2,8 @@ package controller;
 
 import gui.*;
 
-import implementazioniPostgresDAO.ToDoImplementazionePostgresDAO;
-import implementazioniPostgresDAO.UtenteImplementazionePostgresDAO;
+import implementazioni_postgres_dao.ToDoImplementazionePostgresDAO;
+import implementazioni_postgres_dao.UtenteImplementazionePostgresDAO;
 import model.*;
 import org.jetbrains.annotations.NotNull;
 import dao.ToDoDAO;
@@ -35,8 +35,8 @@ import java.util.logging.Logger;
 public class Controller {
 
     private Scelta view;
-    private boolean mostraCompletati = false;
     private Utente utenteAttuale;
+    private boolean mostraCompletati = false;
     private ToDoDAO toDoDAO = new ToDoImplementazionePostgresDAO();
     private UtenteDAO utenteDAO = new UtenteImplementazionePostgresDAO();
     private static final Logger logger = Logger.getLogger(Controller.class.getName());
@@ -260,14 +260,14 @@ public class Controller {
                 if (!selectedFile.exists()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Il file selezionato non esiste.",
-                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 if (!selectedFile.canRead()) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Impossibile leggere il file selezionato.",
-                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -298,7 +298,7 @@ public class Controller {
                 } catch (IOException e) {
                     JOptionPane.showMessageDialog(creaTodoDialog,
                             "Errore durante il caricamento dell'immagine: " + e.getMessage(),
-                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+                            ERROR, JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -359,7 +359,7 @@ public class Controller {
             // Creiamo un calendario con JSpinner
             SpinnerDateModel dateModel = new SpinnerDateModel();
             JSpinner dateSpinner = new JSpinner(dateModel);
-            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, FORMATODATA);
+            JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, DATE);
             dateSpinner.setEditor(dateEditor);
 
             calendarPanel.add(new JLabel("Seleziona data: "));
@@ -378,7 +378,7 @@ public class Controller {
                 dataScelto.set(calendar);
 
                 // Cambia il testo del bottone per mostrare la data selezionata
-                SimpleDateFormat dateFormat = new SimpleDateFormat(FORMATODATA);
+                SimpleDateFormat dateFormat = new SimpleDateFormat(DATE);
                 creaTodoDialog.getDataScadenzaButton().setText(dateFormat.format(selectedDate));
 
                 dateDialog.dispose();
@@ -447,7 +447,7 @@ public class Controller {
                 JPanel attivitaPanel = new JPanel();
                 attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                 JTextField titoloAttivitaField = new JTextField(20);
-                SetPlaceHolder.setTP(titoloAttivitaField, TA, GestioneDarkMode.isDarkMode());
+                SetPlaceHolder.setTP(titoloAttivitaField, ACTIVITY, GestioneDarkMode.isDarkMode());
                 attivitaFields.add(titoloAttivitaField);
 
                 attivitaPanel.add(titoloAttivitaField);
@@ -489,7 +489,7 @@ public class Controller {
             } catch (URISyntaxException _) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Il link inserito non è valido. Formato corretto: https://esempio.com",
-                        ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+                        ERROR, JOptionPane.ERROR_MESSAGE);
                 return null;
             }
         }
@@ -512,7 +512,7 @@ public class Controller {
             if (titoloTodo == null || titoloTodo.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(creaTodoDialog,
                         "Inserisci un titolo valido per il ToDo",
-                        ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+                        ERROR, JOptionPane.ERROR_MESSAGE);
                 return; // Non chiude il dialogo se c'è un errore
             }
 
@@ -973,7 +973,7 @@ public class Controller {
                     JPanel attivitaPanel = new JPanel();
                     attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                     JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, TA, GestioneDarkMode.isDarkMode());
+                    SetPlaceHolder.setTP(titoloAttivitaField, ACTIVITY, GestioneDarkMode.isDarkMode());
                     attivitaFieldsNuovo.add(titoloAttivitaField);
 
                     attivitaPanel.add(titoloAttivitaField);
@@ -999,7 +999,7 @@ public class Controller {
                     JPanel attivitaPanel = new JPanel();
                     attivitaPanel.setLayout(new BoxLayout(attivitaPanel, BoxLayout.X_AXIS));
                     JTextField titoloAttivitaField = new JTextField(20);
-                    SetPlaceHolder.setTP(titoloAttivitaField, TA, GestioneDarkMode.isDarkMode());
+                    SetPlaceHolder.setTP(titoloAttivitaField, ACTIVITY, GestioneDarkMode.isDarkMode());
                     titoloAttivitaField.setText(attivitaGiaPresente.getNome());
                     attivitaFieldsNuovo.add(titoloAttivitaField);
 
@@ -1208,7 +1208,7 @@ public class Controller {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(dialogo,
                     "Errore nel caricamento dell'anteprima: " + ex.getMessage(),
-                    ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+                    ERROR, JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1398,7 +1398,41 @@ public class Controller {
         }
 
         if (todo.getImmagine() != null) {
-            todoPanel.add(generaPanelImmagine(todo, backgroundColor));
+            JPanel immaginePanel = new JPanel();
+            immaginePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+            immaginePanel.setBackground(backgroundColor);
+
+            URL percorsoImmagine = todo.getImmagine();
+            ImageIcon iconaOriginale = new ImageIcon(percorsoImmagine);
+            Image immagine = iconaOriginale.getImage();
+
+            // Ottieni le dimensioni originali
+            int larghezzaOriginale = iconaOriginale.getIconWidth();
+            int altezzaOriginale = iconaOriginale.getIconHeight();
+
+            // Calcola la nuova larghezza mantenendo le proporzioni
+            int altezzaDesiderata = 100;
+            int nuovaLarghezza = (int) (larghezzaOriginale * ((double) altezzaDesiderata / altezzaOriginale));
+
+            // Ridimensiona l'immagine mantenendo le proporzioni
+            Image immagineRidimensionata = immagine.getScaledInstance(nuovaLarghezza, altezzaDesiderata,
+                    Image.SCALE_SMOOTH);
+            ImageIcon iconaRidimensionata = new ImageIcon(immagineRidimensionata);
+
+            JLabel labelImmagine = new JLabel(iconaRidimensionata);
+
+            immaginePanel.add(labelImmagine);
+            todoPanel.add(immaginePanel);
+
+            if (isCondiviso) {
+                todoPanel.add(generaCondiviso(coloreTesto));
+            }
+
+            // aggiunta al contenitore
+            contenitoreToDo.add(todoPanel);
+
+            contenitoreToDo.revalidate();
+            contenitoreToDo.repaint();
         }
 
         if (Boolean.TRUE.equals(isCondiviso)) {
@@ -1546,7 +1580,7 @@ public class Controller {
         scadenzaPanel.setBackground(backgroundColor);
 
         // Formatta la data
-        SimpleDateFormat dateFormat = new SimpleDateFormat(FORMATODATA);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE);
         String dataFormattata = dateFormat.format(todo.getScadenza().getTime());
 
         JLabel scadenzaLabel = new JLabel("Scadenza: ");
@@ -1650,98 +1684,84 @@ public class Controller {
 
         if (email.isEmpty() || password.isEmpty() ||
                 email.equals("Email") || password.equals("Password")) {
-            JOptionPane.showMessageDialog(loginView, "Compila tutti i campi.", ATTENZIONE,
+            JOptionPane.showMessageDialog(loginView, "Compila tutti i campi.", ATTENTION,
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         // Verifica le credenziali
         try {
             if (utenteDAO.loginValido(email, password)) {
                 utenteAttuale = new Utente(email, password, new Bacheca(), new Bacheca(), new Bacheca());
-
+                this.importaBacheca();
                 this.mostraMain();
             } else {
                 JOptionPane.showMessageDialog(loginView,
                         "Credenziali non valide.",
-                        ATTENZIONE,
+                        ATTENTION,
                         JOptionPane.WARNING_MESSAGE);
             }
         } catch (Exception _) {
             JOptionPane.showMessageDialog(loginView,
                     "Email o password non corretti.",
-                    ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+                    ERROR, JOptionPane.ERROR_MESSAGE);
         }
 
+        // ho riusato il modifica descrizione con il modifica password
+        loginView.getPassDime().addActionListener(
+                e -> {
+                    ModificaDescrizione modificaPass = new ModificaDescrizione();
+                    modificaPass.setVisible(true);
+                    modificaPass.setTitle("Modifica password");
+                    SetPlaceHolder.setTP(modificaPass.getTextField(), "Inserisci la nuova password",
+                            GestioneDarkMode.isDarkMode());
+
+                    modificaPass.getButtonOK().addActionListener(
+                            ex -> {
+                                utenteAttuale = new Utente(email, modificaPass.getTextFieldText(), new Bacheca(),
+                                        new Bacheca(), new Bacheca());
+                                this.mostraMain();
+                            });
+                });
     }
 
-    private void gestisciPassDime(@NotNull LogIn loginView) {
-        loginView.getPassDime().addActionListener(e -> {
-            ResetPassword resetDialog = new ResetPassword();
+    private void importaBacheca() {
+        Bacheca b1 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.TEMPO_LIBERO.toString());
+        Bacheca b2 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.LAVORO.toString());
+        Bacheca b3 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.UNIVERSITA.toString());
+        List<ToDo> tempoLibero = (b1 != null && b1.getToDoList() != null) ? b1.getToDoList() : new ArrayList<>();
+        List<ToDo> lavoro = (b2 != null && b2.getToDoList() != null) ? b2.getToDoList() : new ArrayList<>();
+        List<ToDo> universita = (b3 != null && b3.getToDoList() != null) ? b3.getToDoList() : new ArrayList<>();
 
-            resetDialog.getBottoneReset().addActionListener(ex -> {
-                String newPassword = String.valueOf(resetDialog.getPassword().getPassword());
-                String email = resetDialog.getEmail().getText();
+        // Popola le ToDoList di ciascuna bacheca senza duplicazioni
+        if (b1 != null) {
+            System.out.println("ToDo caricati in TEMPO_LIBERO:");
+            for (ToDo t : b1.getToDoList()) {
+                System.out.println(" - " + t.getTitolo());
+            }
+            tempoLibero.addAll(b1.getToDoList());
+        }
 
-                logger.info("Tentativo di reset della password dell'utente " + email);
+        if (b2 != null) {
+            System.out.println("ToDo caricati in LAVORO:");
+            for (ToDo t : b2.getToDoList()) {
+                System.out.println(" - " + t.getTitolo());
+            }
+            lavoro.addAll(b2.getToDoList());
+        }
 
-                // controllo campi vuoti
-                if (email.isEmpty()) {
-                    JOptionPane.showMessageDialog(null,
-                            "Inserire l'email",
-                            ATTENZIONE, JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                if (newPassword.isEmpty()) {
-                    JOptionPane.showMessageDialog(null,
-                            "Inserire una nuova password",
-                            ATTENZIONE, JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
+        if (b3 != null) {
+            System.out.println("ToDo caricati in UNIVERSITA:");
+            for (ToDo t : b3.getToDoList()) {
+                System.out.println(" - " + t.getTitolo());
+            }
+            universita.addAll(b3.getToDoList());
+        }
 
-                // controllo corrispondenza password
-                if (!newPassword.equals(resetDialog.getConfermaPassword().getPassword())) {
-                    JOptionPane.showMessageDialog(null,
-                            "Le password non coincidono",
-                            ATTENZIONE, JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
+        // Assegna le liste alle bacheche dell'utente attuale
+        utenteAttuale.getTempoLibero().setToDoList(tempoLibero);
+        utenteAttuale.getLavoro().setToDoList(lavoro);
+        utenteAttuale.getUniversita().setToDoList(universita);
 
-                // recupera utente dal db
-
-                Utente utente = utenteDAO.trovaUtenteDaMail(email);
-
-                // controllo utente nullo
-                if (utente == null) {
-                    JOptionPane.showMessageDialog(null,
-                            "Non esiste un utente con questa email",
-                            ATTENZIONE, JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-
-                // aggiorna la password nel db
-                if (utenteDAO.aggiornaPassword(email, newPassword)) {
-                    utente.setPassword(newPassword);
-                    this.utenteAttuale = utente;
-
-                    logger.info("Password aggiornata con successo");
-
-                    JOptionPane.showMessageDialog(null,
-                            "Password aggiornata con successo",
-                            ATTENZIONE, JOptionPane.INFORMATION_MESSAGE);
-
-                    resetDialog.dispose();
-                    mostraMain();
-                } else {
-                    logger.severe("Errore durante l'aggiornamento della password");
-                    JOptionPane.showMessageDialog(null,
-                            "Errore durante l'aggiornamento della password",
-                            ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
-                }
-            });
-
-            resetDialog.setVisible(true); // Sposta qui il setVisible
-        });
     }
 
     /**
@@ -1757,13 +1777,13 @@ public class Controller {
 
         if (email.isEmpty() || password.isEmpty() || confermaPassword.isEmpty() ||
                 email.equals("Email") || password.equals("Password") || confermaPassword.equals("Conferma password")) {
-            JOptionPane.showMessageDialog(registerView, "Compila tutti i campi.", ATTENZIONE,
+            JOptionPane.showMessageDialog(registerView, "Compila tutti i campi.", ATTENTION,
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (!password.equals(confermaPassword)) {
-            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", ERRORMESSAGE,
+            JOptionPane.showMessageDialog(registerView, "Le password non corrispondono.", ERROR,
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -1773,7 +1793,7 @@ public class Controller {
             if (utenteDAO.loginValido(email, password)) {
                 JOptionPane.showMessageDialog(registerView,
                         "Utente già registrato!",
-                        ATTENZIONE,
+                        ATTENTION,
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }

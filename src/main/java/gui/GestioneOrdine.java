@@ -59,6 +59,7 @@ public class GestioneOrdine extends JDialog {
         );
 
         // call onCancel() when cross is clicked
+
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
