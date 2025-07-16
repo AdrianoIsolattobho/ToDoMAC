@@ -24,7 +24,7 @@
               <text value=""/>
             </properties>
           </component>
-          <grid id="518de" layout-manager="GridLayoutManager" row-count="1" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="518de" layout-manager="GridLayoutManager" row-count="1" column-count="8" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="4" fill="2" indent="0" use-parent-layout="false"/>
@@ -34,7 +34,7 @@
             <children>
               <component id="14b55" class="javax.swing.JButton" binding="esci">
                 <constraints>
-                  <grid row="0" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="0" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <minimum-size width="40" height="40"/>
                     <maximum-size width="40" height="40"/>
                   </grid>
@@ -50,7 +50,7 @@
               </component>
               <component id="d64cb" class="javax.swing.JButton" binding="mostraCompletati">
                 <constraints>
-                  <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Mostra tutti"/>
@@ -58,7 +58,7 @@
               </component>
               <component id="29020" class="javax.swing.JButton" binding="aggiungiToDo">
                 <constraints>
-                  <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="+ aggiungi ToDo"/>
@@ -96,6 +96,14 @@
                 <properties>
                   <text value="X"/>
                   <toolTipText value="Azzera ricerca"/>
+                </properties>
+              </component>
+              <component id="92d9d" class="javax.swing.JButton" binding="buttonCondivisioni">
+                <constraints>
+                  <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="Mostra in Condivisioni"/>
                 </properties>
               </component>
             </children>

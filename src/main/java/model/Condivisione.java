@@ -2,21 +2,21 @@ package model;
 import java.util.ArrayList;
 
 public class Condivisione {
-    private Utente creatore;
-    private ArrayList<Utente> condivisiCon=new ArrayList<>();
+    private String creatore;
+    private ArrayList<Utente> condivisiCon;
     private ToDo toDoCondiviso;
 
-    public Condivisione(Utente creatore, ToDo toDoCondiviso, Utente condivisiCon) {
+    public Condivisione(String creatore, ToDo toDoCondiviso, ArrayList<Utente> condivisiCon) {
         this.creatore = creatore;
         this.toDoCondiviso = toDoCondiviso;
-        this.condivisiCon.add(condivisiCon);
+        this.condivisiCon = condivisiCon;
     }
 
-    public Utente getCreatore() {
+    public String getCreatore() {
         return creatore;
     }
 
-    public void setCreatore(Utente creatore) {
+    public void setCreatore(String creatore) {
         this.creatore = creatore;
     }
 

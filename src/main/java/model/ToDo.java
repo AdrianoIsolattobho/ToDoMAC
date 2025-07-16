@@ -16,6 +16,7 @@ public class ToDo {
     private java.awt.Color sfondo;
     private URL immagine;
     private Checklist checklist;
+    private String emailUtente;
 
     public ToDo(String titolo, String descrizione, URI link, Calendar scadenza, java.awt.Color sfondo, URL immagine,
             Checklist checklist) {
@@ -29,6 +30,14 @@ public class ToDo {
         this.sfondo = sfondo;
         this.immagine = immagine;
         this.checklist = checklist;
+    }
+
+    public String getEmailUtente() {
+        return emailUtente;
+    }
+
+    public void setEmailUtente(String emailUtente) {
+        this.emailUtente = emailUtente;
     }
 
     public ToDo(){}

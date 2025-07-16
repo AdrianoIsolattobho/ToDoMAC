@@ -16,6 +16,7 @@ public interface ToDoDAO {
     void modificaToDo(String emailUtente, ToDo toDo);
 
     void eliminaToDo(String emailUtente, String titolo);
-    List<ToDo> getToDoPerUtente(String emailUtente);
+
+
 
 }

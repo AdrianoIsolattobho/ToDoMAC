@@ -53,8 +53,8 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
     /**
      * Verifica la validità delle credenziali d'accesso.
      *
-     * @param email l'email dell'utente
-     * @param password la password dell'utente
+     * @param email
+     * @param password
      * @return true se esiste un utente con queste credenziali, false altrimenti.
      */
     @Override
@@ -77,7 +77,7 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
     /**
      * Recupera un utente dal database a partire dalla sua email.
      *
-     * @param email l'email dell'utente
+     * @param email
      * @return true se esiste un utente con questa email nel database, false
      *         altrimenti.
      */
@@ -104,8 +104,8 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
     /**
      * Aggiorna la password di un utente esistente nel database.
      *
-     * @param email l'email dell'utente
-     * @param nuovaPassword la password dell'utente
+     * @param email
+     * @param nuovaPassword
      * @return true se l'update è andato a buon fine, false altrimenti.
      */
     @Override
@@ -126,17 +126,19 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
     @Override
     public ArrayList<Utente> getUtentiAll() {
         ArrayList<Utente> utenti = new ArrayList<>();
-        String sql = "SELECT \"email\" FROM \"Utente\"";
-
-        try (PreparedStatement utentiPS = connection.prepareStatement(sql)){
+        try {
+            PreparedStatement utentiPS = connection.prepareStatement(
+                    "SELECT \"email\" FROM \"Utente\"");
 
             ResultSet rs = utentiPS.executeQuery();
-
             while (rs.next()) {
                 Utente u = new Utente();
                 u.setEmail(rs.getString("email"));
                 utenti.add(u);
             }
+            rs.close();
+            utentiPS.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }

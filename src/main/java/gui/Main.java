@@ -32,6 +32,11 @@ public class Main extends JPanel {
     private JPanel baRic;
     private JPanel contenitoreToDoRIc;
     private JButton buttonAzzera;
+    private JButton buttonCondivisioni;
+
+    public JButton getButtonCondivisioni() {
+        return buttonCondivisioni;
+    }
 
     public JButton getButtonAzzera() {
         return buttonAzzera;
@@ -97,11 +102,15 @@ public class Main extends JPanel {
         contenitoreToDoU.setLayout(new BoxLayout(contenitoreToDoU, BoxLayout.Y_AXIS));
         contenitoreToDoL.setLayout(new BoxLayout(contenitoreToDoL, BoxLayout.Y_AXIS));
         contenitoreToDoT.setLayout(new BoxLayout(contenitoreToDoT, BoxLayout.Y_AXIS));
+        contenitoreTodoSca.setLayout(new BoxLayout(contenitoreTodoSca, BoxLayout.Y_AXIS));
+        contenitoreToDoRIc.setLayout(new BoxLayout(contenitoreToDoRIc, BoxLayout.Y_AXIS));
 
         //bacheche visibili solo nel caso in cui sia presente un todo
         baUni.setVisible(false);
         baLav.setVisible(false);
         baFre.setVisible(false);
+        baSca.setVisible(false);
+        baRic.setVisible(false);
 
     }
 

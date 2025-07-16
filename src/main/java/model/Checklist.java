@@ -27,6 +27,8 @@ public class Checklist {
         this.completata = false;
     }
 
+    public Checklist(){}
+
     public void setCompletata(Boolean completata) {
         this.completata = completata;
     }

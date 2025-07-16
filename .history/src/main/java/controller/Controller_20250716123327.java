@@ -1805,6 +1805,8 @@ public class Controller {
                     if (todo.getLink() == null) {
                         todo.setEmailUtente(utenteAttuale.getEmail());
                     }
+                    System.out.println("Condivido con: " + email);
+                    System.out.println("email autore:" + todo.getEmailUtente());
                     condivisioneDAO.aggiungiCondivisione(todo.getEmailUtente(), todo.getTitolo(), email);
                 }
                 condividiDialog.dispose();
@@ -1822,15 +1824,21 @@ public class Controller {
                 String email = resetDialog.getEmail().getText();
 
                 // controllo campi vuoti
-                if (email.isEmpty() || newPassword.isEmpty()) {
+                if (email.isEmpty()) {
                     JOptionPane.showMessageDialog(null,
-                            "I campi sono vuoti!",
+                            "Inserire l'email",
+                            ATTENZIONE, JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (newPassword.isEmpty()) {
+                    JOptionPane.showMessageDialog(null,
+                            "Inserire una nuova password",
                             ATTENZIONE, JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 // controllo corrispondenza password
-                if (!newPassword.equals(resetDialog.getConfermaPasswordText())) {
+                if (!newPassword.equals(resetDialog.getConfermaPassword().getText())) {
                     JOptionPane.showMessageDialog(null,
                             "Le password non coincidono",
                             ATTENZIONE, JOptionPane.WARNING_MESSAGE);
@@ -1876,19 +1884,26 @@ public class Controller {
         String emailAutore = utenteAttuale.getEmail();
 
         ArrayList<ToDo> toDos = condivisioneDAO.getToDoCondivisiPerUtente(emailAutore);
+        // debug
+        System.out.println("todo condivisi da " + emailAutore + " : " + toDos.size());
 
         for (ToDo t : toDos) {
-
+            // debug
+            System.out.println("-" + t.getTitolo());
 
             ArrayList<String> emails = condivisioneDAO.getUtentiCondivisiPerToDo(emailAutore, t.getTitolo());
-
+            // debug
+            System.out.println("email condivisi per " + t.getTitolo() + " : " + emails);
             ArrayList<Utente> utenti = new ArrayList<>();
             for (String email : emails) {
                 email = email.trim();
-
+                System.out.println("Tentativo di trovare utente: " + email);
                 Utente u = utenteDAO.trovaUtenteDaMail(email);
                 if (u != null) {
+                    System.out.println("Utente trovato: " + email);
                     utenti.add(u);
+                } else {
+                    System.out.println("Utente non trovato: " + email);
                 }
             }
 

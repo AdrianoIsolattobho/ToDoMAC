@@ -217,7 +217,7 @@ public class Controller {
             azzeraRicerca(mainView);
         });
 
-        mainView.getButtonCondivisioni().addActionListener(e -> mostraCondivisioni());
+        mainView.getButtonCondivisioni().addActionListener(e-> mostraCondivisioni());
 
         SetPlaceHolder.setTP(mainView.getCampoRicerca(), "Ricerca un ToDo", GestioneDarkMode.isDarkMode());
         // Ricerca in tempo reale (opzionale)
@@ -240,7 +240,7 @@ public class Controller {
 
         ArrayList<Condivisione> condivisioni = ottieniCondivisioniUtenteAttuale();
 
-        panelCondivisione.aggiornaCondivisioni(condivisioni, (todo, utente) -> {
+        panelCondivisione.aggiornaCondivisioni(condivisioni, (todo, utente) ->{
             condivisioneDAO.eliminaCondivisione(utenteAttuale.getEmail(), todo.getTitolo(), utente.getEmail());
             mostraCondivisioni();
         });
@@ -789,7 +789,7 @@ public class Controller {
     private Boolean checkScaduti(Bacheca bacheca, Calendar oggi, JPanel contenitoreToDoSca) {
         if (bacheca != null && bacheca.getToDoList() != null) {
             for (ToDo todo : bacheca.getToDoList()) {
-                if (todo.getScadenza() != null && todo.getScadenza().compareTo(oggi) <= 0) {
+                if (todo.getScadenza().compareTo(oggi) <= 0) {
                     visualizzaToDo(todo, contenitoreToDoSca, false);
                     return true;
                 }
@@ -816,12 +816,12 @@ public class Controller {
 
         if (!haToDoUniversita && !haToDoTempoLibero && !haToDoLavoro) {
             // Soluzione più semplice: aggiungi direttamente il messaggio
-            JLabel messaggioVuoto = new JLabel("Nessun todo in scadenza oggi");
-            contenitoreToDoSca.add(messaggioVuoto);
-
-            // Forza il refresh del contenitore
-            contenitoreToDoSca.revalidate();
-            contenitoreToDoSca.repaint();
+        JLabel messaggioVuoto = new JLabel("Nessun todo in scadenza oggi");
+        contenitoreToDoSca.add(messaggioVuoto);
+        
+        // Forza il refresh del contenitore
+        contenitoreToDoSca.revalidate();
+        contenitoreToDoSca.repaint();
         }
     }
 
@@ -1142,35 +1142,35 @@ public class Controller {
     }
 
     private Bacheca stringToBacheca(String stringa, JDialog dialog) {
-        Bacheca bacheca;
-        Titolo titolo;
-
-        switch (stringa) {
-            case TL -> {
-                bacheca = utenteAttuale.getTempoLibero();
-                titolo = Titolo.TEMPO_LIBERO;
-            }
-            case LAV -> {
-                bacheca = utenteAttuale.getLavoro();
-                titolo = Titolo.LAVORO;
-            }
-            case UNI -> {
-                bacheca = utenteAttuale.getUniversita();
-                titolo = Titolo.UNIVERSITA;
-            }
-            default -> {
-                JOptionPane.showMessageDialog(dialog,
-                        "Seleziona una bacheca valida",
-                        ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
-                throw new IllegalArgumentException("Bacheca non valida: " + stringa);
-            }
+    Bacheca bacheca;
+    Titolo titolo;
+    
+    switch (stringa) {
+        case TL -> {
+            bacheca = utenteAttuale.getTempoLibero();
+            titolo = Titolo.TEMPO_LIBERO;
         }
-
-        // Imposta esplicitamente il titolo della bacheca
-        bacheca.setTitolo(titolo);
-
-        return bacheca;
+        case LAV -> {
+            bacheca = utenteAttuale.getLavoro();
+            titolo = Titolo.LAVORO;
+        }
+        case UNI -> {
+            bacheca = utenteAttuale.getUniversita();
+            titolo = Titolo.UNIVERSITA;
+        }
+        default -> {
+            JOptionPane.showMessageDialog(dialog,
+                    "Seleziona una bacheca valida",
+                    ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
+            throw new IllegalArgumentException("Bacheca non valida: " + stringa);
+        }
     }
+    
+    // Imposta esplicitamente il titolo della bacheca
+    bacheca.setTitolo(titolo);
+    
+    return bacheca;
+}
 
     private void gestisciTodoInBacheca(ToDo todo, String bacheca, JDialog dialog, String operazione) {
         switch (bacheca) {
@@ -1287,7 +1287,7 @@ public class Controller {
         condividiButton.setContentAreaFilled(false);
         condividiButton.setForeground(coloreTesto);
         condividiButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        creazioneCondividiDialog(condividiButton, todo);
+        creazioneCondividiDialog(condividiButton,todo);
         return condividiButton;
     }
 
@@ -1764,15 +1764,15 @@ public class Controller {
         }
 
         // Registrazione del nuovo utente con bacheche vuote
-        try {
-            if (utenteDAO.loginValido(email, password)) {
+        try{
+            if(utenteDAO.loginValido(email, password)) {
                 JOptionPane.showMessageDialog(registerView,
                         "Utente già registrato!",
                         ATTENZIONE,
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            utenteDAO.registraUtente(email, password);
+            utenteDAO.registraUtente(email,password);
 
             JOptionPane.showMessageDialog(registerView,
                     "Registrazione avvenuta con successo! Effettua il LogIn",
@@ -1781,12 +1781,12 @@ public class Controller {
             mostraPanel(view.getLogInView().getMainLogIn());
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(registerView,
-                    "Errore durante la registrazione: " + ex.getMessage(),
+                    "Errore durante la registrazione: "+ ex.getMessage(),
                     ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void creazioneCondividiDialog(JButton condiviButton, ToDo todo) {
+    private void creazioneCondividiDialog(JButton condiviButton, ToDo todo){
         condiviButton.addActionListener(e -> {
             ListaUtenti listaUtenti = new ListaUtenti();
             JDialog condividiDialog = new JDialog();
@@ -1799,13 +1799,15 @@ public class Controller {
             ArrayList<Utente> utenti = utenteDAO.getUtentiAll();
             listaUtenti.mostraUtenti(utenti, utenteAttuale);
 
-            listaUtenti.getCondivButton().addActionListener(ev -> {
+            listaUtenti.getCondivButton().addActionListener(ev->{
                 List<String> selezionati = listaUtenti.getUtentiSelezionati();
-                for (String email : selezionati) {
-                    if (todo.getLink() == null) {
+                for(String email : selezionati){
+                    if(todo.getLink()==null){
                         todo.setEmailUtente(utenteAttuale.getEmail());
                     }
-                    condivisioneDAO.aggiungiCondivisione(todo.getEmailUtente(), todo.getTitolo(), email);
+                    System.out.println("Condivido con: "+email);
+                    System.out.println("email autore:"+todo.getEmailUtente());
+                    condivisioneDAO.aggiungiCondivisione(todo.getEmailUtente(), todo.getTitolo(), email );
                 }
                 condividiDialog.dispose();
             });
@@ -1821,38 +1823,45 @@ public class Controller {
                 String newPassword = String.valueOf(resetDialog.getPassword().getPassword());
                 String email = resetDialog.getEmail().getText();
 
-                // controllo campi vuoti
-                if (email.isEmpty() || newPassword.isEmpty()) {
+                //controllo campi vuoti
+                if (email.isEmpty()){
                     JOptionPane.showMessageDialog(null,
-                            "I campi sono vuoti!",
+                            "Inserire l'email",
+                            ATTENZIONE, JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (newPassword.isEmpty()) {
+                    JOptionPane.showMessageDialog(null,
+                            "Inserire una nuova password",
                             ATTENZIONE, JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                // controllo corrispondenza password
-                if (!newPassword.equals(resetDialog.getConfermaPasswordText())) {
+                //controllo corrispondenza password
+                if(!newPassword.equals(resetDialog.getConfermaPassword().getText())){
                     JOptionPane.showMessageDialog(null,
                             "Le password non coincidono",
                             ATTENZIONE, JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                // recupera utente dal db
+                //recupera utente dal db
 
                 Utente utente = utenteDAO.trovaUtenteDaMail(email);
 
-                // controllo utente nullo
-                if (utente == null) {
+                //controllo utente nullo
+                if (utente == null){
                     JOptionPane.showMessageDialog(null,
                             "Non esiste un utente con questa email",
                             ATTENZIONE, JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                // aggiorna la password nel db
-                if (utenteDAO.aggiornaPassword(email, newPassword)) {
+                //aggiorna la password nel db
+                if (utenteDAO.aggiornaPassword(email, newPassword)){
                     utente.setPassword(newPassword);
-                    this.utenteAttuale = utente;
+                    this.utenteAttuale  = utente;
+
 
                     JOptionPane.showMessageDialog(null,
                             "Password aggiornata con successo",
@@ -1876,19 +1885,26 @@ public class Controller {
         String emailAutore = utenteAttuale.getEmail();
 
         ArrayList<ToDo> toDos = condivisioneDAO.getToDoCondivisiPerUtente(emailAutore);
+        //debug
+        System.out.println("todo condivisi da " + emailAutore + " : " + toDos.size());
 
-        for (ToDo t : toDos) {
-
+        for(ToDo t : toDos){
+            //debug
+            System.out.println("-"+t.getTitolo());
 
             ArrayList<String> emails = condivisioneDAO.getUtentiCondivisiPerToDo(emailAutore, t.getTitolo());
-
+            //debug
+            System.out.println("email condivisi per " + t.getTitolo() + " : " + emails);
             ArrayList<Utente> utenti = new ArrayList<>();
-            for (String email : emails) {
+            for(String email : emails){
                 email = email.trim();
-
+                System.out.println("Tentativo di trovare utente: " + email);
                 Utente u = utenteDAO.trovaUtenteDaMail(email);
-                if (u != null) {
+                if(u!=null){
+                    System.out.println("Utente trovato: " + email);
                     utenti.add(u);
+                } else {
+                    System.out.println("Utente non trovato: " + email);
                 }
             }
 

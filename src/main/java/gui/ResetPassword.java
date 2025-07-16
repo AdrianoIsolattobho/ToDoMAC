@@ -61,5 +61,9 @@ public class ResetPassword extends JDialog {
         return confermaPassword;
     }
 
+    public String getConfermaPasswordText() {
+        return new String(confermaPassword.getPassword());
+    }
+
 
 }
