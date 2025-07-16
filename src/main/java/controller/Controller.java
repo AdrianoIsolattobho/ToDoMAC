@@ -205,12 +205,6 @@ public class Controller {
             mainView.repaint();
         });
 
-        // ActionListener per la ricerca
-        mainView.getButtonRicerca().addActionListener(e -> {
-            String termineRicerca = mainView.getCampoRicerca().getText();
-            gestisciRicerca(termineRicerca, mainView);
-        });
-
         // ActionListener per azzerare la ricerca
         mainView.getButtonAzzera().addActionListener(e -> {
             mainView.getCampoRicerca().setText("");
@@ -549,8 +543,8 @@ public class Controller {
                     nuovoToDo.setChecklist(c);
                 }
 
-                salvaTodoNelDatabase(nuovoToDo, creaTodoDialog, false,
-                        stringToBacheca(bachecaSelezionata, creaTodoDialog));
+                salvaTodoNelDatabase(nuovoToDo, creaTodoDialog,
+                        stringToBacheca(bachecaSelezionata, creaTodoDialog),null);
                 // aggiorna bacheche in memoria
                 gestisciTodoInBacheca(nuovoToDo, bachecaSelezionata, creaTodoDialog, AGGIUNGI);
                 creaTodoDialog.dispose();
@@ -1070,6 +1064,7 @@ public class Controller {
             AtomicReference<JTextField> titoloCheckListRefNuovo, DialogReferences references) {
         return _ -> {
             // Validazione del titolo
+            String titoloVecchio = todo.getTitolo();
             String nuovoTitolo = modificaTodoDialog.getTitolo().getText();
 
             if (nuovoTitolo == null || nuovoTitolo.trim().isEmpty()) {
@@ -1116,7 +1111,7 @@ public class Controller {
             }
 
             // salvataggio modifiche nel db
-            salvaTodoNelDatabase(todo, modificaTodoDialog, true, stringToBacheca(nuovaBacheca, modificaTodoDialog));
+            salvaTodoNelDatabase(todo, modificaTodoDialog, stringToBacheca(nuovaBacheca, modificaTodoDialog),titoloVecchio);
 
             // Chiudi il dialog e aggiorna l'interfaccia
             modificaTodoDialog.dispose();
@@ -1126,15 +1121,15 @@ public class Controller {
         };
     }
 
-    private void salvaTodoNelDatabase(ToDo todo, JDialog dialog, boolean isUpdate, Bacheca bachecaCorrente) {
+    private void salvaTodoNelDatabase(ToDo todo, JDialog dialog, Bacheca bachecaCorrente, String titoloVecchio) {
         try {
-            if (isUpdate) {
-                toDoDAO.modificaToDo(utenteAttuale.getEmail(), todo);
+            if (titoloVecchio!=null) {
+                toDoDAO.modificaToDo(utenteAttuale.getEmail(), todo,bachecaCorrente,titoloVecchio);
             } else {
                 toDoDAO.creaToDo(utenteAttuale.getEmail(), todo, bachecaCorrente);
             }
         } catch (Exception daoEx) {
-            String operazione = isUpdate ? "modifica" : "salvataggio";
+            String operazione = titoloVecchio!=null ? "modifica" : "salvataggio";
             JOptionPane.showMessageDialog(dialog,
                     "Errore nel " + operazione + " del ToDo nel database: " + daoEx.getMessage(),
                     ERRORMESSAGE, JOptionPane.ERROR_MESSAGE);
@@ -1719,18 +1714,6 @@ public class Controller {
         List<ToDo> lavoro = (b2 != null && b2.getToDoList() != null) ? b2.getToDoList() : new ArrayList<>();
         List<ToDo> universita = (b3 != null && b3.getToDoList() != null) ? b3.getToDoList() : new ArrayList<>();
 
-        // Popola le ToDoList di ciascuna bacheca senza duplicazioni
-        if (b1 != null) {
-            tempoLibero.addAll(b1.getToDoList());
-        }
-
-        if (b2 != null) {
-            lavoro.addAll(b2.getToDoList());
-        }
-
-        if (b3 != null) {
-            universita.addAll(b3.getToDoList());
-        }
 
         // Assegna le liste alle bacheche dell'utente attuale
         utenteAttuale.getTempoLibero().setToDoList(tempoLibero);

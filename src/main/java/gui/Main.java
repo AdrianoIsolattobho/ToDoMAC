@@ -28,7 +28,6 @@ public class Main extends JPanel {
     private JButton mostraInScadenza;
     private JPanel contenitoreTodoSca;
     private JTextField campoRicerca;
-    private JButton buttonRicerca;
     private JPanel baRic;
     private JPanel contenitoreToDoRIc;
     private JButton buttonAzzera;
@@ -48,10 +47,6 @@ public class Main extends JPanel {
 
     public JPanel getBaRic() {
         return baRic;
-    }
-
-    public JButton getButtonRicerca() {
-        return buttonRicerca;
     }
 
     public JTextField getCampoRicerca() {

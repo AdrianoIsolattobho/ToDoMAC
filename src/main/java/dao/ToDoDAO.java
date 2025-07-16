@@ -13,10 +13,8 @@ public interface ToDoDAO {
 
     List<ToDo> caricaToDoPerBacheca(String emailUtente, String nomeBacheca);
 
-    void modificaToDo(String emailUtente, ToDo toDo);
+    void modificaToDo(String emailUtente, ToDo toDo, Bacheca bacheca, String oldTitolo);
 
     void eliminaToDo(String emailUtente, String titolo);
-
-
 
 }

@@ -4,8 +4,6 @@ import java.util.logging.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-import java.util.logging.Logger;
-
 /**
  * Classe per applicare uno stile personalizzato a Swing.
  * Questa classe definisce un metodo statico per applicare uno stile specifico
@@ -14,8 +12,6 @@ import java.util.logging.Logger;
  */
 public class StileSwing extends JFrame {
     private static final String FONT_SCELTO = "Arial";
-    private static final Logger logger = Logger.getLogger(StileSwing.class.getName());
-
     /**
      * Ricerca nel URL dato l'immagine
      * Se la trova e le funzioni utilizzate sono supportate dall'OS allora la
@@ -30,55 +26,6 @@ public class StileSwing extends JFrame {
             final Image image = defaultToolkit.getImage(imageResource);
             Logger logger = Logger.getLogger("StileSwing");
 
-
-        try {
-            // Verifica prima se la Taskbar è supportata sulla piattaforma
-            if (Taskbar.isTaskbarSupported()) {
-                final Taskbar taskbar = Taskbar.getTaskbar();
-
-                    // Verifica se l'impostazione dell'icona è supportata
-                    if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
-                        taskbar.setIconImage(image);
-                    } else {
-                        logger.info("La funzionalità ICON_IMAGE non è supportata su questa piattaforma");
-                    }
-                } else {
-                    logger.info("Taskbar non supportata su questa piattaforma");
-                }
-            } catch (UnsupportedOperationException e) {
-                // La funzionalità Taskbar non è supportata su questa piattaforma
-                logger.info("Taskbar non supportata su questa piattaforma: " + e.getMessage());
-            } catch (Exception e) {
-                // Gestisce altri possibili errori
-                logger.info("Errore durante l'impostazione dell'icona: " + e.getMessage());
-            }
-            
-            if (GestioneDarkMode.isDarkMode()) {
-
-                /*Tema Scuro*/
-
-                //button
-                UIManager.put("Button.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.BOLD, 14));
-                UIManager.put("Button.foreground", new java.awt.Color(1, 167, 225));
-
-                //label
-                UIManager.put("Label.foreground",new java.awt.Color(1, 167, 225) );
-                UIManager.put("Label.background", new java.awt.Color(18, 41, 75));
-                UIManager.put("Label.font", new java.awt.Font(FONT_SCELTO, java.awt.Font.PLAIN, 16));
-
-                //textField
-                UIManager.put("TextField.foreground", new java.awt.Color(1, 167, 225));
-
-                //Password
-                UIManager.put("PasswordField.foreground", new java.awt.Color(1, 167, 225));
-
-
-                //Panel
-                UIManager.put("Panel.background", new java.awt.Color(18, 41, 75));
-            } else {
-                System.out.println("Taskbar non supportata su questa piattaforma");
-            }
-
         try {
             // Verifica prima se la Taskbar è supportata sulla piattaforma
             if (Taskbar.isTaskbarSupported()) {
@@ -87,11 +34,7 @@ public class StileSwing extends JFrame {
                 // Verifica se l'impostazione dell'icona è supportata
                 if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
                     taskbar.setIconImage(image);
-                } else {
-                    logger.info("La funzionalità ICON_IMAGE non è supportata su questa piattaforma");
                 }
-            } else {
-                logger.info("Taskbar non supportata su questa piattaforma");
             }
         } catch (UnsupportedOperationException e) {
             // La funzionalità Taskbar non è supportata su questa piattaforma
@@ -126,6 +69,8 @@ public class StileSwing extends JFrame {
 
             // Panel
             UIManager.put("Panel.background", new java.awt.Color(18, 41, 75));
+
+
         } else {
 
             /* Tema Chiaro */
