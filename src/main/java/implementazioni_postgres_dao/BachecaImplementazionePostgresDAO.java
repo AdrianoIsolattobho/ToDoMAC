@@ -9,10 +9,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Implementazione concreta dell'interfaccia {@link dao.BachecaDAO} per
+ * PostgreSQL.
+ * Gestisce tutte le operazioni di accesso ai dati relativi alle bacheche.
+ */
 public class BachecaImplementazionePostgresDAO implements dao.BachecaDAO{
 
     private Connection connection;
 
+    /**
+     * Costruttore che ottiene una connessione al database tramite {@link DBConnessione}.
+     * Stampa lo stack in caso di errore nella connessione.
+     */
     public BachecaImplementazionePostgresDAO(){
         try{
             connection = DBConnessione.getInstance().getConnection();
@@ -21,34 +30,44 @@ public class BachecaImplementazionePostgresDAO implements dao.BachecaDAO{
         }
     }
 
+    /**
+     * Recupera la descrizione della bacheca di un utente.
+     * @param emailUtente email dell'utente attuale
+     * @param titolo titolo della bacheca
+     * @return la descrizione della bacheca, oppure null se non esiste
+     */
     @Override
-    public String getDescrizioneBacheca(String emailUtente, Titolo titolo){
-        try{
-            String sql = "SELECT \"descrizione\" FROM \"Bacheca\" WHERE \"emailUtente\" = ? AND \"titolo\" = ?::titolo";
-            PreparedStatement descrizionePS = connection.prepareStatement(sql);
+    public String getDescrizioneBacheca(String emailUtente, Titolo titolo) {
+        String sql = "SELECT \"descrizione\" FROM \"Bacheca\" WHERE \"emailUtente\" = ? AND \"titolo\" = ?::titolo";
 
+        try (PreparedStatement descrizionePS = connection.prepareStatement(sql)) {
             descrizionePS.setString(1, emailUtente);
             descrizionePS.setString(2, titolo.name());
 
-            ResultSet rs = descrizionePS.executeQuery();
-
-            if(rs.next()){
-                return rs.getString("descrizione");
-            } else {
-                return null;
+            try (ResultSet rs = descrizionePS.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("descrizione");
+                } else {
+                    return null;
+                }
             }
-
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
+    /**
+     * Recupera l'ordinamento della bacheca di un utente.
+     * @param emailUtente email dell'utente attuale
+     * @param titolo bacheca
+     * @return l'ordinamento attuale della bacheca, oppure null se non esiste'
+     */
     @Override
     public Ordinamento getOrdinamentoBacheca (String emailUtente, Titolo titolo){
-        try{
+
             String sql = "SELECT ordinamento FROM \"Bacheca\" WHERE \"emailUtente\" = ? AND \"titolo\" = ?::titolo";
-            PreparedStatement ordinamentoPS = connection.prepareStatement(sql);
+        try(PreparedStatement ordinamentoPS = connection.prepareStatement(sql)){
 
             ordinamentoPS.setString(1, emailUtente);
             ordinamentoPS.setString(2, titolo.name());
@@ -65,12 +84,19 @@ public class BachecaImplementazionePostgresDAO implements dao.BachecaDAO{
             return null;
         }
     }
+
+    /**
+     * Salva o aggiorna la descrizione della bacheca per l'utente specificato.
+     * @param emailUtente email dell'utente attuale
+     * @param titolo titolo della bacheca
+     * @param descrizione descrizione selezionata
+     */
     @Override
     public void salvaDescrizioneBacheca (String emailUtente, Titolo titolo, String descrizione){
-        try{
+
             String sql = "UPDATE \"Bacheca\" SET \"descrizione\" = ? WHERE \"emailUtente\" = ? AND \"titolo\" = ?::titolo";
 
-            PreparedStatement salvabPS = connection.prepareStatement(sql);
+        try(PreparedStatement salvabPS = connection.prepareStatement(sql)){
 
             salvabPS.setString(1, descrizione);
             salvabPS.setString(2, emailUtente);
@@ -82,12 +108,18 @@ public class BachecaImplementazionePostgresDAO implements dao.BachecaDAO{
         }
     }
 
+    /**
+     * Salva o aggiorna l'ordinamento della bacheca per l'utente specificato.
+     * @param emailUtente email dell'utente attuale
+     * @param titolo titolo della bacheca
+     * @param ordinamento ordinamento selezionato
+     */
     @Override
     public void salvaOrdinamentoBacheca (String emailUtente, Titolo titolo, Ordinamento ordinamento){
-        try{
+
             String sql = "UPDATE \"Bacheca\" SET ordinamento = ?::ordinamento WHERE \"emailUtente\" = ? AND \"titolo\" = ?::titolo";
 
-            PreparedStatement salvaoPS = connection.prepareStatement(sql);
+        try(PreparedStatement salvaoPS = connection.prepareStatement(sql)){
 
             salvaoPS.setString(1, ordinamento.name());
             salvaoPS.setString(2, emailUtente);

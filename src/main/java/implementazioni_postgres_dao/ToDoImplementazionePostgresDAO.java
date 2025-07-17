@@ -2,19 +2,22 @@ package implementazioni_postgres_dao;
 
 import database.DBConnessione;
 import model.*;
-
+import java.awt.Color;
 import java.net.URI;
 import java.net.URL;
-import java.util.Calendar;
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
-
 import java.sql.*;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+/**
+ * Implementazione concreta dell'interfaccia {@link dao.ToDoDAO} per
+ * PostgreSQL.
+ * Gestisce tutte le operazioni di accesso ai dati relativi ai ToDo.
+ */
 public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
-
     private Connection connection;
+    private static final Logger logger = Logger.getLogger(ToDoImplementazionePostgresDAO.class.getName());
 
     public ToDoImplementazionePostgresDAO() {
         try {
@@ -23,335 +26,420 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
     }
 
+    /**
+     * Crea un nuovo ToDo all'interno di una bacheca di un utente
+     * @param emailUtente email utente attuale
+     * @param toDo todo attuale
+     * @param bacheca bacheca attuale
+     */
     @Override
     public void creaToDo(String emailUtente, ToDo toDo, Bacheca bacheca) {
         try {
-            // Calcola il nuovo IdToDo come MAX(IdToDo) + 1
-            int nuovoIdToDo = 1;
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT COALESCE(MAX(\"IdToDo\"), 0) + 1 AS nuovoId FROM \"ToDo\"");
-            if (rs.next()) {
-                nuovoIdToDo = rs.getInt("nuovoId");
-            }
-            rs.close();
-            stmt.close();
+            int nuovoIdToDo = getNextIdToDo();
 
-            // Inserisci il nuovo ToDo con il nuovo IdToDo
-            PreparedStatement creaPS = connection.prepareStatement(
-                    "INSERT INTO \"ToDo\" (\"emailUtente\", \"titolo\", \"descrizione\", \"link\", \"scadenza\", " +
-                            "\"completato\", \"scaduto\", \"sfondo\", \"immagine\", \"IdToDo\") " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            creaPS.setString(1, emailUtente);
-            creaPS.setString(2, toDo.getTitolo());
-            creaPS.setString(3, toDo.getDescrizione());
-            creaPS.setString(4, toDo.getLink() != null ? toDo.getLink().toString() : null);
-            creaPS.setTimestamp(5,
-                    toDo.getScadenza() != null ? new Timestamp(toDo.getScadenza().getTimeInMillis()) : null);
-            creaPS.setBoolean(6, toDo.isCompletato());
-            creaPS.setBoolean(7, toDo.isScaduto());
-            creaPS.setString(8,
-                    toDo.getSfondo() != null ? "#" + Integer.toHexString(toDo.getSfondo().getRGB()).substring(2)
-                            : null);
-            creaPS.setString(9, toDo.getImmagine() != null ? toDo.getImmagine().toString() : null);
-            creaPS.setInt(10, nuovoIdToDo);
-            creaPS.executeUpdate();
-            creaPS.close();
+            inserisciToDo(emailUtente, toDo, nuovoIdToDo);
+            inserisciBacheca(emailUtente, bacheca, nuovoIdToDo);
 
-            System.out.println("TitoloBacheca: " + bacheca.getTitolo() + " descrizione: " + bacheca.getDescrizione());
-
-            // INSERISCI SEMPRE UN RECORD PER ASSOCIARE IL TODO ALLA BACHECA
-            System.out.println("Associando ToDo alla bacheca: " + bacheca.getTitolo());
-            PreparedStatement creaBachecaPS = connection.prepareStatement(
-                    "INSERT INTO \"Bacheca\" (\"titolo\",\"emailUtente\", \"descrizione\", \"IdToDo\", \"ordinamento\") " +
-                            "VALUES (CAST(? AS titolo), ?, ?, ?, CAST(? AS ordinamento))");
-            creaBachecaPS.setString(1, bacheca.getTitolo().toString());
-            creaBachecaPS.setString(2, emailUtente);
-            creaBachecaPS.setString(3, bacheca.getDescrizione() != null ? bacheca.getDescrizione() : "");
-            creaBachecaPS.setInt(4, nuovoIdToDo);
-            Ordinamento ordinamento = bacheca.getOrdinamento() != null ? bacheca.getOrdinamento() : Ordinamento.AZ;
-            creaBachecaPS.setString(5, ordinamento.name());
-            creaBachecaPS.executeUpdate();
-            creaBachecaPS.close();
-
-            // Gestione checklist
             if (toDo.getChecklist() != null) {
-                for (Attivita attivita : toDo.getChecklist().getAttivita()) {
-                    PreparedStatement creaCheckListPS = connection.prepareStatement(
-                            "INSERT INTO \"Attivita\" (\"emailUtente\", \"titoloToDo\", \"nome\", \"completata\") " +
-                                    "VALUES (?, ?, ?, ?)");
-                    creaCheckListPS.setString(1, emailUtente);
-                    creaCheckListPS.setString(2, toDo.getTitolo());
-                    creaCheckListPS.setString(3, attivita.getNome());
-                    creaCheckListPS.setBoolean(4, attivita.isCompletata());
-                    creaCheckListPS.executeUpdate();
-                    creaCheckListPS.close();
+                inserisciChecklist(emailUtente, toDo);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Errore durante la creazione del ToDo", e);
+        }
+    }
+
+    /**
+     * Inserisce un ToDo all'interno del database.
+     * @param emailUtente
+     * @param toDo
+     * @param idToDo
+     * @throws SQLException se c'è un errore con l'inserimento
+     */
+    private void inserisciToDo(String emailUtente, ToDo toDo, int idToDo) throws SQLException {
+        String sql = """
+                INSERT INTO "ToDo" ("emailUtente", "titolo", "descrizione", "link", "scadenza",
+                "completato", "scaduto", "sfondo", "immagine", "IdToDo")
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, emailUtente);
+            ps.setString(2, toDo.getTitolo());
+            ps.setString(3, toDo.getDescrizione());
+            ps.setString(4, toDo.getLink() != null ? toDo.getLink().toString() : null);
+            ps.setTimestamp(5, toDo.getScadenza() != null ? new Timestamp(toDo.getScadenza().getTimeInMillis()) : null);
+            ps.setBoolean(6, toDo.isCompletato());
+            ps.setBoolean(7, toDo.isScaduto());
+            ps.setString(8, colorToHex(toDo.getSfondo()));
+            ps.setString(9, toDo.getImmagine() != null ? toDo.getImmagine().toString() : null);
+            ps.setInt(10, idToDo);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Inserisce una bacheca all'interno del database.
+     * @param emailUtente
+     * @param bacheca
+     * @param idToDo
+     * @throws SQLException se c'è un errore con l'inserimento
+     */
+    private void inserisciBacheca(String emailUtente, Bacheca bacheca, int idToDo) throws SQLException {
+        String sql = """
+                INSERT INTO "Bacheca" ("titolo", "emailUtente", "descrizione", "IdToDo", "ordinamento")
+                VALUES (CAST(? AS titolo), ?, ?, ?, CAST(? AS ordinamento))
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, bacheca.getTitolo().toString());
+            ps.setString(2, emailUtente);
+            ps.setString(3, Optional.ofNullable(bacheca.getDescrizione()).orElse(""));
+            ps.setInt(4, idToDo);
+            ps.setString(5, Optional.ofNullable(bacheca.getOrdinamento()).orElse(Ordinamento.AZ).name());
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Metodo helper che prende il valore max di IdToDo + 1 dal database.
+     * @return un id di ToDo
+     * @throws SQLException
+     */
+    private int getNextIdToDo() throws SQLException {
+        String sql = "SELECT COALESCE(MAX(\"IdToDo\"), 0) + 1 AS nuovoId FROM \"ToDo\"";
+        try (Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            return rs.next() ? rs.getInt("nuovoId") : 1;
+        }
+    }
+
+    /**
+     * Inserisce una checklist all'interno del database.
+     * @param emailUtente
+     * @param toDo
+     */
+    private void inserisciChecklist(String emailUtente, ToDo toDo) {
+        String sql = """
+                INSERT INTO "Attivita" ("emailUtente", "titoloToDo", "nome", "completata")
+                VALUES (?, ?, ?, ?)
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, emailUtente);
+            ps.setString(2, toDo.getTitolo());
+            for (Attivita attivita : toDo.getChecklist().getAttivita()) {
+                ps.setString(3, attivita.getNome());
+                ps.setBoolean(4, attivita.isCompletata());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            logger.severe("Errore durante inserimento ToDo: " + e.getMessage());
+        }
+
+    }
+
+    /**
+     * Carica le informazioni di una bacheca di un utente all'interno del database.
+     * @param emailUtente email utente attuale
+     * @param titolo titolo bacheca attuale
+     * @return
+     */
+    @Override
+    public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
+        Bacheca bacheca = new Bacheca();
+        bacheca.setTitolo(titolo);
+        String sql = """
+                SELECT DISTINCT "descrizione", "ordinamento"
+                FROM "Bacheca"
+                WHERE "emailUtente" = ? AND "titolo" = CAST(? AS titolo)
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, emailUtente);
+            ps.setString(2, titolo.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    bacheca.setDescrizione(rs.getString("descrizione"));
+                    String ordinamento = rs.getString("ordinamento");
+                    if (ordinamento != null) {
+                        bacheca.setOrdinamento(Ordinamento.valueOf(ordinamento));
+                    }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            bacheca.setToDoList(new ArrayList<>(caricaToDoPerBacheca(emailUtente, titolo.name())));
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Errore durante il caricamento della Bacheca", e);
+            return null;
         }
+        return bacheca;
     }
 
-    @Override
-public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
-    Bacheca bacheca = new Bacheca();
-    bacheca.setTitolo(titolo);
-    
-    try {
-        // Carica informazioni base della bacheca
-        PreparedStatement bachecaInfoPS = connection.prepareStatement(
-                "SELECT DISTINCT \"descrizione\", \"ordinamento\" FROM \"Bacheca\" " +
-                "WHERE \"emailUtente\" = ? AND \"titolo\" = CAST(? AS titolo)");
-        bachecaInfoPS.setString(1, emailUtente);
-        bachecaInfoPS.setString(2, titolo.name());
-        
-        ResultSet bachecaRs = bachecaInfoPS.executeQuery();
-        if (bachecaRs.next()) {
-            bacheca.setTitolo(titolo);
-            bacheca.setDescrizione(bachecaRs.getString("descrizione"));
-            String ordinamentoStr = bachecaRs.getString("ordinamento");
-            if (ordinamentoStr != null) {
-                bacheca.setOrdinamento(Ordinamento.valueOf(ordinamentoStr));
-            }
-        }
-        bachecaRs.close();
-        bachecaInfoPS.close();
-        
-        // Carica i ToDo associati alla bacheca
-        List<ToDo> toDoList = caricaToDoPerBacheca(emailUtente, titolo.name());
-        bacheca.setToDoList(new ArrayList<>(toDoList));
-    } catch (Exception e) {
-
-        e.printStackTrace();
-        return null;
-    }
-    
-    return bacheca;
-}
-
+    /**
+     * Metodo per modificare un'immagine di un ToDo già creato.
+     * @param emailUtente email utente attuale
+     * @param toDo todo da modificare
+     * @param bacheca bacheca attuale
+     * @param oldTitolo il titolo precedente del ToDo (prima della modifica)
+     */
     @Override
     public void modificaToDo(String emailUtente, ToDo toDo, Bacheca bacheca, String oldTitolo) {
+        String sql = "SELECT \"IdToDo\", \"immagine\" FROM \"ToDo\" WHERE \"emailUtente\" = ? AND \"titolo\" = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, emailUtente);
+            ps.setString(2, oldTitolo);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int idToDo = rs.getInt("IdToDo");
+                    String immagineAttuale = rs.getString("immagine");
 
-        try {
-            String sql;
-                    sql="SELECT \"IdToDo\", immagine FROM \"ToDo\" WHERE \"emailUtente\" = ? AND \"titolo\" = ?";
-            // Recupera IdToDo
-            PreparedStatement getIdToDoPS = connection.prepareStatement(sql);
-            getIdToDoPS.setString(1, emailUtente);
-            getIdToDoPS.setString(2, oldTitolo);
-
-            ResultSet rs = getIdToDoPS.executeQuery();
-            int idToDo = -1;
-            String immagineAttuale="";
-            if (rs.next()) {
-                idToDo = rs.getInt("IdToDo");
-                immagineAttuale=rs.getString("immagine");
-            } else {
-                throw new SQLException("ToDo non trovato per email e titolo specificati.");
+                    aggiornaToDo(emailUtente, toDo, idToDo, immagineAttuale);
+                    eliminaBacheca(idToDo);
+                    inserisciBacheca(emailUtente, bacheca, idToDo);
+                } else {
+                    logger.warning("ToDo non trovato per modifica con titolo:");
+                }
             }
-            rs.close();
-            getIdToDoPS.close();
-             sql ="UPDATE \"ToDo\" SET " +
-                    "\"descrizione\" = ?, \"link\" = ?, \"scadenza\" = ?,  " +
-                    "\"completato\" = ?, \"scaduto\" = ?, \"sfondo\" = ?, immagine = COALESCE(?,immagine) ,\"titolo\" = ?" +
-                    " WHERE \"emailUtente\" = ? AND \"IdToDo\" = ?";
-            // Aggiorna ToDo
-            PreparedStatement aggiornaPS = connection.prepareStatement(sql);
-
-            aggiornaPS.setString(1, toDo.getDescrizione());
-            aggiornaPS.setString(2, toDo.getLink() != null ? toDo.getLink().toString() : null);
-            aggiornaPS.setTimestamp(3, toDo.getScadenza() != null ? new Timestamp(toDo.getScadenza().getTimeInMillis()) : null);
-            aggiornaPS.setBoolean(4, toDo.isCompletato());
-            aggiornaPS.setBoolean(5, toDo.isScaduto());
-            aggiornaPS.setString(6, toDo.getSfondo() != null ? "#" + Integer.toHexString(toDo.getSfondo().getRGB()).substring(2) : null);
-
-            aggiornaPS.setString(7, toDo.getImmagine() != null ? toDo.getImmagine().toString() : immagineAttuale); // <-- Passa null se null
-            aggiornaPS.setString(8, toDo.getTitolo());
-            aggiornaPS.setString(9, emailUtente);
-            aggiornaPS.setInt(10, idToDo);
-
-            aggiornaPS.executeUpdate();
-            aggiornaPS.close();
-
- sql ="DELETE FROM \"Bacheca\" WHERE \"IdToDo\" = ?";
-            // Elimina la Bacheca precedente
-            PreparedStatement deleteBachecaPS = connection.prepareStatement(sql);
-            deleteBachecaPS.setInt(1, idToDo);
-            deleteBachecaPS.executeUpdate();
-            deleteBachecaPS.close();
-
-            // Inserisce nuova Bacheca
-            PreparedStatement insertBachecaPS = connection.prepareStatement(
-                    "INSERT INTO \"Bacheca\" " +
-                            "(\"IdToDo\", \"titolo\", \"emailUtente\", \"descrizione\", \"ordinamento\") " +
-                            "VALUES (?, CAST(? AS titolo), ?, ?, CAST(? AS ordinamento))");
-            insertBachecaPS.setInt(1, idToDo);
-            insertBachecaPS.setString(2, bacheca.getTitolo().toString());
-            insertBachecaPS.setString(3, emailUtente);
-            insertBachecaPS.setString(4, bacheca.getDescrizione() != null ? bacheca.getDescrizione() : "");
-            insertBachecaPS.setString(5, bacheca.getOrdinamento().name());
-            insertBachecaPS.executeUpdate();
-            insertBachecaPS.close();
-
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Errore durante la modifica del ToDo", e);
         }
     }
 
+    /**
+     * Aggiorna le informazioni di un ToDo già creato.
+     * @param emailUtente
+     * @param toDo
+     * @param idToDo
+     * @param immagineAttuale
+     * @throws SQLException
+     */
+    private void aggiornaToDo(String emailUtente, ToDo toDo, int idToDo, String immagineAttuale) throws SQLException {
+        String sql = """
+                UPDATE "ToDo"
+                SET "descrizione" = ?, "link" = ?, "scadenza" = ?, "completato" = ?,
+                "scaduto" = ?, "sfondo" = ?, "immagine" = COALESCE(?, "immagine"), "titolo" = ?
+                WHERE "emailUtente" = ? AND "IdToDo" = ?
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, toDo.getDescrizione());
+            ps.setString(2, toDo.getLink() != null ? toDo.getLink().toString() : null);
+            ps.setTimestamp(3, toDo.getScadenza() != null ? new Timestamp(toDo.getScadenza().getTimeInMillis()) : null);
+            ps.setBoolean(4, toDo.isCompletato());
+            ps.setBoolean(5, toDo.isScaduto());
+            ps.setString(6, colorToHex(toDo.getSfondo()));
+            ps.setString(7, toDo.getImmagine() != null ? toDo.getImmagine().toString() : immagineAttuale);
+            ps.setString(8, toDo.getTitolo());
+            ps.setString(9, emailUtente);
+            ps.setInt(10, idToDo);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Elimina un ToDo da una bacheca.
+     * @param idToDo
+     * @throws SQLException
+     */
+    private void eliminaBacheca(int idToDo) throws SQLException {
+        String sql = "DELETE FROM \"Bacheca\" WHERE \"IdToDo\" = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, idToDo);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Elimina un ToDo dal database.
+     * @param emailUtente email utente attuale
+     * @param titolo titolo del todo da eliminare
+     */
     @Override
     public void eliminaToDo(String emailUtente, String titolo) {
-        try {
+        String sqlToDo = "DELETE FROM \"ToDo\" WHERE \"emailUtente\" = ? AND \"titolo\" = ?";
+        String sqlAttivita = "DELETE FROM \"Attivita\" WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ?";
+        try (PreparedStatement psToDo = connection.prepareStatement(sqlToDo);
+                PreparedStatement psAttivita = connection.prepareStatement(sqlAttivita)) {
+            psToDo.setString(1, emailUtente);
+            psToDo.setString(2, titolo);
+            psToDo.executeUpdate();
 
-            PreparedStatement eliminabPS = connection.prepareStatement(
-                    "DELETE FROM \"ToDo\" WHERE \"emailUtente\" = ? AND \"titolo\" =?;");
-
-            eliminabPS.setString(1, emailUtente);
-            eliminabPS.setString(2, titolo);
-
-            eliminabPS.executeUpdate();
-            eliminabPS.close();
-
-            PreparedStatement eliminaPS = connection.prepareStatement(
-                    "DELETE FROM \"Attivita\" WHERE \"emailUtente\" = ? AND \"titolo\" =?;");
-
-            eliminaPS.setString(1, emailUtente);
-            eliminaPS.setString(2, titolo);
-
-            eliminaPS.executeUpdate();
-            eliminaPS.close();
+            psAttivita.setString(1, emailUtente);
+            psAttivita.setString(2, titolo);
+            psAttivita.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Errore durante l'eliminazione del ToDo", e);
         }
     }
 
+    /**
+     * Carica i ToDo di un utente all'interno della bacheca specificata.
+     * Utilizzato per caricare i ToDo di un utente al login.
+     * @param emailUtente email utente attuale
+     * @param nomeBacheca titolo bacheca attuale
+     * @return
+     */
     @Override
     public List<ToDo> caricaToDoPerBacheca(String emailUtente, String nomeBacheca) {
         List<ToDo> toDoList = new ArrayList<>();
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "SELECT T.\"IdToDo\",T.\"titolo\", T.\"descrizione\", T.\"link\", T.\"scadenza\", " +
-                    "T.\"completato\", T.\"scaduto\", T.\"sfondo\", T.\"immagine\" " +
-                    "FROM \"ToDo\" T JOIN \"Bacheca\" B ON T.\"IdToDo\" = B.\"IdToDo\" " +
-                    "WHERE T.\"emailUtente\" = ? AND B.\"titolo\" = CAST(? AS titolo)");
+        String sql = """
+                SELECT T."IdToDo", T."titolo", T."descrizione", T."link", T."scadenza",
+                T."completato", T."scaduto", T."sfondo", T."immagine"
+                FROM "ToDo" T
+                JOIN "Bacheca" B ON T."IdToDo" = B."IdToDo"
+                WHERE T."emailUtente" = ? AND B."titolo" = CAST(? AS titolo)
+                """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, emailUtente);
             ps.setString(2, nomeBacheca);
-            ResultSet rs = ps.executeQuery();
-            
-            while (rs.next()) {
-                String titolo = rs.getString("titolo");
-                String descrizione = rs.getString("descrizione");
-                URI link = rs.getString("link") != null ? new URI(rs.getString("link")) : null;
-                Calendar scadenza = null;
-                if (rs.getTimestamp("scadenza") != null) {
-                    scadenza = Calendar.getInstance();
-                    scadenza.setTime(rs.getTimestamp("scadenza"));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ToDo toDo = parseToDoFromResultSet(rs);
+                    toDoList.add(toDo);
                 }
-                Color sfondo = rs.getString("sfondo") != null ? Color.decode(rs.getString("sfondo")) : null;
-                URL immagine = rs.getString("immagine") != null ? URI.create(rs.getString("immagine")).toURL() : null;
-
-                Checklist checklist = CaricaAttivitaPerToDo(rs.getInt("IdToDo"));
-
-                ToDo t = new ToDo(
-                        titolo,
-                        descrizione,
-                        link,
-                        scadenza,
-                        sfondo,
-                        immagine,
-                        checklist.getAttivita() == null || checklist.getAttivita().isEmpty() ? null : checklist);
-
-                t.setCompletato(rs.getBoolean("completato"));
-                t.setScaduto(rs.getBoolean("scaduto"));
-                toDoList.add(t);
             }
-            rs.close();
-            ps.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Errore durante il caricamento dei ToDo per la Bacheca", e);
         }
         return toDoList;
     }
 
+    /**
+     * Metodo helper per analizzare i ToDo dal ResultSet.
+     * @param rs
+     * @return un oggetto ToDo con tutte le informazioni del ResultSet.
+     * @throws SQLException
+     */
+    private ToDo parseToDoFromResultSet(ResultSet rs) throws SQLException {
+        String titolo = rs.getString("titolo");
+        String descrizione = rs.getString("descrizione");
+
+        URI link = null;
+        String linkStr = rs.getString("link");
+        if (linkStr != null) {
+            link = URI.create(linkStr);
+        }
+
+        Calendar scadenza = null;
+        Timestamp ts = rs.getTimestamp("scadenza");
+        if (ts != null) {
+            scadenza = Calendar.getInstance();
+            scadenza.setTime(ts);
+        }
+
+        Color sfondo = null;
+        String sfondoStr = rs.getString("sfondo");
+        if (sfondoStr != null) {
+            sfondo = Color.decode(sfondoStr);
+        }
+
+        URL immagine = null;
+        String imgStr = rs.getString("immagine");
+        if (imgStr != null) {
+            try {
+                immagine = URI.create(imgStr).toURL();
+            } catch (Exception _) {
+                logger.warning("Immagine non valida: " + imgStr);
+            }
+
+        }
+
+        Checklist checklist = CaricaAttivitaPerToDo(rs.getInt("IdToDo"));
+        if (checklist.getAttivita() != null && checklist.getAttivita().isEmpty()) {
+            checklist = null;
+        }
+
+        ToDo toDo = new ToDo(titolo, descrizione, link, scadenza, sfondo, immagine, checklist);
+        toDo.setCompletato(rs.getBoolean("completato"));
+        toDo.setScaduto(rs.getBoolean("scaduto"));
+        return toDo;
+    }
+
+    /**
+     * Imposta lo stato di un ToDo in completo.
+     * @param emailUtente email utente attuale
+     * @param titolo titolo del todo da modificare
+     * @param isCompletato stato del todo attuale
+     * @return true se il todo è stato completato, false altrimenti.
+     */
     @Override
     public Boolean completaToDo(String emailUtente, String titolo, boolean isCompletato) {
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE \"ToDo\" SET \"completato\" = ? WHERE \"emailUtente\" = ? AND \"titolo\" = ?");
+        String sql = "UPDATE \"ToDo\" SET \"completato\" = ? WHERE \"emailUtente\" = ? AND \"titolo\" = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setBoolean(1, isCompletato);
             ps.setString(2, emailUtente);
             ps.setString(3, titolo);
-            int rowsAffected = ps.executeUpdate();
-            ps.close();
-            return rowsAffected > 0;
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Errore durante il completamento del ToDo", e);
             return false;
         }
-
     }
 
+    /**
+     * Imposta lo stato di un'Attivita di un ToDo in completo.
+     * @param emailUtente email utente attuale
+     * @param titolo titolo del todo attuale
+     * @param isCompletato stato del todo
+     * @param nome nome dell'attività
+     * @return true se l'attività è stato completata, false altrimenti.
+     */
     @Override
     public Boolean completaAtt(String emailUtente, String titolo, boolean isCompletato, String nome) {
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "UPDATE \"Attivita\" SET \"completata\" = ? WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ? AND nome = ?");
+        String sql = "UPDATE \"Attivita\" SET \"completata\" = ? WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ? AND nome = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setBoolean(1, isCompletato);
             ps.setString(2, emailUtente);
             ps.setString(3, titolo);
-            ps.setString(4,nome);
-            int rowsAffected = ps.executeUpdate();
-            ps.close();
-            return rowsAffected > 0;
+            ps.setString(4, nome);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Errore durante il completamento dell'Attività", e);
             return false;
         }
-
     }
 
+    /**
+     * Carica le Attivita di un ToDo di un utente.
+     * Utile per recuperare tutte le attività al momento del login.
+     * @param idToDo id del todo da cui viene presa la checklist
+     * @return la checklist con tutte le sue attività
+     */
     @Override
     public Checklist CaricaAttivitaPerToDo(int idToDo) {
         Checklist checklist = new Checklist();
-        try {
-            // Prima recupera il titolo del ToDo usando l'idToDo
-            String titoloToDo = null;
-            PreparedStatement getTitoloPS = connection.prepareStatement(
-                    "SELECT \"titolo\" FROM \"ToDo\" WHERE \"IdToDo\" = ?");
-            getTitoloPS.setInt(1, idToDo);
-            ResultSet titoloRs = getTitoloPS.executeQuery();
-            if (titoloRs.next()) {
-                titoloToDo = titoloRs.getString("titolo");
+        String titoloToDo = null;
+        String sqlTitolo = "SELECT \"titolo\" FROM \"ToDo\" WHERE \"IdToDo\" = ?";
+        try (PreparedStatement psTitolo = connection.prepareStatement(sqlTitolo)) {
+            psTitolo.setInt(1, idToDo);
+            try (ResultSet rs = psTitolo.executeQuery()) {
+                if (rs.next()) {
+                    titoloToDo = rs.getString("titolo");
+                }
             }
-            titoloRs.close();
-            getTitoloPS.close();
-            
             if (titoloToDo != null) {
-                // Ora carica le attività usando il titolo
-                PreparedStatement ps = connection.prepareStatement(
-                        "SELECT * FROM \"Attivita\" WHERE \"titoloToDo\" = ?");
-                ps.setString(1, titoloToDo);
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    String nome = rs.getString("nome");
-                    boolean completata = rs.getBoolean("completata");
-                    Attivita attivita = new Attivita(nome, completata);
-
-                    List<Attivita> attivitaList = checklist.getAttivita();
-                    if (attivitaList == null) {
-                        attivitaList = new ArrayList<>();
+                String sqlAtt = "SELECT nome, completata FROM \"Attivita\" WHERE \"titoloToDo\" = ?";
+                try (PreparedStatement psAtt = connection.prepareStatement(sqlAtt)) {
+                    psAtt.setString(1, titoloToDo);
+                    try (ResultSet rs = psAtt.executeQuery()) {
+                        List<Attivita> attivitaList = new ArrayList<>();
+                        while (rs.next()) {
+                            attivitaList.add(new Attivita(rs.getString("nome"), rs.getBoolean("completata")));
+                        }
                         checklist.setAttivita(attivitaList);
                     }
-                    attivitaList.add(attivita);
                 }
-                rs.close();
-                ps.close();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Errore durante il caricamento delle Attività per il ToDo", e);
         }
         return checklist;
     }
 
+    /**
+     * Metodo helper per convertire un colore in un stringa hex.
+     * @param color
+     * @return una stringa con il codice hex del colore
+     */
+    private String colorToHex(Color color) {
+        return color != null ? "#" + Integer.toHexString(color.getRGB()).substring(2) : null;
+    }
 }

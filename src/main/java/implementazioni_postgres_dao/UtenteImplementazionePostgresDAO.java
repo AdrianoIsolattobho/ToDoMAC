@@ -59,7 +59,7 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
      */
     @Override
     public boolean loginValido(String email, String password) {
-        String sql = "SELECT * FROM \"Utente\" WHERE \"email\" = ? AND \"password\" = ?;";
+        String sql = "SELECT email,password FROM \"Utente\" WHERE \"email\" = ? AND \"password\" = ?;";
 
         try (PreparedStatement loginValidoPS = connection.prepareStatement(sql)) {
             loginValidoPS.setString(1, email);
@@ -123,6 +123,10 @@ public class UtenteImplementazionePostgresDAO implements dao.UtenteDAO {
         return false;
     }
 
+    /**
+     * Trova tutti gli utenti nel database.
+     * @return una lista di tutti gli utenti nel database.
+     */
     @Override
     public ArrayList<Utente> getUtentiAll() {
         ArrayList<Utente> utenti = new ArrayList<>();

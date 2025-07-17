@@ -11,7 +11,7 @@ public class Bacheca {
     private Titolo titolo;
     private String descrizione;
     private Ordinamento ordinamento;
-    private ArrayList<ToDo> toDoList = new ArrayList<>(); // ArrayList per gestire dinamicamente la lista di ToDo
+    private List<ToDo> toDoList; // List per gestire dinamicamente la lista di ToDo
 
     /**
      * Costruttore completo
@@ -59,7 +59,7 @@ public class Bacheca {
         this.ordinamento = ordinamento;
     }
 
-    public ArrayList<ToDo> getToDoList() {
+    public List<ToDo> getToDoList() {
         return toDoList;
     }
 

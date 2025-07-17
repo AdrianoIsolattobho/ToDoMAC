@@ -2,9 +2,6 @@ package gui;
 
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.util.ArrayList;
 
 /**
  * Finestra di dialogo per la condivisione di contenuti con altri utenti.
@@ -19,8 +16,6 @@ public class ListaUtenti extends JDialog {
     private JPanel condiviPanel;
     private JPanel utentiPanel;
     private JTextField cercaField;
-    private JPanel cercaPanel;
-    private JPanel salvaPanel;
     private JButton condivButton;
 
 
@@ -34,7 +29,6 @@ public class ListaUtenti extends JDialog {
         setSize(450, 350);
         setupComponents();
         setLocationRelativeTo(null);
-
     }
 
 

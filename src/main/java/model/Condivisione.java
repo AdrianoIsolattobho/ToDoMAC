@@ -1,5 +1,5 @@
 package model;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * La classe Condivisione rappresenta la condivisione di un oggetto ToDo
@@ -7,7 +7,7 @@ import java.util.ArrayList;
  */
 public class Condivisione {
     private String creatore;
-    private ArrayList<Utente> condivisiCon;
+    private List<Utente> condivisiCon;
     private ToDo toDoCondiviso;
 
     /**
@@ -16,7 +16,7 @@ public class Condivisione {
      * @param toDoCondiviso Oggetto ToDo condiviso
      * @param condivisiCon Lista di utenti destinatari della condivisione
      */
-    public Condivisione(String creatore, ToDo toDoCondiviso, ArrayList<Utente> condivisiCon) {
+    public Condivisione(String creatore, ToDo toDoCondiviso, List<Utente> condivisiCon) {
         this.creatore = creatore;
         this.toDoCondiviso = toDoCondiviso;
         this.condivisiCon = condivisiCon;
@@ -28,7 +28,7 @@ public class Condivisione {
         return creatore;
     }
 
-    public ArrayList<Utente> getCondivisiCon() {
+    public List<Utente> getCondivisiCon() {
         return condivisiCon;
     }
 
