@@ -202,19 +202,7 @@ public class CondivisioneImplementazionePostgresDAO implements dao.CondivisioneD
 
                     String link = rs2.getString("link");
                     if (link != null && !link.isEmpty()) {
-                        try {
-                            // Verifica se il link è già un URI assoluto
-                            URI uri = new URI(link);
-                            if (!uri.isAbsolute()) {
-                                // Se non è assoluto, aggiungi il protocollo http://
-                                uri = new URI("http://" + link);
-                            }
-                            t.setLink(uri);
-                        } catch (Exception e) {
-                            // Se la conversione fallisce, ignora il link
-                            System.err.println("Link non valido ignorato: " + link);
-                            t.setLink(null);
-                        }
+                        t.setLink(new URI(link).toURL().toURI());
                     }
 
                     Timestamp ts = rs2.getTimestamp("scadenza");

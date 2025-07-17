@@ -1491,12 +1491,6 @@ public class Controller {
 
         checkboxTodo.addItemListener(e -> {
             todo.setCompletato(checkboxTodo.isSelected());
-            toDoDAO.completaToDo(utenteAttuale.getEmail(), todo.getTitolo(), todo.isCompletato());
-            if (todo.getChecklist() != null && todo.getChecklist().getAttivita() != null) {
-                for (Attivita att : todo.getChecklist().getAttivita()) {
-                    att.setCompletata(checkboxTodo.isSelected());
-                }
-            }
             aggiornaInterfacciaUtente(view.getLogInView().getMainView());
             view.revalidate();
             view.repaint();
@@ -1565,7 +1559,8 @@ public class Controller {
             // Listener sulla checkbox attività
             checkBoxAtt.addItemListener(e -> {
                 att.setCompletata(checkBoxAtt.isSelected());
-                toDoDAO.completaAtt(utenteAttuale.getEmail(),todo.getTitolo(),checkBoxAtt.isSelected(), att.getNome());
+                System.out.println("email: "+utenteAttuale.getEmail()+" titolo :"+att.getNome()+" attivo? "+checkBoxAtt.isSelected()+" nome: "+checkBoxAtt.getName());
+                toDoDAO.completaAtt(utenteAttuale.getEmail(),todo.getTitolo(),checkBoxAtt.isSelected(), checkBoxAtt.getName());
                 // Ricontrolla se tutte le attività sono completate
                 boolean tutteCompletate = todo.getChecklist().getAttivita().stream()
                         .allMatch(Attivita::isCompletata);
@@ -1721,7 +1716,6 @@ public class Controller {
         oggi.set(Calendar.MILLISECOND, 0);
 
         // Imposta il colore rosso se la scadenza è già passata
-
         if (todo.getScadenza().before(oggi)) {
             todo.setScaduto(true);
         }
@@ -1738,7 +1732,6 @@ public class Controller {
     public JPanel generaPanelCondiviso(Condivisione condivisione, Color coloreTesto) {
         JPanel condivisionePanel = new JPanel();
         condivisionePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        condivisionePanel.setBackground(condivisione.getToDoCondiviso().getSfondo());
         JLabel condivisoDaLabel = new JLabel("Condiviso da: ");
         condivisoDaLabel.setForeground(coloreTesto);
         JLabel condivisoDa = new JLabel(condivisione.getCreatore());
@@ -1951,12 +1944,7 @@ public class Controller {
     private void gestisciPassDime(@NotNull LogIn loginView) {
         loginView.getPassDime().addActionListener(e -> {
             ResetPassword resetDialog = new ResetPassword();
-            
-            // Rimuovi eventuali action listener esistenti prima di aggiungerne uno nuovo
-            for (ActionListener al : resetDialog.getBottoneReset().getActionListeners()) {
-                resetDialog.getBottoneReset().removeActionListener(al);
-            }
-            
+
             resetDialog.getBottoneReset().addActionListener(ex -> {
                 String newPassword = String.valueOf(resetDialog.getPassword().getPassword());
                 String email = resetDialog.getEmail().getText();
@@ -1978,6 +1966,7 @@ public class Controller {
                 }
 
                 // recupera utente dal db
+
                 Utente utente = utenteDAO.trovaUtenteDaMail(email);
 
                 // controllo utente nullo
@@ -1992,12 +1981,13 @@ public class Controller {
                 if (utenteDAO.aggiornaPassword(email, newPassword)) {
                     utente.setPassword(newPassword);
                     this.utenteAttuale = utente;
-                    resetDialog.dispose();
-                    resetDialog.setVisible(false);
 
                     JOptionPane.showMessageDialog(null,
                             "Password aggiornata con successo",
                             ATTENZIONE, JOptionPane.INFORMATION_MESSAGE);
+
+                    resetDialog.dispose();
+                    mostraMain();
                 } else {
                     JOptionPane.showMessageDialog(null,
                             "Errore durante l'aggiornamento della password",
