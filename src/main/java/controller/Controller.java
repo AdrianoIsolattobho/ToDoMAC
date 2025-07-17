@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 /**
  * Controller che gestisce tutte le interazioni tra modello e view
@@ -302,7 +303,12 @@ public class Controller {
         };
     }
 
-    // metodo per ricavare l'estensione dall'immagine selezionata
+    /**
+     * Metodo per ricavare l'estensione desiderata dal file
+     *
+     * @param nomeFile nome file immagine
+     * @return estensione
+     */
     private String getEstensione(String nomeFile) {
         int punto = nomeFile.lastIndexOf('.');
         if (punto > 0 && punto < nomeFile.length() - 1) {
@@ -494,6 +500,21 @@ public class Controller {
         return null;
     }
 
+    /**
+     * Genera un action listener per il salavataggio di un nuovo ToDo.
+     * Questo listener gestisce la raccolta dei dati dal dialog di creazione,
+     * valida i dati inseriti, crea un oggetto ToDo con le informazioni fornite,
+     * lo salva nel database, aggiorna le bacheche in memoria e aggiorna l'interfaccia utente.
+     *
+     * @param mainView
+     * @param creaTodoDialog
+     * @param attivitaFields
+     * @param dataScelto
+     * @param coloreScelto
+     * @param immagineScelta
+     * @param titoloCheckListRef
+     * @return un action listener che, una volta attivato, salva il nuovo todo con i dati inseriti
+     */
     private ActionListener generaActionListenerSalvataggio(Main mainView, CreaToDo creaTodoDialog,
             ArrayList<JTextField> attivitaFields, AtomicReference<Calendar> dataScelto,
             AtomicReference<Color> coloreScelto, AtomicReference<URL> immagineScelta,
@@ -583,7 +604,13 @@ public class Controller {
 
     }
 
-    // Metodo helper per estrarre le attività dai campi di testo
+    /**
+     * Estrae una lista di oggetti Attivita dai JTextField forniti
+     * Ignora i campi null o vuoti.
+     *
+     * @param attivitaFields
+     * @return ArrayList di Attivita create dai testi validi nei campi.
+     */
     private ArrayList<Attivita> estraiAttivitaDaFields(ArrayList<JTextField> attivitaFields) {
         ArrayList<Attivita> attivita = new ArrayList<>();
         // Se non ci sono campi attività, ritorna lista vuota
@@ -603,6 +630,14 @@ public class Controller {
         return attivita;
     }
 
+    /**
+     * Genera un ActionListener per modificare la descrizione di una bacheca.
+     * Mostra un dialog per l'inserimento della nuova descrizione, la salva nel database
+     * e aggiorna l'interfaccia utente.
+     * @param b
+     * @param mainView
+     * @return ActionListener da assegnare a un componente per modificare la descrizione.
+     */
     private ActionListener generaActionListnerModificaDescrizione(Bacheca b, Main mainView) {
         return e -> {
             ModificaDescrizione modificaDescrizioneDialog = new ModificaDescrizione();
@@ -642,6 +677,15 @@ public class Controller {
         };
     }
 
+    /**
+     * Genera un ActionListener per modificare l'ordinamento di una bacheca.
+     * Mostra un dialog con le opzioni di ordinamento, salva la scelta nel database
+     * e aggiorna l'interfaccia utente.
+     *
+     * @param b
+     * @param mainView
+     * @return ActionListener da assegnare a un componente per modificare la descrizione.
+     */
     private ActionListener generaActionListnerModificaOrdine(Bacheca b, Main mainView) {
         return _ -> {
             GestioneOrdine gestioneOrdineDialog = new GestioneOrdine();
@@ -805,6 +849,15 @@ public class Controller {
         mainView.getBaUni().setVisible(haToDoUniversita);
     }
 
+    /**
+     * Controlla se nella bacheca ci sono ToDo scaduti o in scadenza oggi (o prima di oggi).
+     * Se trova almeno un ToDo scaduto, lo visualizza nel contenitore specificato e ritorna true.
+     *
+     * @param bacheca
+     * @param oggi
+     * @param contenitoreToDoSca
+     * @return true se alemno un ToDo è scaduto o in scadenza oggi, false altrimenti
+     */
     private Boolean checkScaduti(Bacheca bacheca, Calendar oggi, JPanel contenitoreToDoSca) {
         if (bacheca != null && bacheca.getToDoList() != null) {
             for (ToDo todo : bacheca.getToDoList()) {
@@ -817,6 +870,14 @@ public class Controller {
         return false;
     }
 
+    /**
+     * Genera e aggiorna la lista dei ToDo in scadenza oggi o già scaduti.
+     * Controlla tutte le bacheche dell'utente (università, tempo libero, lavoro) e
+     * i ToDo condivisi con l'utente, visualizzandoli nel contenitore dedicato.
+     * Se non ci sono ToDo in scadenza, mostra un messaggio indicativo.
+     *
+     * @param mainView
+     */
     private void generaInScadenza(Main mainView) {
         Bacheca universita = utenteAttuale.getUniversita();
         Bacheca tempoLibero = utenteAttuale.getTempoLibero();
@@ -904,6 +965,18 @@ public class Controller {
         }
     }
 
+    /**
+     * Ordina una lista di ToDo in base al criterio specificato.
+     * I criteri di ordinamento disponibili sono:
+     *   AZ: ordine alfabetico crescente per titolo
+     *   ZA: ordine alfabetico decrescente per titolo
+     *   CREAZIONE_ASC: ordine crescente per data di creazione
+     *   CREAZIONE_DESC: ordine decrescente per data di creazione
+     *   SCADENZA_ASC: ordine crescente per data di scadenza (null posizionati in coda)
+     *   SCADENZA_DESC: ordine decrescente per data di scadenza (null posizionati in testa)
+     *
+     * @param mainView
+     */
     private void generaCondiviso(Main mainView) {
         boolean haToDoCondivisi = false;
         ArrayList<Condivisione> arrayCondivisi = condivisioneDAO.getToDoPerUtenteCondiviso(utenteAttuale.getEmail());
@@ -946,6 +1019,13 @@ public class Controller {
         return references;
     }
 
+    /**
+     *  Imposta i campi del dialog di modifica con i valori presenti nel ToDo passato.
+     *
+     * @param todo
+     * @param modificaTodoDialog
+     * @param references
+     */
     private void setOggettiPresenti(ToDo todo, CreaToDo modificaTodoDialog, DialogReferences references) {
 
         // Imposta il link se presente
@@ -979,6 +1059,11 @@ public class Controller {
         }
     }
 
+    /**
+     * Crea e configura il dialog di modifica associato al pulsante di modifica.
+     * @param modificaButton
+     * @param todo
+     */
     private void creazioneModificaDialog(@NotNull JButton modificaButton, ToDo todo) {
         modificaButton.addActionListener(e -> {
             // Crea un'istanza del pannello CreaToDo per la modifica
@@ -1110,6 +1195,18 @@ public class Controller {
         });
     }
 
+    /**
+     * Genera l'ActionListener per il pulsante Salva del dialog di modifica.
+     * Gestisce la validazione e il salvataggio delle modifiche apportate al ToDo.
+     *
+     * @param modificaTodoDialog
+     * @param todo
+     * @param bachecaCorrente
+     * @param attivitaFieldsNuovo
+     * @param titoloCheckListRefNuovo
+     * @param references
+     * @return ActionListener per il pulsante Salva
+     */
     private ActionListener generaActionListnerSalvaModifica(CreaToDo modificaTodoDialog, ToDo todo,
             String bachecaCorrente, ArrayList<JTextField> attivitaFieldsNuovo,
             AtomicReference<JTextField> titoloCheckListRefNuovo, DialogReferences references) {
@@ -1183,6 +1280,15 @@ public class Controller {
         };
     }
 
+    /**
+     * Salva il ToDo nel database, aggiornandolo o creandolo a seconda che il titolo precedente sia presente.
+     * Mostra un messaggio di errore in caso di problemi di salvataggio.
+     *
+     * @param todo
+     * @param dialog
+     * @param bachecaCorrente
+     * @param titoloVecchio
+     */
     private void salvaTodoNelDatabase(ToDo todo, JDialog dialog, Bacheca bachecaCorrente, String titoloVecchio) {
         try {
             if (titoloVecchio != null) {
@@ -1198,6 +1304,15 @@ public class Controller {
         }
     }
 
+    /**
+     * Converte una stringa rappresentante il nome della bacheca nel corrispondente oggetto Bacheca.
+     * Imposta il titolo e l'ordinamento predefinito della bacheca.
+     *
+     * @param stringa
+     * @param dialog
+     * @return l'oggetto Bacheca corrispondente
+     * @throws IllegalArgumentException se la stringa non corrisponde a nessuna bacheca valida
+     */
     private Bacheca stringToBacheca(String stringa, JDialog dialog) {
         Bacheca bacheca;
         Titolo titolo;
@@ -1232,6 +1347,13 @@ public class Controller {
         return bacheca;
     }
 
+    /**
+     * Gestisce l'aggiunta o la rimozione di un ToDo da una determinata bacheca dell'utente.
+     * @param todo
+     * @param bacheca
+     * @param dialog
+     * @param operazione
+     */
     private void gestisciTodoInBacheca(ToDo todo, String bacheca, JDialog dialog, String operazione) {
         switch (bacheca) {
             case TL -> {
@@ -1264,6 +1386,11 @@ public class Controller {
         }
     }
 
+    /**
+     * Restituisce il nome della bacheca in cui è contenuto il ToDo.
+     * @param todo
+     * @return il nome della bacheca o null se non è contenuta in nessuna
+     */
     private @Nullable String getBachecaCorrente(ToDo todo) {
         final String bachecaCorrente;
         if (utenteAttuale.getTempoLibero().getToDoList().contains(todo)) {
@@ -1278,6 +1405,13 @@ public class Controller {
         return bachecaCorrente;
     }
 
+    /**
+     * Carica un'immagine in un pannello, ridimensionandola per mostrare un'anteprima mantenendo le proporzioni.
+     *
+     * @param originalIcon
+     * @param pannelloImmagine
+     * @param dialogo
+     */
     private void caricaImmagine(ImageIcon originalIcon, JPanel pannelloImmagine, JDialog dialogo) {
         try {
             // Carica l'immagine per l'anteprima
@@ -1324,6 +1458,13 @@ public class Controller {
         }
     }
 
+    /**
+     * Crea un JButton per modificare un ToDo con icona e configurazione grafica.
+     *
+     * @param coloreTesto
+     * @param todo
+     * @return il JButton configurato
+     */
     private JButton generaModificaButton(Color coloreTesto, ToDo todo) {
         // Pulsante modifica con icona di modifica (Unicode per pencil)
         JButton modificaButton = new JButton("✏");
@@ -1338,6 +1479,13 @@ public class Controller {
         return modificaButton;
     }
 
+    /**
+     * Crea un JButton per condividere un ToDo, mostrando il numero di condivisioni.
+     *
+     * @param coloreTesto
+     * @param todo
+     * @return il JButton configurato
+     */
     private JButton generaShareButton(Color coloreTesto, ToDo todo) {
         JButton condividiButton = new JButton("📤");
         int conteggio = condivisioneDAO.getUtentiCondivisiPerToDo(utenteAttuale.getEmail(), todo.getTitolo()).size();
@@ -1355,6 +1503,15 @@ public class Controller {
         return condividiButton;
     }
 
+    /**
+     * Crea un JButton per eliminare un ToDo o una sua condivisione.
+     * Mostra un messaggio di conferma prima di procedere con l'eliminazione.
+     *
+     * @param coloreTesto
+     * @param todo
+     * @param condivisione
+     * @return il JButton configurato con il relativo ActionListener
+     */
     public JButton generaEliminaButton(Color coloreTesto, ToDo todo, Condivisione condivisione) {
         // Pulsante elimina con icona del cestino (Unicode per trash)
         JButton eliminaButton = new JButton("🗑");
@@ -1545,6 +1702,16 @@ public class Controller {
         contenitoreToDo.repaint();
     }
 
+    /**
+     * Genera un JPanel contenente la checklist di un ToDo con le checkbox per ogni attività.
+     *  * Ogni checkbox aggiorna lo stato dell'attività e del ToDo nel database e cambia il colore
+     *  * del pannello se tutte le attività sono completate.
+     *
+     * @param todo
+     * @param backgroundColor
+     * @param coloreTesto
+     * @return un JPanel con la checklist completa
+     */
     private @NotNull JPanel generaPanelCheckList(ToDo todo, Color backgroundColor, Color coloreTesto) {
         JPanel checklistPanel = new JPanel();
         checklistPanel.setLayout(new BoxLayout(checklistPanel, BoxLayout.Y_AXIS));
@@ -1624,6 +1791,16 @@ public class Controller {
         return checklistPanel;
     }
 
+    /**
+     * Genera un JPanel contenente un link cliccabile associato al ToDo.
+     * Il link viene mostrato in forma abbreviata e, se cliccato, apre il browser predefinito.
+     *
+     * @param todo
+     * @param backgroundColor
+     * @param coloreTesto
+     * @param todoPanel
+     * @return un JPanel con il link cliccabile
+     */
     private static @NotNull JPanel generaPanelLink(ToDo todo, Color backgroundColor, Color coloreTesto,
             JPanel todoPanel) {
         JPanel uriPanel = new JPanel();
@@ -1673,6 +1850,13 @@ public class Controller {
         return uriPanel;
     }
 
+    /**
+     * Genera un JPanel contenente l'immagine associata al ToDo.
+     * L'immagine viene ridimensionata mantenendo le proporzioni con altezza fissa di 100px.
+     * @param todo
+     * @param backgroundColor
+     * @return un JPanel con l'immagine ridimensionata
+     */
     private static @NotNull JPanel generaPanelImmagine(@NotNull ToDo todo, Color backgroundColor) {
         JPanel immaginePanel = new JPanel();
         immaginePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -1701,6 +1885,15 @@ public class Controller {
         return immaginePanel;
     }
 
+    /**
+     * Genera un JPanel contenente la data di scadenza del ToDo.
+     * Se la scadenza è passata, la data viene mostrata in rosso e in grassetto.
+     *
+     * @param todo
+     * @param backgroundColor
+     * @param coloreTesto
+     * @return un JPanel con la data di scadenza formatta e colorata
+     */
     private static @NotNull JPanel generaPanelScadenza(@NotNull ToDo todo, Color backgroundColor, Color coloreTesto) {
         JPanel scadenzaPanel = new JPanel();
         scadenzaPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -1737,6 +1930,14 @@ public class Controller {
         return scadenzaPanel;
     }
 
+    /**
+     * Genera un JPanel che mostra informazioni sulla condivisione di un ToDo.
+     * Viene mostrato il nome del creatore del ToDo condiviso.
+     *
+     * @param condivisione
+     * @param coloreTesto
+     * @return un JPanel con le informazioni sulla condivisione
+     */
     public JPanel generaPanelCondiviso(Condivisione condivisione, Color coloreTesto) {
         JPanel condivisionePanel = new JPanel();
         condivisionePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -1839,6 +2040,13 @@ public class Controller {
         }
     }
 
+    /**
+     * Importa le bacheche dell'utente attuale dal database.
+     * Carica le bacheche per i titoli TEMPO_LIBERO, LAVORO e UNIVERSITA,
+     * quindi assegna le relative liste di ToDo all'utente attuale.
+     * Aggiorna inoltre titolo, descrizione e ordinamento di ciascuna bacheca.
+     * Se una bacheca o la sua lista ToDo non sono presenti, viene assegnata una lista vuota.
+     */
     private void importaBacheca() {
         Bacheca b1 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.TEMPO_LIBERO);
         Bacheca b2 = toDoDAO.caricaBacheca(utenteAttuale.getEmail(), Titolo.LAVORO);
@@ -1920,6 +2128,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Aggiunge un ActionListener al bottone di condivisione che apre un dialog per
+     * selezionare gli utenti con cui condividere un ToDo.
+     * @param condiviButton
+     * @param todo
+     */
     private void creazioneCondividiDialog(JButton condiviButton, ToDo todo) {
         condiviButton.addActionListener(e -> {
             ListaUtenti listaUtenti = new ListaUtenti();
@@ -1950,6 +2164,16 @@ public class Controller {
         });
     }
 
+    /**
+     * Gestisce il processo di reset della password tramite dialog in
+     * interfaccia di login.
+     *
+     * Aggiunge un ActionListener al bottone di reset password che apre un dialog
+     * per inserire email e nuova password, verifica i dati, e aggiorna la
+     * password dell'utente nel database.
+     *
+     * @param loginView
+     */
     private void gestisciPassDime(@NotNull LogIn loginView) {
         loginView.getPassDime().addActionListener(e -> {
             ResetPassword resetDialog = new ResetPassword();
@@ -2011,7 +2235,15 @@ public class Controller {
         });
     }
 
-    // metodo per mostrare utenti
+    /**
+     * Popola il pannello della lista utenti con gli utenti disponibili per la
+     * condivisione di un ToDo, escludendo l'utente attuale e quelli con cui il ToDo
+     * è già condiviso.
+     *
+     * @param listaUtenti
+     * @param utenti
+     * @param todo
+     */
     public void generaUtentiCondivisibili(ListaUtenti listaUtenti, List<Utente> utenti, ToDo todo) {
         listaUtenti.getUtentiPanel().removeAll();
         listaUtenti.getUtentiCb().clear();
@@ -2042,7 +2274,11 @@ public class Controller {
         listaUtenti.getUtentiPanel().repaint();
     }
 
-    // metodo per ottenere gli utenti selezionati
+    /**
+     * Ottiene la lista di email degli utenti selezionati nella lista utenti.
+     * @param listaUtenti
+     * @return Lista di email degli utenti selezionati
+     */
     public List<String> getUtentiSelezionati(ListaUtenti listaUtenti) {
         List<String> selezionati = new ArrayList<>();
         for (JCheckBox cb : listaUtenti.getUtentiCb()) {
@@ -2053,6 +2289,12 @@ public class Controller {
         return selezionati;
     }
 
+    /**
+     * Punto di ingresso principale dell'applicazione.
+     * Applica lo stile e inizializza la vista principale.
+     *
+     * @param args Argomenti da linea di comando (non utilizzati).
+     */
     public static void main(String[] args) {
         StileSwing.applicaStile();
         SwingUtilities.invokeLater(() -> {
