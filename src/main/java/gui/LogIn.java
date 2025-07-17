@@ -2,7 +2,12 @@ package gui;
 
 import javax.swing.*;
 
-
+/**
+ * Pannello di login per l'applicazione.
+ * Contiene campi per email e password, pulsanti per effettuare il login e tornare indietro.
+ * Gestisce lo stile dei componenti e l'interazione con la schermata principale.
+ *
+ */
 public class LogIn extends JPanel {
     private JTextField email;
     private JPasswordField password;
@@ -13,12 +18,19 @@ public class LogIn extends JPanel {
     private Main mainView;
     private JPanel logInPanel;
 
+    /**
+     * Costruttore che inizializza la vista principale.
+     * I componenti vengono inizializzati separatamente tramite il form
+     */
     public LogIn() {
         // Lascia vuoto il costruttore o sposta l'inizializzazione dopo la creazione del form
         mainView = new Main();
     }
 
-    // Chiamare questo metodo dopo che il form è stato inizializzato
+    /**
+     * Applica lo stile e placeholder ai campi dopo l'inizializzazione del form.
+     * Questo metodo va chiamato dopo che i componenti grafici sono stati creati
+     */
     public void setupComponents() {
         if (this.email != null && this.password != null) {
             SetPlaceHolder.setTP(this.email, "Email", GestioneDarkMode.isDarkMode());
@@ -35,6 +47,7 @@ public class LogIn extends JPanel {
         }
     }
 
+    /* ------------ Getter per accedere ai componenti dall'esterno ------------ */
 
     public JTextField getEmail() {
         return email;

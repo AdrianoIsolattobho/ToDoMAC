@@ -1,4 +1,9 @@
 package model;
+
+/**
+ * Rappresenta un utente del sistema con credenziali e tre bacheche associate:
+ * Università, Tempo Libero e Lavoro
+ */
 public class Utente {
     private String email;
     private String password;
@@ -6,11 +11,15 @@ public class Utente {
     private Bacheca universita;
     private Bacheca lavoro;
 
-    
-
-    // costruttore
-
-
+    /**
+     * Costruttore completo per creare un utente con bacheche già assegnate.
+     *
+     * @param email email identificativa di un Utente
+     * @param password password relativa alla mail dell'Utente
+     * @param tempoLibero bacheca Tempo Libero
+     * @param universita bacheca Università
+     * @param lavoro bacheca Lavoro
+     */
     public Utente(String email, String password, Bacheca tempoLibero, Bacheca universita, Bacheca lavoro) {
         this.email = email;
         this.password = password;
@@ -19,10 +28,12 @@ public class Utente {
         this.lavoro = lavoro;
     }
 
-    //costruttore vuoto per il recupero password
+    /**
+     * Costruttore vuoto utilizzato per il recupero password.
+     */
     public Utente(){}
 
-    // getters e setters
+    /* ------------ Getter e Setter per accedere ai componenti dall'esterno ------------ */
     public String getEmail() {
         return email;
     }

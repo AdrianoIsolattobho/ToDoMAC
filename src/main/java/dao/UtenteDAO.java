@@ -18,28 +18,28 @@ public interface UtenteDAO {
     void registraUtente(String email, String password);
 
     /**
-     * Verifica se le credenziali fornite appartengano ad un utente registrato nel database.
+     * Verifica se le credenziali fornite appartengano a un utente registrato nel database.
      *
-     * @param email
-     * @param password
-     * @return
+     * @param email email dell'utente
+     * @param password password dell'utente
+     * @return true se le credenziali sono valide, false altrimenti
      */
     boolean loginValido(String email, String password);
 
     /**
      * Cerca e restituisce un utente a partire dalla sua email.
      *
-     * @param email
-     * @return
+     * @param email email dell'utente che si sta cercando
+     * @return l'oggetto Utente corrispondente all'email, oppure null se non trovato
      */
     Utente trovaUtenteDaMail (String email);
 
     /**
      * Aggiorna la password di un utente nel database.
      *
-     * @param email
-     * @param nuovaPassword
-     * @return
+     * @param email email dell'utente da modificare
+     * @param nuovaPassword nuova password da associare alla mail
+     * @return true se l'aggiornamento è andato a buon fine, false altrimenti
      */
     boolean aggiornaPassword (String email, String nuovaPassword);
 

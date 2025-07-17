@@ -2,7 +2,15 @@ package gui;
 
 import javax.swing.*;
 
+/**
+ * Finestra di dialogo per la creazione o modifica di un ToDo.
+ * La finestra è strutturata tramite più pannelli Swing per separare logicamente
+ * i campi di input: titolo, descrizione, link, scadenza, colore. ecc.
+ *
+ */
 public class CreaToDo extends JDialog {
+
+    //Componenti principali della UI
     private JPanel mainPanel;
     private JTextField titolo;
     private JButton checklistButton;
@@ -10,6 +18,8 @@ public class CreaToDo extends JDialog {
     private JButton colorButton;
     private JButton dataScadenzaButton;
     private JButton salvaButton;
+
+    //Pannelli di layout
     private JPanel savePanel;
     private JPanel inputPanel;
     private JPanel nomePanel;
@@ -18,23 +28,27 @@ public class CreaToDo extends JDialog {
     private JPanel scadenzaPanel;
     private JPanel colorePanel;
     private JPanel bachecaPanel;
-    private JComboBox<String> bachecaBox;
-    private JTextField descrizioneField;
     private JPanel descrizionePanel;
-    private JButton sfogliaButton;
     private JPanel previewPanel;
     private JPanel pannelloAggiungibile;
 
-    public JPanel getPannelloAggiungibile() {
-        return pannelloAggiungibile;
-    }
+    //Campi di input aggiuntivi
+    private JComboBox<String> bachecaBox;
+    private JTextField descrizioneField;
+    private JButton sfogliaButton;
 
+
+    /**
+     * Costruttore: inizializza il contenuto del dialog e imposta le proprietà base.
+     */
     public CreaToDo() {
         setContentPane(mainPanel);
         setModal(true);
         getRootPane().setDefaultButton(salvaButton);
         this.setTitle("Modifica Descrizione");
     }
+
+    /* ----------- Metodi di accesso (getters) per i pannelli e componenti ----------- */
 
     public JPanel getSavePanel() {
         return savePanel;
@@ -115,5 +129,7 @@ public class CreaToDo extends JDialog {
     public JButton getDataScadenzaButton() {
         return dataScadenzaButton;
     }
-
+    public JPanel getPannelloAggiungibile() {
+        return pannelloAggiungibile;
+    }
 }

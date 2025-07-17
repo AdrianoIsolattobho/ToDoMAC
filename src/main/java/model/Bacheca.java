@@ -3,13 +3,23 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * La classe Bacheca rappresenta una collezione di ToDo,
+ * associata ad un titolo, una descrizione e un criterio di ordinamento.
+ */
 public class Bacheca {
     private Titolo titolo;
     private String descrizione;
     private Ordinamento ordinamento;
     private ArrayList<ToDo> toDoList = new ArrayList<>(); // ArrayList per gestire dinamicamente la lista di ToDo
 
-    // costruttore
+    /**
+     * Costruttore completo
+     * @param titolo Titolo della bacheca
+     * @param descrizione Descrizione della bacheca
+     * @param ordinamento Tipo di ordinamento applicato alla lista di ToDo
+     * @param toDoList Lista di ToDo di una bacheca
+     */
     public Bacheca(Titolo titolo, String descrizione, Ordinamento ordinamento, List<ToDo> toDoList) {
         this.titolo = titolo;
         this.descrizione = descrizione;
@@ -18,10 +28,13 @@ public class Bacheca {
         this.toDoList.addAll(toDoList);
     }
 
+    /**
+     * Costruttore vuoto.
+     */
     public Bacheca() {
     }
 
-    // getter e setter
+    /* ------------ Getter e Setter per accedere ai componenti dall'esterno ------------ */
     public Titolo getTitolo() {
         return titolo;
     }

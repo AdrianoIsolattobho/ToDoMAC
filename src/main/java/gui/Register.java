@@ -2,7 +2,10 @@ package gui;
 
 import javax.swing.*;
 
-
+/**
+ * Pannello per la registrazione dell'utente.
+ * Contiene campi per email, password, conferma password e pulsanti di navigazione.
+ */
 public class Register extends JPanel {
     private JButton registratiButton;
     private JPasswordField confermaPassword;
@@ -12,7 +15,10 @@ public class Register extends JPanel {
     private JPanel registerPanel;
 
 
-    // Chiamare questo metodo dopo che il form è stato inizializzato
+    /**
+     * Inizializza componenti grafici e stili.
+     * Va chiamato dopo che i componenti sono stati costruiti.
+     */
     public void setupComponents() {
         if (this.email != null && this.password != null && this.confermaPassword != null) {
             SetPlaceHolder.setTP(this.email, "Email", GestioneDarkMode.isDarkMode());
@@ -29,6 +35,7 @@ public class Register extends JPanel {
         }
     }
 
+    /* ------------ Getter per componenti utili ------------ */
     public JPanel getMainRegistrazione() {
         return this.registerPanel;
     }

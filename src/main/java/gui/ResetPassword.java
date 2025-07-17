@@ -3,7 +3,10 @@ package gui;
 
 import javax.swing.*;
 
-
+/**
+ * Finestra di dialogo per il reset della password.
+ * Consente di inserire email, nuova password e confermare quest'ultima.
+ */
 public class ResetPassword extends JDialog {
     private JPanel contentPanel;
     private JButton bottoneReset;
@@ -12,7 +15,9 @@ public class ResetPassword extends JDialog {
     private JPasswordField confermaPassword;
     private JButton buttonCancel;
 
-
+    /**
+     * Costruttore che imposta finestra, dimensioni e comportamento iniziale.
+     */
     public ResetPassword() {
         setContentPane(contentPanel);
         setModal(true);
@@ -25,10 +30,13 @@ public class ResetPassword extends JDialog {
         //Più diretto e veloce rispetto a richiamare la finestra genitore con SwingUtilities
         // possibile farlo perchè questa classe estende JDialog
 
-        buttonCancel.addActionListener(e -> dispose());
+        buttonCancel.addActionListener(_ -> dispose());
     }
 
-    // Chiamare questo metodo dopo che il form è stato inizializzato
+    /**
+     * Inizializza componenti grafici e stile (placeholder, bordi, trasparenza).
+     * Da chiamare dopo l'inizializzazione dei componenti.
+     */
     public void setupComponents() {
         if (this.email != null && this.password != null) {
             SetPlaceHolder.setTP(this.email, "Email", GestioneDarkMode.isDarkMode());
@@ -45,6 +53,7 @@ public class ResetPassword extends JDialog {
         }
     }
 
+    /* ------------ Getter per accedere ai componenti dall'esterno ------------ */
     public JButton getBottoneReset() {
         return bottoneReset;
     }
@@ -64,6 +73,5 @@ public class ResetPassword extends JDialog {
     public String getConfermaPasswordText() {
         return new String(confermaPassword.getPassword());
     }
-
 
 }

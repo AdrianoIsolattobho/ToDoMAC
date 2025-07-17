@@ -5,12 +5,17 @@ import javax.swing.JTextField;
 
 
 /**
- * Classe per gestire i placeholder nei JTextField e JPasswordField.
+ * Classe di utilità per gestire i placeholder nei campi di testo Swing:
+ * {@link JTextField } e {@link JPasswordField}.
  * Questa classe fornisce metodi per impostare un placeholder in un campo di testo
  * e gestire il comportamento del campo quando guadagna o perde il focus.
  */
 public class SetPlaceHolder {
 
+    /**
+     * Costruttore privato per impedire l'istanziazione della classe di utilità.
+     *
+     */
     private SetPlaceHolder() {
         throw new IllegalStateException("Utility class");
     }

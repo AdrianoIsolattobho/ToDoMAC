@@ -2,7 +2,11 @@ package gui;
 
 import javax.swing.*;
 
-
+/**
+ * Pannello principale dell'applicazione, contenente tutte le bacheche, ognuna con i proprio ToDo, controlli
+ * di ordinamento, ricerca, condivisione e pulsanti per modifiche e logout.
+ *
+ */
 public class Main extends JPanel {
     private JButton esci;
     private JLabel nome;
@@ -34,6 +38,42 @@ public class Main extends JPanel {
     private JPanel baCon;
     private JPanel contenitoreToDoCon;
 
+    /**
+     * Inizializza i componenti dinamici e applica le impostazioni grafiche
+     *
+     */
+    public void setupComponents() {
+        esci.setBounds(0, 0, 30, 25);
+
+        try {
+            if ( GestioneDarkMode.isDarkMode()){
+                esci.setIcon(new ImageIcon(getClass().getResource("/img/logout_dark.png")));
+            } else {
+                esci.setIcon(new ImageIcon(getClass().getResource("/img/logout.png")));
+            }
+        } catch (Exception _) {
+            // Se l'immagine non viene trovata, utilizza del testo al posto dell'icona
+            esci.setText("Esci");
+            esci.setToolTipText("Esci dall'applicazione");
+        }
+        contenitoreToDoU.setLayout(new BoxLayout(contenitoreToDoU, BoxLayout.Y_AXIS));
+        contenitoreToDoL.setLayout(new BoxLayout(contenitoreToDoL, BoxLayout.Y_AXIS));
+        contenitoreToDoT.setLayout(new BoxLayout(contenitoreToDoT, BoxLayout.Y_AXIS));
+        contenitoreTodoSca.setLayout(new BoxLayout(contenitoreTodoSca, BoxLayout.Y_AXIS));
+        contenitoreToDoRIc.setLayout(new BoxLayout(contenitoreToDoRIc, BoxLayout.Y_AXIS));
+        contenitoreToDoCon.setLayout(new BoxLayout(contenitoreToDoCon, BoxLayout.Y_AXIS));
+
+        //bacheche visibili solo nel caso in cui sia presente un todo
+        baUni.setVisible(false);
+        baLav.setVisible(false);
+        baFre.setVisible(false);
+        baSca.setVisible(false);
+        baRic.setVisible(false);
+        baCon.setVisible(false);
+
+    }
+
+    /* ------------ Getter e Setter per accedere ai componenti dall'esterno ------------ */
 
     public JPanel getContenitoreToDoCon() {
         return contenitoreToDoCon;
@@ -81,40 +121,6 @@ public class Main extends JPanel {
 
     public JButton getOrdineFreButton() {
         return ordineFreButton;
-    }
-
-    /*
-     * Setup dei componenti grafici utile da codice per non passare da IntelliJ
-     */
-    public void setupComponents() {
-        esci.setBounds(0, 0, 30, 25);
-
-        try {
-            if ( GestioneDarkMode.isDarkMode()){
-                esci.setIcon(new ImageIcon(getClass().getResource("/img/logout_dark.png")));
-            } else {
-                esci.setIcon(new ImageIcon(getClass().getResource("/img/logout.png")));
-            }
-        } catch (Exception _) {
-            // Se l'immagine non viene trovata, utilizza del testo al posto dell'icona
-            esci.setText("Esci");
-            esci.setToolTipText("Esci dall'applicazione");
-        }
-        contenitoreToDoU.setLayout(new BoxLayout(contenitoreToDoU, BoxLayout.Y_AXIS));
-        contenitoreToDoL.setLayout(new BoxLayout(contenitoreToDoL, BoxLayout.Y_AXIS));
-        contenitoreToDoT.setLayout(new BoxLayout(contenitoreToDoT, BoxLayout.Y_AXIS));
-        contenitoreTodoSca.setLayout(new BoxLayout(contenitoreTodoSca, BoxLayout.Y_AXIS));
-        contenitoreToDoRIc.setLayout(new BoxLayout(contenitoreToDoRIc, BoxLayout.Y_AXIS));
-        contenitoreToDoCon.setLayout(new BoxLayout(contenitoreToDoCon, BoxLayout.Y_AXIS));
-
-        //bacheche visibili solo nel caso in cui sia presente un todo
-        baUni.setVisible(false);
-        baLav.setVisible(false);
-        baFre.setVisible(false);
-        baSca.setVisible(false);
-        baRic.setVisible(false);
-        baCon.setVisible(false);
-
     }
 
     public JButton getEsci() {
@@ -184,6 +190,7 @@ public class Main extends JPanel {
     public void setDescrizioneFreText(String descrizioneFreText) {
         this.descrizioneFre.setText(descrizioneFreText);
     }
+
     public JButton getModificaDescrizioneUni() {
         return modificaDescrizioneUni;
     }

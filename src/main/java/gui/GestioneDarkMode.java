@@ -3,15 +3,26 @@ package gui;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+/**
+ * Classe di utilità per rivelare se il sistema operativo è attualmente in modalità scura (dark mode)
+ * Supporta Windows e macOS.
+ *
+ */
 public class GestioneDarkMode {
 
+    /**
+     * Costruttore privato per impedire l'istanza della classe.
+     * Essendo una utility class, tutti i metodi sono statici.
+     *
+     */
     private GestioneDarkMode() {
         throw new IllegalStateException("Utility class");
     }
 
     /**
      * Rileva il Sistema Operativo sul quale viene eseguita l'applicazione.
-     * @return boolean
+     * @return true se la modalità scura è attiva, false se è attiva la modalità chiara
+     * @throws UnsupportedOperationException se il sistema operativo non è supportato
      */
     public static boolean isDarkMode() {
         String os = System.getProperty("os.name").toLowerCase();
@@ -25,10 +36,11 @@ public class GestioneDarkMode {
         }
     }
 
-    /*+
+    /**
      * Controlla se è attiva la dark mode dai registri di windows
-     * @return boolean
-     */
+     * La chiave 'AppUseLightTheme' è impostata a 0 se la dark mode è attiva.
+     * @return true se è attiva la modalità scura, false se è attiva la modalità chiara
+     **/
     public static boolean isDarkModeWindows() {
         try {
             // Creazione del comando tramite ProcessBuilder
@@ -59,7 +71,7 @@ public class GestioneDarkMode {
 
     /**
      * Controlla se è attiva la dark mode su MacOS.
-     * @return boolean
+     * @return true se è attiva la modalità scura, false se è attiva la modalità chiara
      */
     public static boolean isDarkModeMac() {
         try {

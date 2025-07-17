@@ -3,6 +3,15 @@ package gui;
 import javax.swing.*;
 import java.awt.event.*;
 
+/**
+ * Finestra di dialogo per gestire l'ordinamento delle attività.
+ * L'Utente può scegliere tra diversi criteri di ordinamento:
+ * Alfabetico A-Z o Z-A
+ * Data di creazione (crescente o decrescente)
+ * Data di scadenza (crescente o decrescente)
+ * La selezione viene fatta tramite radio button, raggruppati per assicurare una sola scelta alla volta.
+ *
+ */
 public class GestioneOrdine extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
@@ -15,38 +24,12 @@ public class GestioneOrdine extends JDialog {
     private JRadioButton dataScadenzaDecrescenteRadioButton;
     private ButtonGroup group;
 
-    public ButtonGroup getGroup() {
-        return group;
-    }
-
-    public JButton getButtonOK() {
-        return buttonOK;
-    }
-
-    public JRadioButton getOrdineAlfabeticoAZRadioButton() {
-        return ordineAlfabeticoAZRadioButton;
-    }
-
-    public JRadioButton getOrdineAlfabeticoZARadioButton() {
-        return ordineAlfabeticoZARadioButton;
-    }
-
-    public JRadioButton getDataDiCreazioneCrescenteRadioButton() {
-        return dataDiCreazioneCrescenteRadioButton;
-    }
-
-    public JRadioButton getDataDiCreazioneDecrescenteRadioButton() {
-        return dataDiCreazioneDecrescenteRadioButton;
-    }
-
-    public JRadioButton getDataScadenzaCrescenteRadioButton() {
-        return dataScadenzaCrescenteRadioButton;
-    }
-
-    public JRadioButton getDataScadenzaDecrescenteRadioButton() {
-        return dataScadenzaDecrescenteRadioButton;
-    }
-
+    /**
+     * Costruttore della finestra di gestione ordine.
+     * Inizializza componenti, imposta la finestra come modale,
+     * gestisce gli eventi di chiusura e tasto ESC.
+     *
+     */
     public GestioneOrdine() {
         setContentPane(contentPane);
         setModal(true);
@@ -88,4 +71,39 @@ public class GestioneOrdine extends JDialog {
         // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(_-> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
+
+    /* ------------ Getter per accedere ai componenti dall'esterno ------------ */
+    public ButtonGroup getGroup() {
+        return group;
+    }
+
+    public JButton getButtonOK() {
+        return buttonOK;
+    }
+
+    public JRadioButton getOrdineAlfabeticoAZRadioButton() {
+        return ordineAlfabeticoAZRadioButton;
+    }
+
+    public JRadioButton getOrdineAlfabeticoZARadioButton() {
+        return ordineAlfabeticoZARadioButton;
+    }
+
+    public JRadioButton getDataDiCreazioneCrescenteRadioButton() {
+        return dataDiCreazioneCrescenteRadioButton;
+    }
+
+    public JRadioButton getDataDiCreazioneDecrescenteRadioButton() {
+        return dataDiCreazioneDecrescenteRadioButton;
+    }
+
+    public JRadioButton getDataScadenzaCrescenteRadioButton() {
+        return dataScadenzaCrescenteRadioButton;
+    }
+
+    public JRadioButton getDataScadenzaDecrescenteRadioButton() {
+        return dataScadenzaDecrescenteRadioButton;
+    }
+
+
 }

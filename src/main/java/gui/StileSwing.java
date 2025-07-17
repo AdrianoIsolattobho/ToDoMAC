@@ -11,6 +11,11 @@ import java.net.URL;
  * Come se fosse un file CSS per le Swing.
  */
 public class StileSwing extends JFrame {
+
+    /**
+     * Applica lo stile ai componenti Swing e imposta l'icona del programma nella taskbar.
+     *
+     */
     private static final String FONT_SCELTO = "Arial";
     /**
      * Ricerca nel URL dato l'immagine
@@ -44,10 +49,8 @@ public class StileSwing extends JFrame {
             logger.info("Errore durante l'impostazione dell'icona: " + e.getMessage());
         }
 
-        /**
-         * Prende in input il return di gui.GestioneDarkMode
-         * in base all'input imposta lo stile per i componenti Swing
-         */
+            //Prende in input il return di gui.GestioneDarkMode
+            //in base all'input imposta lo stile per i componenti Swing
         if (GestioneDarkMode.isDarkMode()) {
 
             /* Tema Scuro */

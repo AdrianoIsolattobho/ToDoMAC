@@ -1,4 +1,9 @@
 package model;
+
+/**
+ * Enum Ordinamento
+ * Rappresenta i possibili criteri di ordinamento per liste di ToDo
+ */
 public enum Ordinamento {
     AZ,
     ZA,
