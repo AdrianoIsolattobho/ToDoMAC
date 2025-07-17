@@ -1,0 +1,29 @@
+    private void creazioneCondividiDialog(JButton condiviButton, ToDo todo) {
+        condiviButton.addActionListener(e -> {
+            ListaUtenti listaUtenti = new ListaUtenti();
+            JDialog condividiDialog = new JDialog();
+            condividiDialog.setTitle("Condividi ToDo");
+            condividiDialog.setContentPane(listaUtenti.getCondiviPanel());
+            condividiDialog.setModal(true);
+            condividiDialog.setSize(350, 450);
+            condividiDialog.setLocationRelativeTo(view.getLogInView().getMainView().getMain());
+
+            // Assicurati che il ToDo abbia un'email utente impostata
+            if (todo.getEmailUtente() == null) {
+                todo.setEmailUtente(utenteAttuale.getEmail());
+            }
+
+            ArrayList<Utente> utenti = utenteDAO.getUtentiAll();
+            generaUtentiCondivisibili(listaUtenti, utenti, todo); // Passa todo come parametro
+
+            listaUtenti.getCondivButton().addActionListener(ev -> {
+                List<String> selezionati = getUtentiSelezionati(listaUtenti);
+                for (String email : selezionati) {
+                    condivisioneDAO.aggiungiCondivisione(todo.getEmailUtente(), todo.getTitolo(), email);
+                }
+                condividiDialog.dispose();
+                mostraMain();
+            });
+            condividiDialog.setVisible(true);
+        });
+    }

@@ -55,7 +55,7 @@ public class ListaUtenti extends JDialog {
     }
 
     /* ------------ Getter per accedere ai componenti dall'esterno ------------ */
-    public JTextField getCercaField() {
+public JTextField getCercaField() {
         return cercaField;
     }
 

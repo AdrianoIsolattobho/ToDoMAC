@@ -37,7 +37,9 @@ public class ListaUtenti extends JDialog {
 
     }
 
-
+    public JTextField getCercaField() {
+        return cercaField;
+    }
 
     /**
      * Configura lo stile del campo di ricerca:
@@ -55,9 +57,7 @@ public class ListaUtenti extends JDialog {
     }
 
     /* ------------ Getter per accedere ai componenti dall'esterno ------------ */
-    public JTextField getCercaField() {
-        return cercaField;
-    }
+
 
     public JPanel getUtentiPanel() {
         return utentiPanel;
