@@ -11,9 +11,9 @@ public class Attivita {
         this.completata = completata;
     }
 
-    public Attivita(String nome) {
+    public Attivita(String nome,Boolean completata) {
         this.nome = nome;
-        this.completata = false;
+        this.completata = completata;
     }
 
     public String getNome() {

@@ -1,13 +1,11 @@
 package gui;
 
-import model.Utente;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
+
 
 public class ListaUtenti extends JDialog {
     private JPanel condiviPanel;
@@ -46,45 +44,21 @@ public class ListaUtenti extends JDialog {
 
     }
 
+    public ArrayList<JCheckBox> getUtentiCb() {
+        return utentiCb;
+    }
+
+    public JPanel getUtentiPanel() {
+        return utentiPanel;
+    }
+
     public void setupComponents(){
         //imposta il placeholder nei campi con dark mode o meno
         SetPlaceHolder.setTP(this.cercaField, "Cerca utente...", GestioneDarkMode.isDarkMode());
-        System.out.println("setted placeholder"+(cercaField!=null));
         //applica bordi arrotondati personalizzati ai campi
         this.cercaField.setBorder(new RoundedBorder(15));
         //rende i campi trasparenti per una visiva migliore con lo sfondo
         this.cercaField.setOpaque(false);
-    }
-
-    //metodo per mostrare utenti
-    public void mostraUtenti(List<Utente> utenti, Utente utenteAttuale){
-        utentiPanel.removeAll();
-        utentiCb.clear();
-
-        int rows = Math.max(utenti.size(), 1);
-        utentiPanel.setLayout(new GridLayout(rows, 1,5,5));
-
-        for(Utente u : utenti){
-            if(!u.getEmail().equals(utenteAttuale.getEmail())){
-                JCheckBox cb = new JCheckBox(u.getEmail());
-                utentiCb.add(cb);
-                utentiPanel.add(cb);
-            }
-        }
-
-        utentiPanel.revalidate();
-        utentiPanel.repaint();
-    }
-
-    //metodo per ottenere gli utenti selezionati
-    public List<String> getUtentiSelezionati(){
-        List<String> selezionati = new ArrayList<>();
-        for(JCheckBox cb : utentiCb){
-            if(cb.isSelected()){
-                selezionati.add(cb.getText());
-            }
-        }
-        return selezionati;
     }
 
     public JPanel getCondiviPanel() {

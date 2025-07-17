@@ -1,9 +1,7 @@
 package implementazioni_postgres_dao;
 
 import database.DBConnessione;
-import model.Attivita;
-import model.Checklist;
-import model.ToDo;
+import model.*;
 
 import java.awt.*;
 import java.io.File;
@@ -43,21 +41,23 @@ public class CondivisioneImplementazionePostgresDAO implements dao.CondivisioneD
     }
 
     @Override
-    public void eliminaCondivisione(String emailAutore, String titoloToDo, String emailUtenteCondiviso){
-        try{
-            PreparedStatement eliminaPS = connection.prepareStatement(
-                    "DELETE FROM \"Condivisione\" WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ? AND \"emailAutore\" = ?;");
+    public Boolean eliminaCondivisione(String emailAutore, String titoloToDo, String emailUtenteCondiviso){
+        try {
+        PreparedStatement eliminaPS = connection.prepareStatement(
+                "DELETE FROM \"Condivisione\" WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ? AND \"emailAutore\" = ?;");
 
-            eliminaPS.setString(1, emailUtenteCondiviso);
-            eliminaPS.setString(2, titoloToDo);
-            eliminaPS.setString(3, emailAutore);
+        eliminaPS.setString(1, emailUtenteCondiviso);
+        eliminaPS.setString(2, titoloToDo);
+        eliminaPS.setString(3, emailAutore);
 
-            eliminaPS.executeUpdate();
-            eliminaPS.close();
-
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+        int righeEliminate = eliminaPS.executeUpdate();
+        eliminaPS.close();
+        
+        return righeEliminate > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
     }
 
     @Override
@@ -129,7 +129,7 @@ public class CondivisioneImplementazionePostgresDAO implements dao.CondivisioneD
                 }
 
                 PreparedStatement attivitaPS = connection.prepareStatement(
-                        "SELECT * FROM \"Attivita\" WHERE \"emailUtente\" = ? AND \"titoloTodo\" = ?" );
+                        "SELECT * FROM \"Attivita\" WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ?" );
 
                 attivitaPS.setString(1, emailAutore);
                 attivitaPS.setString(2, titolo);
@@ -139,7 +139,7 @@ public class CondivisioneImplementazionePostgresDAO implements dao.CondivisioneD
 
                 while (ars.next()){
                     String nome = ars.getString("nome");
-                    checklist.getAttivita().add(new Attivita(nome));
+                    checklist.getAttivita().add(new Attivita(nome,false));
                 }
 
                 t.setChecklist(checklist);
@@ -157,4 +157,99 @@ public class CondivisioneImplementazionePostgresDAO implements dao.CondivisioneD
         return todos;
     }
 
+    @Override
+    public ArrayList<Condivisione> getToDoPerUtenteCondiviso(String emailUtente) {
+        ArrayList<Condivisione> condivisioni = new ArrayList<>();
+
+        try{
+            String sql = "SELECT * FROM \"Condivisione\" WHERE \"emailUtente\" = ?";
+
+            PreparedStatement condivPS = connection.prepareStatement(sql);
+
+            condivPS.setString(1,emailUtente);
+
+            ResultSet rs = condivPS.executeQuery();
+
+            while(rs.next()){
+                String titoloToDo = rs.getString("titoloToDo");
+                String emailAutore = rs.getString("emailAutore");
+
+                String sql2 = "SELECT * FROM \"ToDo\" WHERE \"titolo\" = ? AND \"emailUtente\" = ?";
+
+                PreparedStatement todoPS = connection.prepareStatement(sql2);
+
+                todoPS.setString(1, titoloToDo);
+                todoPS.setString(2, emailAutore);
+
+                ResultSet rs2 = todoPS.executeQuery();
+
+                if(rs2.next()){
+                    ToDo t = new ToDo();
+
+                    t.setTitolo(rs2.getString("titolo"));
+                    t.setDescrizione(rs2.getString("descrizione"));
+
+                    String link = rs2.getString("link");
+                    if(link != null && !link.isEmpty()){
+                        t.setLink(new URI(link).toURL().toURI());
+                    }
+
+                    Timestamp ts = rs2.getTimestamp("scadenza");
+                    if(ts != null){
+                        Calendar scadenza = Calendar.getInstance();
+                        scadenza.setTimeInMillis(ts.getTime());
+                        t.setScadenza(scadenza);
+                    }
+
+                    t.setCompletato(rs2.getBoolean("completato"));
+                    t.setScaduto(rs2.getBoolean("scaduto"));
+
+                    String sfondohex = rs2.getString("sfondo");
+                    if(sfondohex != null && sfondohex.startsWith("#")){
+                        t.setSfondo(Color.decode(sfondohex));
+                    }
+
+                    String img = rs2.getString("immagine");
+                    if (img != null && !img.isEmpty()) {
+                        File fileImg = new File("immagini_todo/"+ img);
+                    }
+
+                    String sql3 = "SELECT * FROM \"Attivita\" WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ?";
+                    PreparedStatement attivitaPS = connection.prepareStatement(sql3);
+
+                    attivitaPS.setString(1, emailAutore);
+                    attivitaPS.setString(2, titoloToDo);
+
+                    ResultSet ars = attivitaPS.executeQuery();
+                    Checklist checklist = new Checklist();
+
+                    while (ars.next()){
+                        checklist.getAttivita().add(new Attivita(ars.getString("nome"),false));
+                    }
+
+                    t.setChecklist(checklist);
+
+                    ars.close();
+                    attivitaPS.close();
+
+                    ArrayList<Utente> condivisiCon = new ArrayList<>();
+                    Utente u = new Utente();
+                    u.setEmail(emailUtente);
+                    condivisiCon.add(u);
+
+
+                    Condivisione c = new Condivisione(emailAutore, t, condivisiCon);
+                    condivisioni.add(c);
+                }
+                rs2.close();
+                todoPS.close();
+            }
+            rs.close();
+            condivPS.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return condivisioni;
+    }
+    
 }

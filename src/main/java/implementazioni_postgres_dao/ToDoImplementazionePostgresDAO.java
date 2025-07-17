@@ -58,20 +58,24 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
             creaPS.setInt(10, nuovoIdToDo);
             creaPS.executeUpdate();
             creaPS.close();
-            System.out.println("TitoloBacheca: " + bacheca.getTitolo() + " descrizione: " + bacheca.getDescrizione());
-            // Inserisci la Bacheca con lo stesso IdToDo
-            PreparedStatement creaBachecaPS = connection.prepareStatement(
-                    "INSERT INTO \"Bacheca\" (\"titoloBacheca\", \"descrizioneBacheca\", \"IdToDo\", \"ordinamento\") VALUES (?, ?, ?,?)");
-            creaBachecaPS.setString(1, bacheca.getTitolo().toString());
-            creaBachecaPS.setString(2, bacheca.getDescrizione() != null ? bacheca.getDescrizione() : "");
-            creaBachecaPS.setInt(3, nuovoIdToDo);
-            Ordinamento ordinamento = bacheca.getOrdinamento() != null ? bacheca.getOrdinamento() : Ordinamento.AZ;
-            creaBachecaPS.setString(4,
-                    ordinamento != null ? ordinamento.name() : Ordinamento.AZ.name());
 
+            System.out.println("TitoloBacheca: " + bacheca.getTitolo() + " descrizione: " + bacheca.getDescrizione());
+
+            // INSERISCI SEMPRE UN RECORD PER ASSOCIARE IL TODO ALLA BACHECA
+            System.out.println("Associando ToDo alla bacheca: " + bacheca.getTitolo());
+            PreparedStatement creaBachecaPS = connection.prepareStatement(
+                    "INSERT INTO \"Bacheca\" (\"titolo\",\"emailUtente\", \"descrizione\", \"IdToDo\", \"ordinamento\") " +
+                            "VALUES (CAST(? AS titolo), ?, ?, ?, CAST(? AS ordinamento))");
+            creaBachecaPS.setString(1, bacheca.getTitolo().toString());
+            creaBachecaPS.setString(2, emailUtente);
+            creaBachecaPS.setString(3, bacheca.getDescrizione() != null ? bacheca.getDescrizione() : "");
+            creaBachecaPS.setInt(4, nuovoIdToDo);
+            Ordinamento ordinamento = bacheca.getOrdinamento() != null ? bacheca.getOrdinamento() : Ordinamento.AZ;
+            creaBachecaPS.setString(5, ordinamento.name());
             creaBachecaPS.executeUpdate();
             creaBachecaPS.close();
 
+            // Gestione checklist
             if (toDo.getChecklist() != null) {
                 for (Attivita attivita : toDo.getChecklist().getAttivita()) {
                     PreparedStatement creaCheckListPS = connection.prepareStatement(
@@ -81,7 +85,6 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
                     creaCheckListPS.setString(2, toDo.getTitolo());
                     creaCheckListPS.setString(3, attivita.getNome());
                     creaCheckListPS.setBoolean(4, attivita.isCompletata());
-
                     creaCheckListPS.executeUpdate();
                     creaCheckListPS.close();
                 }
@@ -92,41 +95,48 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
     }
 
     @Override
-    public Bacheca caricaBacheca(String emailUtente, String titolo) {
-        Bacheca b = null;
-        try {
-            PreparedStatement caricaPS = connection.prepareStatement(
-                    "SELECT * FROM \"Bacheca\" NATURAL JOIN \"ToDo\" WHERE \"emailUtente\" = ? AND \"titoloBacheca\" = ?");
-            caricaPS.setString(1, emailUtente);
-            caricaPS.setString(2, titolo);
-
-            ResultSet rs = caricaPS.executeQuery();
-
-            if (rs.next()) {
-                Titolo titoloBacheca = Titolo.valueOf(rs.getString("titoloBacheca"));
-                String descrizioneBacheca = rs.getString("descrizioneBacheca");
-                String ordinamentoStr = rs.getString("ordinamento");
-                Ordinamento ordinamento = (ordinamentoStr != null)
-                        ? Ordinamento.valueOf(ordinamentoStr)
-                        : Ordinamento.AZ;
-
-                // Popolazione dei ToDo utilizzando il metodo già esistente
-                List<ToDo> toDoList = caricaToDoPerBacheca(emailUtente, titoloBacheca.toString());
-
-                b = new Bacheca(
-                        titoloBacheca,
-                        descrizioneBacheca,
-                        ordinamento,
-                        toDoList);
+public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
+    System.out.println("=== METODO caricaBacheca CHIAMATO ===");
+    System.out.println("Email utente: " + emailUtente);
+    System.out.println("Titolo bacheca: " + titolo);
+    
+    Bacheca bacheca = new Bacheca();
+    bacheca.setTitolo(titolo);
+    
+    try {
+        // Carica informazioni base della bacheca
+        PreparedStatement bachecaInfoPS = connection.prepareStatement(
+                "SELECT DISTINCT \"descrizione\", \"ordinamento\" FROM \"Bacheca\" " +
+                "WHERE \"emailUtente\" = ? AND \"titolo\" = CAST(? AS titolo)");
+        bachecaInfoPS.setString(1, emailUtente);
+        bachecaInfoPS.setString(2, titolo.name());
+        
+        ResultSet bachecaRs = bachecaInfoPS.executeQuery();
+        if (bachecaRs.next()) {
+            bacheca.setTitolo(titolo);
+            bacheca.setDescrizione(bachecaRs.getString("descrizione"));
+            String ordinamentoStr = bachecaRs.getString("ordinamento");
+            if (ordinamentoStr != null) {
+                bacheca.setOrdinamento(Ordinamento.valueOf(ordinamentoStr));
             }
-
-            rs.close();
-            caricaPS.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return b;
+        bachecaRs.close();
+        bachecaInfoPS.close();
+        
+        // Carica i ToDo associati alla bacheca
+        List<ToDo> toDoList = caricaToDoPerBacheca(emailUtente, titolo.name());
+        bacheca.setToDoList(new ArrayList<>(toDoList));
+        
+        System.out.println("Bacheca caricata con " + toDoList.size() + " ToDo");
+        
+    } catch (Exception e) {
+        System.out.println("ERRORE nel caricaBacheca:");
+        e.printStackTrace();
+        return null;
     }
+    
+    return bacheca;
+}
 
     @Override
     public void modificaToDo(String emailUtente, ToDo toDo, Bacheca bacheca, String oldTitolo) {
@@ -182,13 +192,13 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
             // Inserisce nuova Bacheca
             PreparedStatement insertBachecaPS = connection.prepareStatement(
                     "INSERT INTO \"Bacheca\" " +
-                            "(\"IdToDo\", \"titoloBacheca\", \"descrizioneBacheca\", \"ordinamento\") "
-                            +
-                            "VALUES (?, ?, ?, ?)");
+                            "(\"IdToDo\", \"titolo\", \"emailUtente\", \"descrizione\", \"ordinamento\") " +
+                            "VALUES (?, CAST(? AS titolo), ?, ?, CAST(? AS ordinamento))");
             insertBachecaPS.setInt(1, idToDo);
             insertBachecaPS.setString(2, bacheca.getTitolo().toString());
-            insertBachecaPS.setString(3, bacheca.getDescrizione() != null ? bacheca.getDescrizione() : "");
-            insertBachecaPS.setString(4, bacheca.getOrdinamento().name());
+            insertBachecaPS.setString(3, emailUtente);
+            insertBachecaPS.setString(4, bacheca.getDescrizione() != null ? bacheca.getDescrizione() : "");
+            insertBachecaPS.setString(5, bacheca.getOrdinamento().name());
             insertBachecaPS.executeUpdate();
             insertBachecaPS.close();
 
@@ -210,6 +220,14 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
             eliminabPS.executeUpdate();
             eliminabPS.close();
 
+            PreparedStatement eliminaPS = connection.prepareStatement(
+                    "DELETE FROM \"Attivita\" WHERE \"emailUtente\" = ? AND \"titolo\" =?;");
+
+            eliminaPS.setString(1, emailUtente);
+            eliminaPS.setString(2, titolo);
+
+            eliminaPS.executeUpdate();
+            eliminaPS.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -217,14 +235,69 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
 
     @Override
     public List<ToDo> caricaToDoPerBacheca(String emailUtente, String nomeBacheca) {
+        System.out.println("=== METODO caricaToDoPerBacheca CHIAMATO ===");
+        System.out.println("Email utente: " + emailUtente);
+        System.out.println("Nome bacheca: " + nomeBacheca);
+        
         List<ToDo> toDoList = new ArrayList<>();
         try {
+            // Debug: verifica tutti i dati nel database
+            PreparedStatement allDataPS = connection.prepareStatement(
+                    "SELECT T.\"emailUtente\", T.\"titolo\" as todo_titolo, B.\"titolo\" as bacheca_titolo, T.\"IdToDo\", B.\"IdToDo\" as bacheca_id " +
+                    "FROM \"ToDo\" T FULL OUTER JOIN \"Bacheca\" B ON T.\"IdToDo\" = B.\"IdToDo\"");
+            ResultSet allDataRs = allDataPS.executeQuery();
+            System.out.println("=== TUTTI I DATI NEL DATABASE ===");
+            while (allDataRs.next()) {
+                System.out.println("Email: " + allDataRs.getString("emailUtente") + 
+                                 ", ToDo: " + allDataRs.getString("todo_titolo") + 
+                                 ", Bacheca: " + allDataRs.getString("bacheca_titolo") + 
+                                 ", IdToDo: " + allDataRs.getInt("IdToDo") + 
+                                 ", IdBacheca: " + allDataRs.getInt("bacheca_id"));
+            }
+            allDataRs.close();
+            allDataPS.close();
+            
+            // Debug: verifica se esistono dati
+            PreparedStatement debugPS = connection.prepareStatement(
+                    "SELECT COUNT(*) as count FROM \"ToDo\" T JOIN \"Bacheca\" B ON T.\"IdToDo\" = B.\"IdToDo\" " +
+                    "WHERE T.\"emailUtente\" = ? AND B.\"titolo\" = CAST(? AS titolo)");
+            debugPS.setString(1, emailUtente);
+            debugPS.setString(2, nomeBacheca);
+            ResultSet debugRs = debugPS.executeQuery();
+            if (debugRs.next()) {
+                System.out.println("Numero di ToDo trovati: " + debugRs.getInt("count"));
+            }
+            debugRs.close();
+            debugPS.close();
+            
+            // Prova anche senza CAST
+            PreparedStatement debugPS2 = connection.prepareStatement(
+                    "SELECT COUNT(*) as count FROM \"ToDo\" T JOIN \"Bacheca\" B ON T.\"IdToDo\" = B.\"IdToDo\" " +
+                    "WHERE T.\"emailUtente\" = ? AND B.\"titolo\" = CAST(? AS titolo)");
+            debugPS2.setString(1, emailUtente);
+            debugPS2.setString(2, nomeBacheca);
+            ResultSet debugRs2 = debugPS2.executeQuery();
+            if (debugRs2.next()) {
+                System.out.println("Numero di ToDo trovati (senza CAST): " + debugRs2.getInt("count"));
+            }
+            debugRs2.close();
+            debugPS2.close();
+            
+            // Query principale con colonne specificate
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT * FROM \"ToDo\" NATURAL JOIN \"Bacheca\" WHERE \"emailUtente\" = ? AND \"titoloBacheca\" = ?");
+                    "SELECT T.\"titolo\", T.\"descrizione\", T.\"link\", T.\"scadenza\", " +
+                    "T.\"completato\", T.\"scaduto\", T.\"sfondo\", T.\"immagine\" " +
+                    "FROM \"ToDo\" T JOIN \"Bacheca\" B ON T.\"IdToDo\" = B.\"IdToDo\" " +
+                    "WHERE T.\"emailUtente\" = ? AND B.\"titolo\" = CAST(? AS titolo)");
             ps.setString(1, emailUtente);
             ps.setString(2, nomeBacheca);
+            
+            System.out.println("Query: " + ps.toString());
+            
             ResultSet rs = ps.executeQuery();
+            
             while (rs.next()) {
+                System.out.println("Trovato ToDo: " + rs.getString("titolo"));
                 String titolo = rs.getString("titolo");
                 String descrizione = rs.getString("descrizione");
                 URI link = rs.getString("link") != null ? new URI(rs.getString("link")) : null;
@@ -235,6 +308,7 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
                 }
                 Color sfondo = rs.getString("sfondo") != null ? Color.decode(rs.getString("sfondo")) : null;
                 URL immagine = rs.getString("immagine") != null ? URI.create(rs.getString("immagine")).toURL() : null;
+                
                 ToDo t = new ToDo(
                         titolo,
                         descrizione,
@@ -242,19 +316,87 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
                         scadenza,
                         sfondo,
                         immagine,
-                        null // oppure la checklist se la gestisci
+                        null // checklist se la gestisci
                 );
                 t.setCompletato(rs.getBoolean("completato"));
                 t.setScaduto(rs.getBoolean("scaduto"));
-                // Imposta altri campi se necessario
                 toDoList.add(t);
             }
             rs.close();
             ps.close();
+            
+            System.out.println("Totale ToDo restituiti: " + toDoList.size());
+            
         } catch (Exception e) {
+            System.out.println("ERRORE nel caricaToDoPerBacheca:");
             e.printStackTrace();
         }
         return toDoList;
+    }
+
+    @Override
+    public Boolean completaToDo(String emailUtente, String titolo, boolean isCompletato) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE \"ToDo\" SET \"completato\" = ? WHERE \"emailUtente\" = ? AND \"titolo\" = ?");
+            ps.setBoolean(1, isCompletato);
+            ps.setString(2, emailUtente);
+            ps.setString(3, titolo);
+            int rowsAffected = ps.executeUpdate();
+            ps.close();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+    @Override
+    public Boolean completaAtt(String emailUtente, String titolo, boolean isCompletato, String nome) {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE \"Attivita\" SET \"completata\" = ? WHERE \"emailUtente\" = ? AND \"titoloToDo\" = ? AND nome = ?");
+            ps.setBoolean(1, isCompletato);
+            ps.setString(2, emailUtente);
+            ps.setString(3, titolo);
+            ps.setString(4,nome);
+            int rowsAffected = ps.executeUpdate();
+            ps.close();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+    @Override
+    public Checklist CaricaAttivitaPerToDo(int idToDo) {
+        Checklist checklist = new Checklist();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "SELECT * FROM \"Attivita\" WHERE \"IdToDo\" = ?");
+            ps.setInt(1, idToDo);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String nome = rs.getString("nome");
+                boolean completata = rs.getBoolean("completata");
+                Attivita attivita = new Attivita(nome, completata);
+
+                List<Attivita> attivitaList = checklist.getAttivita();
+                if (attivitaList == null) {
+                    attivitaList = new ArrayList<>(); // inizializza lista vuota se null
+                    checklist.setAttivita(attivitaList);
+                }
+                attivitaList.add(attivita);
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return checklist;
     }
 
 }

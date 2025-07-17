@@ -9,7 +9,7 @@ public class DBConnessione {
     private Connection connection;
     private static final String NOME = "postgres";
     //Possiamo ignorare il problema di sonar qube riguardo alla password dato che non ci interessa la sicurezza in questo contesto
-    private static final String PASSWORD = "Angelozampa15.";
+    private static final String PASSWORD = "Angelozampa15."; //NOSONAR
     private static final String URL = "jdbc:postgresql://localhost:5432/postgres";
 
 
