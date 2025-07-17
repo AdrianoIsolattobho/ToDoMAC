@@ -1490,11 +1490,13 @@ public class Controller {
         checkboxTodo.setForeground(coloreTesto);
 
         checkboxTodo.addItemListener(e -> {
+
             todo.setCompletato(checkboxTodo.isSelected());
             toDoDAO.completaToDo(utenteAttuale.getEmail(), todo.getTitolo(), todo.isCompletato());
             if (todo.getChecklist() != null && todo.getChecklist().getAttivita() != null) {
                 for (Attivita att : todo.getChecklist().getAttivita()) {
                     att.setCompletata(checkboxTodo.isSelected());
+                    toDoDAO.completaAtt(utenteAttuale.getEmail(),todo.getTitolo(),att.isCompletata(),att.getNome());
                 }
             }
             aggiornaInterfacciaUtente(view.getLogInView().getMainView());
