@@ -96,6 +96,10 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
 
     @Override
 public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
+    System.out.println("=== METODO caricaBacheca CHIAMATO ===");
+    System.out.println("Email utente: " + emailUtente);
+    System.out.println("Titolo bacheca: " + titolo);
+    
     Bacheca bacheca = new Bacheca();
     bacheca.setTitolo(titolo);
     
@@ -122,8 +126,11 @@ public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
         // Carica i ToDo associati alla bacheca
         List<ToDo> toDoList = caricaToDoPerBacheca(emailUtente, titolo.name());
         bacheca.setToDoList(new ArrayList<>(toDoList));
+        
+        System.out.println("Bacheca caricata con " + toDoList.size() + " ToDo");
+        
     } catch (Exception e) {
-
+        System.out.println("ERRORE nel caricaBacheca:");
         e.printStackTrace();
         return null;
     }

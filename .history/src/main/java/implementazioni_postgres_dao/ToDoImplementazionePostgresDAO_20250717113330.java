@@ -96,6 +96,10 @@ public class ToDoImplementazionePostgresDAO implements dao.ToDoDAO {
 
     @Override
 public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
+    System.out.println("=== METODO caricaBacheca CHIAMATO ===");
+    System.out.println("Email utente: " + emailUtente);
+    System.out.println("Titolo bacheca: " + titolo);
+    
     Bacheca bacheca = new Bacheca();
     bacheca.setTitolo(titolo);
     
@@ -122,8 +126,11 @@ public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
         // Carica i ToDo associati alla bacheca
         List<ToDo> toDoList = caricaToDoPerBacheca(emailUtente, titolo.name());
         bacheca.setToDoList(new ArrayList<>(toDoList));
+        
+        System.out.println("Bacheca caricata con " + toDoList.size() + " ToDo");
+        
     } catch (Exception e) {
-
+        System.out.println("ERRORE nel caricaBacheca:");
         e.printStackTrace();
         return null;
     }
@@ -231,7 +238,7 @@ public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
         List<ToDo> toDoList = new ArrayList<>();
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT T.\"IdToDo\",T.\"titolo\", T.\"descrizione\", T.\"link\", T.\"scadenza\", " +
+                    "SELECT T.\"IdToDo\"T.\"titolo\", T.\"descrizione\", T.\"link\", T.\"scadenza\", " +
                     "T.\"completato\", T.\"scaduto\", T.\"sfondo\", T.\"immagine\" " +
                     "FROM \"ToDo\" T JOIN \"Bacheca\" B ON T.\"IdToDo\" = B.\"IdToDo\" " +
                     "WHERE T.\"emailUtente\" = ? AND B.\"titolo\" = CAST(? AS titolo)");
@@ -315,39 +322,24 @@ public Bacheca caricaBacheca(String emailUtente, Titolo titolo) {
     public Checklist CaricaAttivitaPerToDo(int idToDo) {
         Checklist checklist = new Checklist();
         try {
-            // Prima recupera il titolo del ToDo usando l'idToDo
-            String titoloToDo = null;
-            PreparedStatement getTitoloPS = connection.prepareStatement(
-                    "SELECT \"titolo\" FROM \"ToDo\" WHERE \"IdToDo\" = ?");
-            getTitoloPS.setInt(1, idToDo);
-            ResultSet titoloRs = getTitoloPS.executeQuery();
-            if (titoloRs.next()) {
-                titoloToDo = titoloRs.getString("titolo");
-            }
-            titoloRs.close();
-            getTitoloPS.close();
-            
-            if (titoloToDo != null) {
-                // Ora carica le attività usando il titolo
-                PreparedStatement ps = connection.prepareStatement(
-                        "SELECT * FROM \"Attivita\" WHERE \"titoloToDo\" = ?");
-                ps.setString(1, titoloToDo);
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    String nome = rs.getString("nome");
-                    boolean completata = rs.getBoolean("completata");
-                    Attivita attivita = new Attivita(nome, completata);
+            PreparedStatement ps = connection.prepareStatement(
+                    "SELECT * FROM \"Attivita\" WHERE \"IdToDo\" = ?");
+            ps.setInt(1, idToDo);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String nome = rs.getString("nome");
+                boolean completata = rs.getBoolean("completata");
+                Attivita attivita = new Attivita(nome, completata);
 
-                    List<Attivita> attivitaList = checklist.getAttivita();
-                    if (attivitaList == null) {
-                        attivitaList = new ArrayList<>();
-                        checklist.setAttivita(attivitaList);
-                    }
-                    attivitaList.add(attivita);
+                List<Attivita> attivitaList = checklist.getAttivita();
+                if (attivitaList == null) {
+                    attivitaList = new ArrayList<>(); // inizializza lista vuota se null
+                    checklist.setAttivita(attivitaList);
                 }
-                rs.close();
-                ps.close();
+                attivitaList.add(attivita);
             }
+            rs.close();
+            ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
